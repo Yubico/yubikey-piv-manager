@@ -1,0 +1,10 @@
+*.pyc
+*.egg-info
+*.egg/
+build/
+dist/
+.ropeproject/
+ChangeLog
+MANIFEST
+pivtool/qt_resources.py
+.DS_Store
