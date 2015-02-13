@@ -43,8 +43,9 @@ class MainWindow(QtGui.QMainWindow):
 
     def build_ui(self):
         widget = QtGui.QWidget()
+        widget.setMinimumWidth(320)
+        widget.setMinimumHeight(200)
         layout = QtGui.QHBoxLayout()
-
         widget.setLayout(layout)
 
         return widget
