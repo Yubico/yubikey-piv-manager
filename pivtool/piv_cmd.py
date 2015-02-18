@@ -36,7 +36,7 @@ def check(status, err):
         raise ValueError('Error: %s' % err)
 
 
-class YkPiv(object):
+class YkPivCmd(object):
     def __init__(self, cmd=CMD, verbosity=0, reader=None, key=None):
         self._base_args = [cmd]
         if verbosity > 0:
@@ -45,6 +45,16 @@ class YkPiv(object):
             self._base_args.extend(['-r', reader])
         if key:
             self._base_args.extend(['-k', key])
+
+    def args(self, *args):
+        self._base_args.extend(list(args))
+
+    def set_arg(self, opt, value):
+        try:
+            index = self._base_args.index(opt)
+            self._base_args[index+1] = value
+        except ValueError:
+            self._base_args.extend([opt, value])
 
     def run(self, *args, **kwargs):
         p = subprocess.Popen(self._base_args + list(args),
