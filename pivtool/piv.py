@@ -42,7 +42,6 @@ DEFAULT_KEY = '010203040506070801020304050607080102030405060708'
 
 ATTR_NAME = "name"
 ATTR_PIN_CHANGED = "pinChanged"
-ATTR_CSR = "csr"
 
 
 def rename_group(old_name, new_name):
@@ -128,6 +127,14 @@ class YkPiv(object):
     def _reset(self):
         self.__del__()
         self._connect()
+
+    @property
+    def name(self):
+        return self.get(ATTR_NAME, 'YubiKey NEO')
+
+    @name.setter
+    def name(self, new_name):
+        self[ATTR_NAME] = new_name
 
     @property
     def version(self):

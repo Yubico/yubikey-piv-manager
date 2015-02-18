@@ -37,7 +37,17 @@ app_name = "Yubico PIV tool"
 win_title_1 = "Yubico PIV tool (%s)"
 ok = "OK"
 cancel = "Cancel"
-
+refresh = "Refresh"
+no_key = "No YubiKey found. Please insert a PIV enabled YubiKey and try again."
+name = "Name"
+name_1 = "Name: %s"
+change_name = "Change name"
+change_name_desc = "Change the name of the device."
+pin_last_changed_1 = "PIN last changed: %s"
+change_pin = "Change PIN"
+unknown = "Unknown"
+change_cert = "Request certificate"
+cert_expires_1 = "Certificate expires: %s"
 
 def _translate(qt):
     values = globals()

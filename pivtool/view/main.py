@@ -26,7 +26,32 @@
 
 from PySide import QtGui
 from PySide import QtCore
+from pivtool.piv import YkPiv
 from pivtool.storage import settings
+from pivtool import messages as m
+from pivtool.view.status import StatusWidget
+
+
+class NoKeyPresent(QtGui.QWidget):
+
+    def __init__(self):
+        super(NoKeyPresent, self).__init__()
+
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(QtGui.QLabel(m.no_key))
+
+        self._refresh_btn = QtGui.QPushButton(m.refresh)
+        self._refresh_btn.clicked.connect(self.refresh_key)
+        layout.addWidget(self._refresh_btn)
+
+        self.setLayout(layout)
+
+    def refresh_key(self):
+        try:
+            key = YkPiv()
+            self.parentWidget().setCentralWidget(StatusWidget(key))
+        except ValueError as e:
+            print e.message
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -34,21 +59,18 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.setCentralWidget(self.build_ui())
+        self.setMinimumWidth(360)
+        self.setMinimumHeight(180)
+
+        no_key = NoKeyPresent()
+        self.setCentralWidget(no_key)
 
         self.resize(settings.value('window/size', QtCore.QSize(0, 0)))
         pos = settings.value('window/pos')
         if pos:
             self.move(pos)
 
-    def build_ui(self):
-        widget = QtGui.QWidget()
-        widget.setMinimumWidth(320)
-        widget.setMinimumHeight(200)
-        layout = QtGui.QHBoxLayout()
-        widget.setLayout(layout)
-
-        return widget
+        no_key.refresh_key()
 
     def closeEvent(self, event):
         settings.setValue('window/size', self.size())
