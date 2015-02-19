@@ -48,6 +48,7 @@ change_pin = "Change PIN"
 unknown = "Unknown"
 change_cert = "Request certificate"
 cert_expires_1 = "Certificate expires: %s"
+set_pin_desc = "Change yout PIN"
 
 def _translate(qt):
     values = globals()

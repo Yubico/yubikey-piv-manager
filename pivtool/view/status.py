@@ -24,8 +24,10 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+
 from PySide import QtGui
 from pivtool import messages as m
+from pivtool.view.set_pin_dialog import SetPinDialog
 from datetime import datetime, timedelta
 
 
@@ -93,8 +95,12 @@ class StatusWidget(QtGui.QWidget):
             self._refresh()
 
     def change_pin(self):
-        print "TODO"
-        self._refresh()
+        dialog = SetPinDialog(self._key, self)
+        if dialog.exec_():
+            QtGui.QMessageBox.information(
+                self, "PIN Changed",
+                "The PIN has been successfully changed.")
+            self._refresh()
 
     def change_cert(self):
         print "TODO"

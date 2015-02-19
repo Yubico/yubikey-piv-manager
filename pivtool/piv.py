@@ -166,7 +166,7 @@ class YkPiv(object):
         rc = ykpiv_verify(self._state, buf, byref(tries))
 
         if rc == YKPIV_WRONG_PIN:
-            if tries._type_value > 0:
+            if tries.value > 0:
                 raise ValueError('PIN verification failed. %d tries remaining' %
                                  tries.value)
             else:
