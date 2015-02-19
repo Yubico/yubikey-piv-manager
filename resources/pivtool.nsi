@@ -1,6 +1,6 @@
 !include "MUI2.nsh"
 
-!define MUI_ICON "neoman.ico"
+!define MUI_ICON "pivtool.ico"
 
 ; The name of the installer
 Name "Yubico PIV tool"

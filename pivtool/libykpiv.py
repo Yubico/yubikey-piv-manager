@@ -28,7 +28,7 @@ from ctypes import (Structure, POINTER, c_int, c_ubyte, c_char_p, c_long,
                     c_ulong, c_size_t)
 from pivtool.libloader import load_library
 
-_lib = load_library('ykpiv', '0')
+_lib = load_library('ykpiv', '1')
 
 
 def define(name, args, res):
