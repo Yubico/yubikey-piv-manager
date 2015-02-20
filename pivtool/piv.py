@@ -29,7 +29,6 @@ from pivtool.piv_cmd import YkPivCmd
 from pivtool.storage import settings
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
-import time
 
 
 def check(rc):
@@ -38,10 +37,9 @@ def check(rc):
 
 
 KEY_LEN = 24
-DEFAULT_KEY = '010203040506070801020304050607080102030405060708'
+DEFAULT_KEY = '010203040506070801020304050607080102030405060708'.decode('hex')
 
 ATTR_NAME = "name"
-ATTR_PIN_CHANGED = "pinChanged"
 
 
 def rename_group(old_name, new_name):
@@ -113,7 +111,7 @@ class YkPiv(object):
     def _read_chuid(self, first_attempt=True):
         try:
             chuid_data = self.fetch_object(YKPIV_OBJ_CHUID)[29:29+16]
-            self._chuid = ''.join(map(chr, chuid_data)).encode('hex')
+            self._chuid = chuid_data.encode('hex')
         except ValueError as e:  # No chuid set?
             if first_attempt:
                 self.set_chuid()
@@ -127,14 +125,11 @@ class YkPiv(object):
     def _reset(self):
         self.__del__()
         self._connect()
-
-    @property
-    def name(self):
-        return self.get(ATTR_NAME, 'YubiKey NEO')
-
-    @name.setter
-    def name(self, new_name):
-        self[ATTR_NAME] = new_name
+        args = self._cmd._base_args
+        if '-P' in args:
+            self.verify_pin(args[args.index('-P') + 1])
+        if '-k' in args:
+            self.authenticate(args[args.index('-k') + 1].decode('hex'))
 
     @property
     def version(self):
@@ -146,21 +141,24 @@ class YkPiv(object):
 
     def set_chuid(self):
         old_chuid = self._chuid
-        self._cmd.run('-a', 'set-chuid')
-        self._reset()
-        self._read_chuid()
-        rename_group(old_chuid, self.chuid)
+        try:
+            self._cmd.run('-a', 'set-chuid')
+            self._read_chuid()
+            rename_group(old_chuid, self.chuid)
+        finally:
+            self._reset()
 
-    def authenticate(self, hex_key=DEFAULT_KEY):
-        key = (c_ubyte * KEY_LEN)()
-        key_len = c_size_t(sizeof(key))
-        check(ykpiv_hex_decode(hex_key, len(hex_key), key, byref(key_len)))
-        check(ykpiv_authenticate(self._state, key))
-        self._cmd.set_arg('-k', hex_key)
+    def authenticate(self, key=DEFAULT_KEY):
+        c_key = (c_ubyte * len(key)).from_buffer_copy(key)
+        check(ykpiv_authenticate(self._state, c_key))
+        self._cmd.set_arg('-k', key.encode('hex'))
+
+    def set_authentication(self, key):
+        c_key = (c_ubyte * len(key)).from_buffer_copy(key)
+        check(ykpiv_set_mgmkey(self._state, c_key))
+        self._cmd.set_arg('-k', key.encode('hex'))
 
     def verify_pin(self, pin):
-        if len(pin) > 8:
-            raise ValueError('PIN must be no more than 8 digits long.')
         buf = create_string_buffer(pin)
         tries = c_int(-1)
         rc = ykpiv_verify(self._state, buf, byref(tries))
@@ -175,24 +173,39 @@ class YkPiv(object):
         self._cmd.set_arg('-P', pin)
 
     def set_pin(self, pin):
-        self._cmd.run('-a', 'change-pin', '-N', pin)
-        self._reset()
-        self.verify_pin(pin)
-        self[ATTR_PIN_CHANGED] = int(time.time())
-
-    @property
-    def pin_last_changed(self):
-        last_changed = self[ATTR_PIN_CHANGED]
-        if last_changed is None:
-            return None
-        return int(last_changed)
+        if len(pin) > 8:
+            raise ValueError('PIN must be no more than 8 characters long.')
+        try:
+            self._cmd.run('-a', 'change-pin', '-N', pin)
+            self._cmd.set_arg('-P', pin)
+        finally:
+            self._reset()
 
     def fetch_object(self, object_id):
         buf = (c_ubyte * 1024)()
         buf_len = c_size_t(sizeof(buf))
 
         check(ykpiv_fetch_object(self._state, object_id, buf, buf_len))
-        return buf[:buf_len.value]
+        return ''.join(map(chr, buf[:buf_len.value]))
 
     def save_object(self, object_id, data):
-        check(ykpiv_save_object(self._state, object_id, data, sizeof(data)))
+        c_data = (c_ubyte * len(data)).from_buffer_copy(data)
+        check(ykpiv_save_object(self._state, object_id, c_data, len(data)))
+
+    def generate(self, slot='9a'):
+        try:
+            return self._cmd.generate(slot)
+        finally:
+            self._reset()
+
+    def create_csr(self, subject, pubkey_pem, slot='9a'):
+        try:
+            return self._cmd.create_csr(subject, pubkey_pem, slot)
+        finally:
+            self._reset()
+
+    def import_cert(self, cert_pem, slot='9a'):
+        try:
+            return self._cmd.import_cert(cert_pem, slot)
+        finally:
+            self._reset()

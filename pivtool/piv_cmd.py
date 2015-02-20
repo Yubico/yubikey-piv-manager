@@ -74,6 +74,13 @@ class YkPivCmd(object):
     def generate(self, slot='9a'):
         return self.run('-s', slot, '-a', 'generate')
 
-    def request_certificate(self, subject, pem, pin='123456', slot='9a'):
-        return self.run('-a', 'verify-pin', '-P', pin, '-s', slot, '-a',
+    def create_csr(self, subject, pem, slot='9a'):
+        if '-P' not in self._base_args:
+            raise ValueError('PIN has not been verified')
+        return self.run('-a', 'verify-pin', '-s', slot, '-a',
                         'request-certificate', '-S', subject, input=pem)
+
+    def import_cert(self, pem, slot='9a'):
+        if '-k' not in self._base_args:
+            raise ValueError('Management key has not been provided')
+        return self.run('-s', slot, '-a', 'import-certificate', input=pem)

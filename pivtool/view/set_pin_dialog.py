@@ -41,10 +41,10 @@ def _pin_field():
 
 class SetPinDialog(QtGui.QDialog):
 
-    def __init__(self, key, parent=None):
+    def __init__(self, controller, parent=None):
         super(SetPinDialog, self).__init__(parent)
 
-        self._key = key
+        self._controller = controller
         self._build_ui()
 
     def _build_ui(self):
@@ -81,9 +81,10 @@ class SetPinDialog(QtGui.QDialog):
             self._ok_btn.setDisabled(True)
 
     def _set_pin(self):
+        old_pin = self._old_pin.text()
+        new_pin = self._new_pin.text()
         try:
-            self._key.verify_pin(self._old_pin.text())
-            self._key.set_pin(self._new_pin.text())
+            self._controller.change_pin(old_pin, new_pin)
             self.accept()
         except ValueError as e:
             print e.message

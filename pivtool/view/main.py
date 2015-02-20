@@ -27,6 +27,7 @@
 from PySide import QtGui
 from PySide import QtCore
 from pivtool.piv import YkPiv
+from pivtool.model.controller import Controller
 from pivtool.storage import settings
 from pivtool import messages as m
 from pivtool.view.status import StatusWidget
@@ -48,8 +49,8 @@ class NoKeyPresent(QtGui.QWidget):
 
     def refresh_key(self):
         try:
-            key = YkPiv()
-            self.parentWidget().setCentralWidget(StatusWidget(key))
+            controller = Controller(YkPiv())
+            self.parentWidget().setCentralWidget(StatusWidget(controller))
         except ValueError as e:
             print e.message
 

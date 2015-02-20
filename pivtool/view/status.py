@@ -33,22 +33,14 @@ from datetime import datetime, timedelta
 
 class StatusWidget(QtGui.QWidget):
 
-    def __init__(self, key):
+    def __init__(self, controller):
         super(StatusWidget, self).__init__()
 
-        self._key = key
+        self._controller = controller
         self._build_ui()
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout()
-
-        name_row = QtGui.QHBoxLayout()
-        self._name = QtGui.QLabel()
-        name_row.addWidget(self._name, 3)
-        name_btn = QtGui.QPushButton(m.change_name)
-        name_btn.clicked.connect(self.change_name)
-        name_row.addWidget(name_btn, 2)
-        layout.addLayout(name_row)
 
         pin_row = QtGui.QHBoxLayout()
         self._pin = QtGui.QLabel()
@@ -72,9 +64,7 @@ class StatusWidget(QtGui.QWidget):
         self._refresh()
 
     def _refresh(self):
-        self._name.setText(m.name_1 % self._key.name)
-
-        last_changed = self._key.pin_last_changed
+        last_changed = self._controller.get_pin_last_changed()
         self._pin.setStyleSheet("QLabel { color: red; }")
         if last_changed is not None:
             last_changed = datetime.fromtimestamp(last_changed)
@@ -87,15 +77,8 @@ class StatusWidget(QtGui.QWidget):
         # TODO: Find expiration of certificate
         self._cert.setText(m.cert_expires_1 % m.unknown)
 
-    def change_name(self):
-        name, ok = QtGui.QInputDialog.getText(
-            self, m.name, m.change_name_desc, text=self._key.name)
-        if ok:
-            self._key.name = name
-            self._refresh()
-
     def change_pin(self):
-        dialog = SetPinDialog(self._key, self)
+        dialog = SetPinDialog(self._controller, self)
         if dialog.exec_():
             QtGui.QMessageBox.information(
                 self, "PIN Changed",
