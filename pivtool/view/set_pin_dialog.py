@@ -28,7 +28,7 @@ from PySide import QtGui, QtCore
 from pivtool import messages as m
 
 
-PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'\d{4,8}'))
+PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'.{6,8}'))
 
 
 def _pin_field():
@@ -54,7 +54,7 @@ class SetPinDialog(QtGui.QDialog):
         layout.addWidget(QtGui.QLabel('Current PIN:'))
         self._old_pin = _pin_field()
         layout.addWidget(self._old_pin)
-        layout.addWidget(QtGui.QLabel('New PIN (4-8 digits):'))
+        layout.addWidget(QtGui.QLabel('New PIN (6-8 characters):'))
         self._new_pin = _pin_field()
         layout.addWidget(self._new_pin)
         layout.addWidget(QtGui.QLabel('Repeat new PIN:'))
@@ -87,4 +87,4 @@ class SetPinDialog(QtGui.QDialog):
             self._controller.change_pin(old_pin, new_pin)
             self.accept()
         except ValueError as e:
-            print e.message
+            print e

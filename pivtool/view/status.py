@@ -86,4 +86,12 @@ class StatusWidget(QtGui.QWidget):
             self._refresh()
 
     def change_cert(self):
-        print "TODO"
+        pin, status = QtGui.QInputDialog.getText(
+            self, 'Enter PIN', 'PIN:', QtGui.QLineEdit.Password)
+        if not status:
+            return
+        self._controller.request_certificate(pin)
+        QtGui.QMessageBox.information(
+            self, "Certificate installed",
+            "A new certificate has been installed.")
+        self._refresh()

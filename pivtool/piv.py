@@ -159,6 +159,8 @@ class YkPiv(object):
         self._cmd.set_arg('-k', key.encode('hex'))
 
     def verify_pin(self, pin):
+        if isinstance(pin, unicode):
+            pin = pin.encode('utf8')
         buf = create_string_buffer(pin)
         tries = c_int(-1)
         rc = ykpiv_verify(self._state, buf, byref(tries))
@@ -173,6 +175,8 @@ class YkPiv(object):
         self._cmd.set_arg('-P', pin)
 
     def set_pin(self, pin):
+        if isinstance(pin, unicode):
+            pin = pin.encode('utf8')
         if len(pin) > 8:
             raise ValueError('PIN must be no more than 8 characters long.')
         try:

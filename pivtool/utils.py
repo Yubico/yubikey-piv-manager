@@ -31,6 +31,8 @@ SALT = 'yubico-piv-tool'
 
 
 def derive_key(password):
+    if isinstance(password, unicode):
+        password = password.encode('utf8')
     return PBKDF2(password, SALT, 24, 1000)
 
 

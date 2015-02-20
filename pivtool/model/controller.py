@@ -34,7 +34,9 @@ YKPIV_OBJ_PIN_TIMESTAMP = 0x5fff00
 
 
 def request_cert_from_ca(csr):
-    return None  # TODO: Call certreq
+    print "csr:", csr
+    raise ValueError('NOT IMPLEMENTED')
+    # TODO: Call certreq
 
 
 class Controller(object):
@@ -74,6 +76,7 @@ class Controller(object):
         self._key.save_object(YKPIV_OBJ_PIN_TIMESTAMP, timestamp)
 
     def request_certificate(self, pin):
+        print "Verify PIN: %r" % pin
         self._key.verify_pin(pin)
         self._authenticate(pin)
         pubkey = self._key.generate()
