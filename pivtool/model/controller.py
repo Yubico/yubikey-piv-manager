@@ -25,12 +25,22 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from pivtool.utils import derive_key, complexity_check
+from pivtool.utils import complexity_check
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Random import get_random_bytes
+from getpass import getuser
 import time
 import struct
 
 
 YKPIV_OBJ_PIN_TIMESTAMP = 0x5fff00
+YKPIV_OBJ_PIN_SALT = 0x5fff01
+
+
+def derive_key(password, salt):
+    if isinstance(password, unicode):
+        password = password.encode('utf8')
+    return PBKDF2(password, salt, 24, 10000)
 
 
 def request_cert_from_ca(csr):
@@ -43,6 +53,10 @@ class Controller(object):
 
     def __init__(self, key):
         self._key = key
+        try:
+            self._salt = self._key.fetch_object(YKPIV_OBJ_PIN_SALT)
+        except ValueError:
+            self._salt = ''
 
     def _authenticate(self, pin=None):
         try:  # Default key
@@ -53,7 +67,7 @@ class Controller(object):
 
         if pin is not None:
             try:  # Key derived from PIN
-                self._key.authenticate(derive_key(pin))
+                self._key.authenticate(derive_key(pin, self._salt))
                 return
             except ValueError:
                 pass
@@ -61,26 +75,29 @@ class Controller(object):
         password = None  # TODO: Ask for password
         if password is None:
             raise ValueError('Unable to authenticate')
-        self._key.authenticate(derive_key(password))
+        self._key.authenticate(derive_key(password, self._salt))
 
     def change_pin(self, old_pin, new_pin):
         if not complexity_check(new_pin):
             raise ValueError('New PIN does not meet complexity rules')
         self._key.verify_pin(old_pin)
         self._authenticate(old_pin)
-        new_key = derive_key(new_pin)
         self._key.set_pin(new_pin)
+
+        salt = get_random_bytes(16)
+        new_key = derive_key(new_pin, salt)
         self._key.set_authentication(new_key)
+        self._key.save_object(YKPIV_OBJ_PIN_SALT, salt)
+        self._salt = salt
 
         timestamp = struct.pack('i', int(time.time()))
         self._key.save_object(YKPIV_OBJ_PIN_TIMESTAMP, timestamp)
 
     def request_certificate(self, pin):
-        print "Verify PIN: %r" % pin
         self._key.verify_pin(pin)
         self._authenticate(pin)
         pubkey = self._key.generate()
-        subject = '/CN=example/O=test/'  # TODO: Insert username
+        subject = '/CN=%s/' % getuser()
         csr = self._key.create_csr(subject, pubkey)
         cert = request_cert_from_ca(csr)
         self._key.import_cert(cert)

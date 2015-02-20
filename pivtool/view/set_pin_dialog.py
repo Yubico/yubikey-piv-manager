@@ -26,6 +26,7 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
+from pivtool.utils import complexity_check
 
 
 PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'.{6,8}'))
@@ -75,7 +76,7 @@ class SetPinDialog(QtGui.QDialog):
 
     def _check_confirm(self):
         new_pin = self._new_pin.text()
-        if len(new_pin) >= 4 and new_pin == self._confirm_pin.text():
+        if complexity_check(new_pin) and new_pin == self._confirm_pin.text():
             self._ok_btn.setDisabled(False)
         else:
             self._ok_btn.setDisabled(True)

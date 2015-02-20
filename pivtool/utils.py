@@ -24,17 +24,6 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from Crypto.Protocol.KDF import PBKDF2
-
-# We use a constant, as there is nowhere to store a per-key salt.
-SALT = 'yubico-piv-tool'
-
-
-def derive_key(password):
-    if isinstance(password, unicode):
-        password = password.encode('utf8')
-    return PBKDF2(password, SALT, 24, 1000)
-
 
 def complexity_check(password):
     # TODO: https://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/504.mspx?mfr=true
