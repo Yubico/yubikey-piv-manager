@@ -29,6 +29,7 @@ from PySide import QtGui
 from pivtool import messages as m
 from pivtool.view.set_pin_dialog import SetPinDialog
 from datetime import datetime, timedelta
+from functools import partial
 
 
 class StatusWidget(QtGui.QWidget):
@@ -90,8 +91,13 @@ class StatusWidget(QtGui.QWidget):
             self, 'Enter PIN', 'PIN:', QtGui.QLineEdit.Password)
         if not status:
             return
-        self._controller.request_certificate(pin)
-        QtGui.QMessageBox.information(
-            self, "Certificate installed",
-            "A new certificate has been installed.")
-        self._refresh()
+
+        worker = QtCore.QCoreApplication.instance().worker
+        def callback(result):
+            self._refresh()
+            QtGui.QMessageBox.information(
+                self, "Certificate installed",
+                "A new certificate has been installed.")
+        worker.post('Requesting cert...',
+                    partial(self._controller.request_certificate, pin),
+                    callback)

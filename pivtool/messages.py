@@ -41,6 +41,7 @@ refresh = "Refresh"
 no_key = "No YubiKey found. Please insert a PIV enabled YubiKey and try again."
 name = "Name"
 name_1 = "Name: %s"
+wait = "Please wait..."
 change_name = "Change name"
 change_name_desc = "Change the name of the device."
 pin_last_changed_1 = "PIN last changed: %s"
@@ -49,6 +50,7 @@ unknown = "Unknown"
 change_cert = "Request certificate"
 cert_expires_1 = "Certificate expires: %s"
 set_pin_desc = "Change yout PIN"
+
 
 def _translate(qt):
     values = globals()

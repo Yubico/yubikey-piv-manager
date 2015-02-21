@@ -30,6 +30,7 @@ import argparse
 import pivtool.qt_resources
 from PySide import QtGui, QtCore
 from pivtool.view.main import MainWindow
+from pivtool.worker import Worker
 from pivtool import __version__ as version, messages as m
 
 
@@ -66,7 +67,7 @@ class PivtoolApplication(QtGui.QApplication):
         args = self._parse_args()
 
         self.window = self._create_window()
-
+        self.worker = Worker(self.window)
 
     def _parse_args(self):
         parser = argparse.ArgumentParser(description="Yubico PIV tool",

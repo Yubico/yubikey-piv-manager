@@ -140,13 +140,13 @@ class YkPiv(object):
         return self._chuid
 
     def set_chuid(self):
-        old_chuid = self._chuid
+        old_chuid = self.chuid
         try:
             self._cmd.run('-a', 'set-chuid')
-            self._read_chuid()
-            rename_group(old_chuid, self.chuid)
         finally:
             self._reset()
+        self._read_chuid()
+        rename_group(old_chuid, self.chuid)
 
     def authenticate(self, key=DEFAULT_KEY):
         c_key = (c_ubyte * len(key)).from_buffer_copy(key)
