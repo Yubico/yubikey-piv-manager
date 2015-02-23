@@ -27,7 +27,7 @@
 from PySide import QtGui
 from PySide import QtCore
 from pivtool.piv import YkPiv
-from pivtool.model.controller import Controller
+from pivtool.controller import Controller
 from pivtool.storage import settings
 from pivtool import messages as m
 from pivtool.view.status import StatusWidget

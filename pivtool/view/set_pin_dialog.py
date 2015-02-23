@@ -50,15 +50,15 @@ class SetPinDialog(QtGui.QDialog):
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout()
-        layout.addWidget(QtGui.QLabel(m.set_pin_desc))
+        layout.addWidget(QtGui.QLabel(m.change_pin_desc))
 
-        layout.addWidget(QtGui.QLabel('Current PIN:'))
+        layout.addWidget(QtGui.QLabel(m.current_pin_label))
         self._old_pin = _pin_field()
         layout.addWidget(self._old_pin)
-        layout.addWidget(QtGui.QLabel('New PIN (6-8 characters):'))
+        layout.addWidget(QtGui.QLabel(m.new_pin_label))
         self._new_pin = _pin_field()
         layout.addWidget(self._new_pin)
-        layout.addWidget(QtGui.QLabel('Repeat new PIN:'))
+        layout.addWidget(QtGui.QLabel(m.verify_pin_label))
         self._confirm_pin = _pin_field()
         layout.addWidget(self._confirm_pin)
 

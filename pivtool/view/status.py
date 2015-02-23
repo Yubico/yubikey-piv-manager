@@ -25,7 +25,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from PySide import QtGui
+from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.view.set_pin_dialog import SetPinDialog
 from datetime import datetime, timedelta
@@ -82,22 +82,25 @@ class StatusWidget(QtGui.QWidget):
         dialog = SetPinDialog(self._controller, self)
         if dialog.exec_():
             QtGui.QMessageBox.information(
-                self, "PIN Changed",
-                "The PIN has been successfully changed.")
+                self, m.pin_changed, m.pin_changed_desc)
             self._refresh()
 
     def change_cert(self):
         pin, status = QtGui.QInputDialog.getText(
-            self, 'Enter PIN', 'PIN:', QtGui.QLineEdit.Password)
+            self, m.enter_pin, m.pin_label, QtGui.QLineEdit.Password)
         if not status:
             return
 
         worker = QtCore.QCoreApplication.instance().worker
-        def callback(result):
-            self._refresh()
-            QtGui.QMessageBox.information(
-                self, "Certificate installed",
-                "A new certificate has been installed.")
-        worker.post('Requesting cert...',
+        worker.post(m.changing_cert,
                     partial(self._controller.request_certificate, pin),
-                    callback)
+                    self._change_cert_callback, True)
+
+    def _change_cert_callback(self, result):
+        if isinstance(result, Exception):
+            QtGui.QMessageBox.warning(self, m.error, str(result))
+            raise result
+
+        self._refresh()
+        QtGui.QMessageBox.information(self, m.cert_installed,
+                                      m.cert_installed_desc)

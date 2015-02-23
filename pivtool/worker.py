@@ -60,22 +60,24 @@ class QtWorker(QtCore.QObject):
         self._work_signal.connect(self.work)
         self._work_done_0.connect(self.busy.reset)
 
-    def post(self, title, fn, callback=None):
+    def post(self, title, fn, callback=None, return_errors=False):
         self.busy.setLabelText(title)
         self.busy.show()
-        self.post_bg(fn, callback)
+        self.post_bg(fn, callback, return_errors)
 
-    def post_bg(self, fn, callback=None):
-        self._work_signal.emit((fn, callback))
+    def post_bg(self, fn, callback=None, return_errors=False):
+        self._work_signal.emit((fn, callback, return_errors))
 
     @QtCore.Slot(tuple)
     def work(self, job):
         QtCore.QThread.msleep(10)  # Needed to yield
-        (fn, callback) = job
+        (fn, callback, return_errors) = job
         try:
             result = fn()
         except Exception as e:
             result = e
+            if not return_errors:
+                def callback(e): raise e
         if callback:
             event = _Event(partial(callback, result))
             QtGui.QApplication.postEvent(self.window, event)
