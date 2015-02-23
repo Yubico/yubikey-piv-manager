@@ -80,20 +80,25 @@ class StatusWidget(QtGui.QWidget):
     def change_pin(self):
         dialog = SetPinDialog(self._controller, self)
         if dialog.exec_():
-            QtGui.QMessageBox.information(
-                self, m.pin_changed, m.pin_changed_desc)
+            QtGui.QMessageBox.information(self, m.pin_changed,
+                                          m.pin_changed_desc)
             self._refresh()
 
     def change_cert(self):
-        pin, status = QtGui.QInputDialog.getText(
-            self, m.enter_pin, m.pin_label, QtGui.QLineEdit.Password)
-        if not status:
-            return
+        res = QtGui.QMessageBox.warning(self, m.change_cert,
+                                        m.change_cert_warning,
+                                        QtGui.QMessageBox.Ok,
+                                        QtGui.QMessageBox.Cancel)
+        if res == QtGui.QMessageBox.Ok:
+            pin, status = QtGui.QInputDialog.getText(
+                self, m.enter_pin, m.pin_label, QtGui.QLineEdit.Password)
+            if not status:
+                return
 
-        worker = QtCore.QCoreApplication.instance().worker
-        worker.post(m.changing_cert,
-                    (self._controller.request_certificate, pin),
-                    self._change_cert_callback, True)
+            worker = QtCore.QCoreApplication.instance().worker
+            worker.post(m.changing_cert,
+                        (self._controller.request_certificate, pin),
+                        self._change_cert_callback, True)
 
     def _change_cert_callback(self, result):
         if isinstance(result, Exception):

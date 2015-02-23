@@ -69,6 +69,10 @@ Your PIN must:
 enter_pin = "Enter PIN"
 unknown = "Unknown"
 change_cert = "Request certificate"
+change_cert_warning = "This will generate a new private key and request a " \
+    "certificate from the Windows CA, overwriting any previously stored " \
+    "credential in slot 9a of your YubiKey's PIV applet. This action cannot " \
+    "be undone."
 changing_cert = "Requesting certificate..."
 cert_expires_1 = "Certificate expires: %s"
 cert_installed = "Certificate installed"

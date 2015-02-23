@@ -31,10 +31,10 @@ from getpass import getuser
 
 # Password must contain characters from three of the following four categories:
 CATEGORIES = [
-    re.compile(r'[A-Z]'),  # English uppercase characters (A through Z)
-    re.compile(r'[a-z]'),  # English lowercase characters (a through z)
-    re.compile(r'[0-9]'),  # Base 10 digits (0 through 9)
-    re.compile(r'\w')      # Nonalphanumeric characters (e.g., !, $, #, %)
+    lambda c: c.isupper(),  # English uppercase characters (A through Z)
+    lambda c: c.islower(),  # English lowercase characters (a through z)
+    re.compile(r'[0-9]').match,  # Base 10 digits (0 through 9)
+    re.compile(r'\W', re.UNICODE).match # Nonalphanumeric characters (e.g., !, $, #, %)
 ]
 
 
@@ -44,7 +44,7 @@ def complexity_check(password):
         return False
 
     # Contain characters from at least 3 groups:
-    groups = sum(map(lambda p: p.search(password) is not None, CATEGORIES))
+    groups = sum(map(lambda c: any(map(c, password)), CATEGORIES))
     if groups < 3:
         return False
 
