@@ -29,7 +29,6 @@ from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.view.set_pin_dialog import SetPinDialog
 from datetime import datetime, timedelta
-from functools import partial
 
 
 class StatusWidget(QtGui.QWidget):
@@ -93,7 +92,7 @@ class StatusWidget(QtGui.QWidget):
 
         worker = QtCore.QCoreApplication.instance().worker
         worker.post(m.changing_cert,
-                    partial(self._controller.request_certificate, pin),
+                    (self._controller.request_certificate, pin),
                     self._change_cert_callback, True)
 
     def _change_cert_callback(self, result):

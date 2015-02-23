@@ -73,7 +73,9 @@ class QtWorker(QtCore.QObject):
         QtCore.QThread.msleep(10)  # Needed to yield
         (fn, callback, return_errors) = job
         try:
-            result = fn()
+            if not isinstance(fn, tuple):
+                fn = (fn,)
+            result = fn[0](*fn[1:])
         except Exception as e:
             result = e
             if not return_errors:

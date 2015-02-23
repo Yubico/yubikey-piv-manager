@@ -52,8 +52,20 @@ pin_label = "PIN:"
 pin_last_changed_1 = "PIN last changed: %s"
 change_pin = "Change PIN"
 change_pin_desc = "Change your PIN"
+changing_pin = "Setting PIN..."
 pin_changed = "PIN changed"
 pin_changed_desc = "The PIN has been successfully changed."
+pin_not_complex = "PIN doesn't meet complexity rules"
+pin_complexity_desc = """
+Your PIN must:
+* Not contain all or part of the user's account name
+* Be at least six characters in length
+* Contain characters from three of the following four categories:
+   * English uppercase characters (A through Z)
+   * English lowercase characters (a through z)
+   * Base 10 digits (0 through 9)
+   * Nonalphanumeric characters (e.g., !, $, #, %)
+"""
 enter_pin = "Enter PIN"
 unknown = "Unknown"
 change_cert = "Request certificate"

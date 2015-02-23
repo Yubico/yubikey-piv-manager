@@ -24,7 +24,32 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
+import re
+from getpass import getuser
+
+# https://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/504.mspx?mfr=true
+
+# Password must contain characters from three of the following four categories:
+CATEGORIES = [
+    re.compile(r'[A-Z]'),  # English uppercase characters (A through Z)
+    re.compile(r'[a-z]'),  # English lowercase characters (a through z)
+    re.compile(r'[0-9]'),  # Base 10 digits (0 through 9)
+    re.compile(r'\w')      # Nonalphanumeric characters (e.g., !, $, #, %)
+]
+
 
 def complexity_check(password):
-    # TODO: https://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/504.mspx?mfr=true
-    return 6 <= len(password) <= 8
+    # Be at least six characters in length
+    if len(password) < 6:
+        return False
+
+    # Contain characters from at least 3 groups:
+    groups = sum(map(lambda p: p.search(password) is not None, CATEGORIES))
+    if groups < 3:
+        return False
+
+    # Not contain all or part of the user's account name
+    if getuser().lower() in password.lower():
+        return False
+
+    return True

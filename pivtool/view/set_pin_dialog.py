@@ -76,7 +76,7 @@ class SetPinDialog(QtGui.QDialog):
 
     def _check_confirm(self):
         new_pin = self._new_pin.text()
-        if complexity_check(new_pin) and new_pin == self._confirm_pin.text():
+        if len(new_pin) > 0 and new_pin == self._confirm_pin.text():
             self._ok_btn.setDisabled(False)
         else:
             self._ok_btn.setDisabled(True)
@@ -84,8 +84,19 @@ class SetPinDialog(QtGui.QDialog):
     def _set_pin(self):
         old_pin = self._old_pin.text()
         new_pin = self._new_pin.text()
-        try:
-            self._controller.change_pin(old_pin, new_pin)
+        if not complexity_check(new_pin):
+            QtGui.QMessageBox.warning(self, m.pin_not_complex,
+                                      m.pin_complexity_desc)
+            return
+
+        worker = QtCore.QCoreApplication.instance().worker
+        worker.post(m.changing_pin,
+                    (self._controller.change_pin, old_pin, new_pin),
+                    self._change_pin_callback, True)
+
+    def _change_pin_callback(self, result):
+        if isinstance(result, Exception):
+            QtGui.QMessageBox.warning(self, m.error, str(result))
+            raise result
+        else:
             self.accept()
-        except ValueError as e:
-            print e
