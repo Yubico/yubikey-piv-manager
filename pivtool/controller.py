@@ -107,7 +107,11 @@ class Controller(object):
 
     def initialize(self, pin):
         self.change_pin('123456', pin)
-        # TODO: Invalidate PUK
+        for i in range(3):
+            try:
+                self._key.set_puk('', '')
+            except ValueError:
+                pass
 
     def change_pin(self, old_pin, new_pin):
         if not complexity_check(new_pin):

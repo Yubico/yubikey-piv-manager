@@ -185,6 +185,27 @@ class YkPiv(object):
         finally:
             self._reset()
 
+    def set_puk(self, puk, new_puk):
+        if isinstance(puk, unicode):
+            puk = puk.encode('utf8')
+        if isinstance(new_puk, unicode):
+            new_puk = new_puk.encode('utf8')
+        if len(new_puk) > 8:
+            raise ValueError('PUK must be no more than 8 characters long.')
+
+        pin = None
+        args = self._cmd._base_args
+        if '-P' in args:
+            pin = args[args.index('-P') + 1]
+
+        try:
+            self._cmd.set_arg('-P', puk)
+            self._cmd.run('-a', 'change-puk', '-N', new_puk)
+        finally:
+            if pin is not None:
+                self._cmd.set_arg('-P', pin)
+            self._reset()
+
     def fetch_object(self, object_id):
         buf = (c_ubyte * 1024)()
         buf_len = c_size_t(sizeof(buf))

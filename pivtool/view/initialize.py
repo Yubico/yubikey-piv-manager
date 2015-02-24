@@ -55,6 +55,7 @@ class InitializeWidget(QtGui.QWidget):
         self._confirm_pin.textChanged.connect(self._check_confirm)
 
         self._ok_btn = QtGui.QPushButton(m.change_pin)
+        self._ok_btn.setAutoDefault(True)
         self._ok_btn.setDisabled(True)
         self._ok_btn.clicked.connect(self._set_pin)
         layout.addWidget(self._ok_btn)
