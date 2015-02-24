@@ -26,6 +26,7 @@
 
 import os
 import sys
+import time
 import argparse
 import pivtool.qt_resources
 from PySide import QtGui, QtCore
@@ -76,17 +77,23 @@ class PivtoolApplication(QtGui.QApplication):
         args = self._parse_args()
 
         if args.check_only:
-            controller = Controller(YkPiv())
-            if controller.is_pin_expired():
-                dialog = SetPinDialog(controller, None, True)
-                if dialog.exec_():
-                    QtGui.QMessageBox.information(None, m.pin_changed,
-                                                  m.pin_changed_desc)
+            self.check_pin()
             self.quit()
             return
 
         self.window.show()
         self.window.raise_()
+
+    def check_pin(self):
+        try:
+            controller = Controller(YkPiv())
+            if controller.is_pin_expired():
+                dialog = SetPinDialog(controller, None, True)
+                if dialog.exec_():
+                    QtGui.QMessageBox.information(None, m.pin_changed,
+                                                    m.pin_changed_desc)
+        except:
+            print "No YubiKey PIV applet detected"
 
     def _parse_args(self):
         parser = argparse.ArgumentParser(description="Yubico PIV tool",
@@ -112,5 +119,7 @@ class PivtoolApplication(QtGui.QApplication):
 def main():
     app = PivtoolApplication(sys.argv)
     status = app.exec_()
+    app.worker.thread().quit()
     app.deleteLater()
+    time.sleep(0.01) # Without this the process sometimes stalls.
     sys.exit(status)
