@@ -33,7 +33,6 @@ from pivtool import messages as m
 from pivtool.view.status import StatusWidget
 from pivtool.view.initialize import InitializeWidget
 from pivtool.view.set_pin_dialog import SetPinDialog
-from pivtool.worker import _Event
 
 
 class NoKeyPresent(QtGui.QWidget):
@@ -76,16 +75,16 @@ class MainWindow(QtGui.QMainWindow):
         self.setMinimumWidth(360)
         self.setMinimumHeight(180)
 
-        no_key = NoKeyPresent()
-        self.setCentralWidget(no_key)
-
         self.resize(settings.value('window/size', QtCore.QSize(0, 0)))
         pos = settings.value('window/pos')
         if pos:
             self.move(pos)
 
-        event = _Event(no_key.refresh_key)
-        QtGui.QApplication.postEvent(self, event)
+    def showEvent(self, event):
+        no_key = NoKeyPresent()
+        self.setCentralWidget(no_key)
+        no_key.refresh_key()
+        event.accept()
 
     def closeEvent(self, event):
         settings.setValue('window/size', self.size())

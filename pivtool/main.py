@@ -32,6 +32,9 @@ from PySide import QtGui, QtCore
 from pivtool.view.main import MainWindow
 from pivtool.worker import Worker
 from pivtool import __version__ as version, messages as m
+from pivtool.piv import YkPiv
+from pivtool.controller import Controller
+from pivtool.view.set_pin_dialog import SetPinDialog
 
 
 if getattr(sys, 'frozen', False):
@@ -64,14 +67,31 @@ class PivtoolApplication(QtGui.QApplication):
         QtCore.QCoreApplication.setOrganizationDomain(m.domain)
         QtCore.QCoreApplication.setApplicationName(m.app_name)
 
-        args = self._parse_args()
-
         self.window = self._create_window()
         self.worker = Worker(self.window)
+
+        QtCore.QTimer.singleShot(0, self.start)
+
+    def start(self):
+        args = self._parse_args()
+
+        if args.check_only:
+            controller = Controller(YkPiv())
+            if controller.is_pin_expired():
+                dialog = SetPinDialog(controller, None, True)
+                if dialog.exec_():
+                    QtGui.QMessageBox.information(None, m.pin_changed,
+                                                  m.pin_changed_desc)
+            self.quit()
+            return
+
+        self.window.show()
+        self.window.raise_()
 
     def _parse_args(self):
         parser = argparse.ArgumentParser(description="Yubico PIV tool",
                                          add_help=True)
+        parser.add_argument('-c', '--check-only', action='store_true')
         return parser.parse_args()
 
     def _set_basedir(self):
@@ -86,8 +106,6 @@ class PivtoolApplication(QtGui.QApplication):
         window = MainWindow()
         window.setWindowTitle(m.win_title_1 % version)
         window.setWindowIcon(QtGui.QIcon(':/pivtool.png'))
-        window.show()
-        window.raise_()
         return window
 
 
