@@ -32,7 +32,7 @@ from pivtool.utils import complexity_check
 PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'.{6,8}'))
 
 
-def _pin_field():
+def pin_field():
     field = QtGui.QLineEdit()
     field.setEchoMode(QtGui.QLineEdit.Password)
     field.setMaxLength(8)
@@ -53,13 +53,13 @@ class SetPinDialog(QtGui.QDialog):
         layout.addWidget(QtGui.QLabel(m.change_pin_desc))
 
         layout.addWidget(QtGui.QLabel(m.current_pin_label))
-        self._old_pin = _pin_field()
+        self._old_pin = pin_field()
         layout.addWidget(self._old_pin)
         layout.addWidget(QtGui.QLabel(m.new_pin_label))
-        self._new_pin = _pin_field()
+        self._new_pin = pin_field()
         layout.addWidget(self._new_pin)
         layout.addWidget(QtGui.QLabel(m.verify_pin_label))
-        self._confirm_pin = _pin_field()
+        self._confirm_pin = pin_field()
         layout.addWidget(self._confirm_pin)
 
         self._new_pin.textChanged.connect(self._check_confirm)
@@ -84,6 +84,11 @@ class SetPinDialog(QtGui.QDialog):
     def _set_pin(self):
         old_pin = self._old_pin.text()
         new_pin = self._new_pin.text()
+        if old_pin == new_pin:  # TODO: Different message
+            QtGui.QMessageBox.warning(self, m.pin_not_changed,
+                                      m.pin_not_changed_desc)
+            return
+
         if not complexity_check(new_pin):
             QtGui.QMessageBox.warning(self, m.pin_not_complex,
                                       m.pin_complexity_desc)

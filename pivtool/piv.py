@@ -213,3 +213,9 @@ class YkPiv(object):
             return self._cmd.import_cert(cert_pem, slot)
         finally:
             self._reset()
+
+    def read_cert(self):
+        try:
+            return self.fetch_object(YKPIV_OBJ_AUTHENTICATION)
+        except ValueError:
+            return None

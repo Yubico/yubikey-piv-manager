@@ -28,6 +28,9 @@ from pivtool.utils import complexity_check
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from getpass import getuser
+from pyasn1.codec import der
+from pyasn1_modules import rfc2459
+from datetime import datetime
 import os
 import tempfile
 import time
@@ -95,6 +98,17 @@ class Controller(object):
             raise ValueError("Unable to authenticate")
         self._key.authenticate(derive_key(password, self._salt))
 
+    def is_uninitialized(self):
+        try:
+            self._key.authenticate()
+            return True
+        except:
+            return False
+
+    def initialize(self, pin):
+        self.change_pin('123456', pin)
+        # TODO: Invalidate PUK
+
     def change_pin(self, old_pin, new_pin):
         if not complexity_check(new_pin):
             raise ValueError("New PIN does not meet complexity rules")
@@ -129,6 +143,22 @@ class Controller(object):
             return None
 
     def get_certificate_expiration(self):
-        # TODO: read certificate
+        cert = self._key.read_cert()
+        if cert is None:
+            return None
         # TODO: if exists, parse ASN1, get expiration.
-        pass
+        cert = der.decoder.decode(cert, asn1Spec=rfc2459.Certificate())[0]
+        expiration = cert['tbsCertificate']['validity']['notAfter']
+        value = expiration.getComponentByName(expiration.getName()).asOctets()
+        if expiration.getName() == 'utcTime':
+            if int(value[0:2]) < 50:
+                value = '20' + value
+            else:
+                value = '19' + value
+        if value.endswith('Z'):
+            value = value[:-1]
+        else:
+            # TODO: +-hhmm
+            pass
+        dt = datetime.strptime(value + 'GMT', '%Y%m%d%H%M%S%Z')
+        return int((dt - datetime.fromtimestamp(0)).total_seconds())

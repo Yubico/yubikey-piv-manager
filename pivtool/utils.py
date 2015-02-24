@@ -44,12 +44,12 @@ def complexity_check(password):
         return False
 
     # Contain characters from at least 3 groups:
-    groups = sum(map(lambda c: any(map(c, password)), CATEGORIES))
-    if groups < 3:
+    if sum(map(lambda c: any(map(c, password)), CATEGORIES)) < 3:
         return False
 
     # Not contain all or part of the user's account name
-    if getuser().lower() in password.lower():
+    parts = [p for p in re.split('\W', getuser().lower()) if len(p) >= 3]
+    if any(map(lambda part: part in password.lower(), parts)):
         return False
 
     return True

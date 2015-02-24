@@ -31,6 +31,7 @@ from pivtool.controller import Controller
 from pivtool.storage import settings
 from pivtool import messages as m
 from pivtool.view.status import StatusWidget
+from pivtool.view.initialize import InitializeWidget
 
 
 class NoKeyPresent(QtGui.QWidget):
@@ -50,7 +51,11 @@ class NoKeyPresent(QtGui.QWidget):
     def refresh_key(self):
         try:
             controller = Controller(YkPiv())
-            self.parentWidget().setCentralWidget(StatusWidget(controller))
+            parent = self.parentWidget()
+            if controller.is_uninitialized():
+                parent.setCentralWidget(InitializeWidget(controller))
+            else:
+                parent.setCentralWidget(StatusWidget(controller))
         except ValueError as e:
             print e.message
 
