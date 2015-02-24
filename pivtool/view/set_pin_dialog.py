@@ -42,15 +42,15 @@ def pin_field():
 
 class SetPinDialog(QtGui.QDialog):
 
-    def __init__(self, controller, parent=None):
+    def __init__(self, controller, parent=None, forced=False):
         super(SetPinDialog, self).__init__(parent)
 
         self._controller = controller
-        self._build_ui()
+        self._build_ui(forced)
 
-    def _build_ui(self):
+    def _build_ui(self, forced):
         layout = QtGui.QVBoxLayout()
-        layout.addWidget(QtGui.QLabel(m.change_pin_desc))
+        layout.addWidget(QtGui.QLabel(m.change_pin_forced_desc))
 
         layout.addWidget(QtGui.QLabel(m.current_pin_label))
         self._old_pin = pin_field()
@@ -65,8 +65,11 @@ class SetPinDialog(QtGui.QDialog):
         self._new_pin.textChanged.connect(self._check_confirm)
         self._confirm_pin.textChanged.connect(self._check_confirm)
 
-        buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
-                                         QtGui.QDialogButtonBox.Cancel)
+        if forced:
+            buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
+        else:
+            buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
+                                             QtGui.QDialogButtonBox.Cancel)
         self._ok_btn = buttons.button(QtGui.QDialogButtonBox.Ok)
         self._ok_btn.setDisabled(True)
         buttons.accepted.connect(self._set_pin)

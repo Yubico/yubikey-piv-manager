@@ -32,6 +32,8 @@ from pivtool.storage import settings
 from pivtool import messages as m
 from pivtool.view.status import StatusWidget
 from pivtool.view.initialize import InitializeWidget
+from pivtool.view.set_pin_dialog import SetPinDialog
+from pivtool.worker import _Event
 
 
 class NoKeyPresent(QtGui.QWidget):
@@ -54,6 +56,12 @@ class NoKeyPresent(QtGui.QWidget):
             parent = self.parentWidget()
             if controller.is_uninitialized():
                 parent.setCentralWidget(InitializeWidget(controller))
+            elif controller.is_pin_expired():
+                dialog = SetPinDialog(controller, self, True)
+                if dialog.exec_():
+                    QtGui.QMessageBox.information(self, m.pin_changed,
+                                                m.pin_changed_desc)
+                parent.setCentralWidget(StatusWidget(controller))
             else:
                 parent.setCentralWidget(StatusWidget(controller))
         except ValueError as e:
@@ -76,7 +84,8 @@ class MainWindow(QtGui.QMainWindow):
         if pos:
             self.move(pos)
 
-        no_key.refresh_key()
+        event = _Event(no_key.refresh_key)
+        QtGui.QApplication.postEvent(self, event)
 
     def closeEvent(self, event):
         settings.setValue('window/size', self.size())

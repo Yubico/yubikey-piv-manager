@@ -53,9 +53,9 @@ class StatusWidget(QtGui.QWidget):
         cert_row = QtGui.QHBoxLayout()
         self._cert = QtGui.QLabel()
         cert_row.addWidget(self._cert, 3)
-        cert_btn = QtGui.QPushButton(m.change_cert)
-        cert_btn.clicked.connect(self.change_cert)
-        cert_row.addWidget(cert_btn, 2)
+        self._cert_btn = QtGui.QPushButton(m.change_cert)
+        self._cert_btn.clicked.connect(self.change_cert)
+        cert_row.addWidget(self._cert_btn, 2)
         layout.addLayout(cert_row)
 
         layout.addStretch()
@@ -65,13 +65,16 @@ class StatusWidget(QtGui.QWidget):
 
     def _refresh(self):
         last_changed = self._controller.get_pin_last_changed()
-        self._pin.setStyleSheet("QLabel { color: red; }")
-        if last_changed is not None:
-            last_changed = datetime.fromtimestamp(last_changed)
-            if datetime.now() - last_changed < timedelta(days=30):
-                self._pin.setStyleSheet("")
+        if self._controller.is_pin_expired():
+            self._cert_btn.setDisabled(True)
+            self._pin.setStyleSheet("QLabel { color: red; }")
         else:
+            self._cert_btn.setDisabled(False)
+            self._pin.setStyleSheet("")
+        if last_changed is None:
             last_changed = m.unknown
+        else:
+            last_changed = datetime.fromtimestamp(last_changed)
         self._pin.setText(m.pin_last_changed_1 % last_changed)
 
         # TODO: Find expiration of certificate

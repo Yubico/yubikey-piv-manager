@@ -30,7 +30,7 @@ from Crypto.Random import get_random_bytes
 from getpass import getuser
 from pyasn1.codec import der
 from pyasn1_modules import rfc2459
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import tempfile
 import time
@@ -145,6 +145,13 @@ class Controller(object):
             return struct.unpack('i', data)[0]
         except ValueError:
             return None
+
+    def is_pin_expired(self):
+        last_changed = self.get_pin_last_changed()
+        if last_changed is None:
+            return True
+        delta = timedelta(seconds=time.time() - last_changed)
+        return delta.days > 30
 
     def get_certificate_expiration(self):
         cert = self._key.read_cert()
