@@ -57,9 +57,15 @@ class YkPivCmd(object):
             self._base_args.extend([opt, value])
 
     def run(self, *args, **kwargs):
+        if subprocess.mswindows:  # Avoid showing console window on Windows
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        else:
+            startupinfo = None
+
         p = subprocess.Popen(self._base_args + list(args),
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                             stderr=subprocess.PIPE, startupinfo=startupinfo)
         out, err = p.communicate(**kwargs)
         check(p.returncode, err)
 
