@@ -28,7 +28,7 @@
 from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.view.set_pin_dialog import SetPinDialog
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class StatusWidget(QtGui.QWidget):
@@ -64,21 +64,31 @@ class StatusWidget(QtGui.QWidget):
         self._refresh()
 
     def _refresh(self):
-        last_changed = self._controller.get_pin_last_changed()
         if self._controller.is_pin_expired():
             self._cert_btn.setDisabled(True)
             self._pin.setStyleSheet("QLabel { color: red; }")
         else:
             self._cert_btn.setDisabled(False)
             self._pin.setStyleSheet("")
+
+        last_changed = self._controller.get_pin_last_changed()
         if last_changed is None:
             last_changed = m.unknown
         else:
             last_changed = datetime.fromtimestamp(last_changed)
         self._pin.setText(m.pin_last_changed_1 % last_changed)
 
-        # TODO: Find expiration of certificate
-        self._cert.setText(m.cert_expires_1 % m.unknown)
+        if self._controller.is_cert_expired():
+            self._cert.setStyleSheet("QLabel { color: red; }")
+        else:
+            self._cert.setStyleSheet("")
+
+        cert_expires = self._controller.get_certificate_expiration()
+        if cert_expires is None:
+            cert_expires = m.unknown
+        else:
+            cert_expires = datetime.fromtimestamp(cert_expires)
+        self._cert.setText(m.cert_expires_1 % cert_expires)
 
     def change_pin(self):
         dialog = SetPinDialog(self._controller, self)

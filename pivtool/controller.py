@@ -28,7 +28,7 @@ from pivtool.utils import complexity_check
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from getpass import getuser
-from pyasn1.codec import der
+from pyasn1.codec.der import decoder
 from pyasn1_modules import rfc2459
 from datetime import datetime, timedelta
 import os
@@ -157,8 +157,9 @@ class Controller(object):
         cert = self._key.read_cert()
         if cert is None:
             return None
-        # TODO: if exists, parse ASN1, get expiration.
-        cert = der.decoder.decode(cert, asn1Spec=rfc2459.Certificate())[0]
+        if cert[0] == chr(0x70):  #TODO: Understand what this is
+            cert = cert[4:]
+        cert = decoder.decode(cert, asn1Spec=rfc2459.Certificate())[0]
         expiration = cert['tbsCertificate']['validity']['notAfter']
         value = expiration.getComponentByName(expiration.getName()).asOctets()
         if expiration.getName() == 'utcTime':
@@ -173,3 +174,10 @@ class Controller(object):
             pass
         dt = datetime.strptime(value + 'GMT', '%Y%m%d%H%M%S%Z')
         return int((dt - datetime.fromtimestamp(0)).total_seconds())
+
+    def is_cert_expired(self):
+        expiry = self.get_certificate_expiration()
+        if expiry is None:
+            return True
+        else:
+            return time.time() < expiry

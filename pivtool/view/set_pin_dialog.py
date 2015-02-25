@@ -87,7 +87,7 @@ class SetPinDialog(QtGui.QDialog):
     def _set_pin(self):
         old_pin = self._old_pin.text()
         new_pin = self._new_pin.text()
-        if old_pin == new_pin:  # TODO: Different message
+        if old_pin == new_pin:
             QtGui.QMessageBox.warning(self, m.pin_not_changed,
                                       m.pin_not_changed_desc)
             return

@@ -207,7 +207,7 @@ class YkPiv(object):
             self._reset()
 
     def fetch_object(self, object_id):
-        buf = (c_ubyte * 1024)()
+        buf = (c_ubyte * 4096)()
         buf_len = c_size_t(sizeof(buf))
 
         check(ykpiv_fetch_object(self._state, object_id, buf, buf_len))
