@@ -54,7 +54,7 @@ def request_cert_from_ca(csr):
             f.write(csr)
             csr_fn = f.name
 
-        with tempfile.NamedTemporaryFile(delete=False) as f:
+        with tempfile.NamedTemporaryFile() as f:
             cert_fn = f.name
 
         p = subprocess.Popen(['certreq', '-submit', '-attrib',
