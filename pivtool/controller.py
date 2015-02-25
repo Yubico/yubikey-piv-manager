@@ -57,12 +57,10 @@ def request_cert_from_ca(csr):
         with tempfile.NamedTemporaryFile() as f:
             cert_fn = f.name
 
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         p = subprocess.Popen(['certreq', '-submit', '-attrib',
                               'CertificateTemplate:User', csr_fn, cert_fn],
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, startupinfo=startupinfo)
+                             stderr=subprocess.PIPE)
         out, err = p.communicate()
 
         with open(cert_fn, 'r') as cert:
