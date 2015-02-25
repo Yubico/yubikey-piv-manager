@@ -56,7 +56,7 @@ change_pin_desc = "Change your PIN"
 change_pin_forced_desc = "Your PIN has expired and must now be changed."
 changing_pin = "Setting PIN..."
 pin_changed = "PIN changed"
-pin_changed_desc = "The PIN has been successfully changed."
+pin_changed_desc = "Your PIN has been successfully changed."
 pin_not_changed = "PIN not changed"
 pin_not_changed_desc = "New PIN must be different from old PIN"
 pin_not_complex = "PIN doesn't meet complexity rules"
@@ -80,7 +80,8 @@ change_cert_warning = "This will generate a new private key and request a " \
 changing_cert = "Requesting certificate..."
 cert_expires_1 = "Certificate expires: %s"
 cert_installed = "Certificate installed"
-cert_installed_desc = "A new certificate has been installed."
+cert_installed_desc = "A new certificate has been installed. You will need " \
+    "to unplug, and re-insert your NEO before it can be used."
 
 
 def _translate(qt):

@@ -168,4 +168,4 @@ class Controller(object):
         if expiry is None:
             return True
         else:
-            return time.time() < expiry
+            return time.time() > expiry

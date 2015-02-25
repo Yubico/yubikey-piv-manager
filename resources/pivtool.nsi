@@ -84,6 +84,7 @@ Section
                    "InternetShortcut" "URL" "http://www.yubico.com/"
 !insertmacro MUI_STARTMENU_WRITE_END
 
+  CreateShortCut "$SMSTARTUP\Yubico PIV PIN-check.lnk" "$INSTDIR\Yubico PIV tool.exe" "-c"
 SectionEnd
 
 ; Uninstaller
@@ -104,6 +105,7 @@ Section "Uninstall"
   Delete "$SMPROGRAMS\$MUI_TEMP\Uninstall.lnk"
   Delete "$SMPROGRAMS\$MUI_TEMP\Yubico Web page.url"
   Delete "$SMPROGRAMS\$MUI_TEMP\Yubico PIV tool.lnk"
+  Delete "$SMSTARTUP\Yubico PIV PIN-check.lnk"
 
   ;Delete empty start menu parent diretories
   StrCpy $MUI_TEMP "$SMPROGRAMS\$MUI_TEMP"
