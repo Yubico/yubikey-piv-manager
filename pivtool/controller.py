@@ -24,7 +24,7 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from pivtool.utils import complexity_check
+from pivtool.utils import complexity_check, test
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from getpass import getuser
@@ -80,18 +80,13 @@ class Controller(object):
             self._salt = ''
 
     def _authenticate(self, pin=None):
-        try:  # Default key
-            self._key.authenticate()
+        if test(self._key.authenticate, catches=ValueError):  # Default key
             return
-        except ValueError:
-            pass
 
         if pin is not None:
-            try:  # Key derived from PIN
-                self._key.authenticate(derive_key(pin, self._salt))
+            if test(self._key.authenticate, derive_key(pin, self._salt),
+                    catches=ValueError):  # Key derived from PIN
                 return
-            except ValueError:
-                pass
 
         password = None  # TODO: Ask for password
         if password is None:
@@ -99,19 +94,12 @@ class Controller(object):
         self._key.authenticate(derive_key(password, self._salt))
 
     def is_uninitialized(self):
-        try:
-            self._key.authenticate()
-            return True
-        except:
-            return False
+        return test(self._key.authenticate)
 
-    def initialize(self, pin):
-        self.change_pin('123456', pin)
+    def initialize(self, pin, old_pin='123456'):
+        self.change_pin(old_pin, pin)
         for i in range(3):
-            try:
-                self._key.set_puk('', '')
-            except ValueError:
-                pass
+            test(self._key.set_puk, '', '', catches=ValueError)
 
     def change_pin(self, old_pin, new_pin):
         if not complexity_check(new_pin):
@@ -157,7 +145,7 @@ class Controller(object):
         cert = self._key.read_cert()
         if cert is None:
             return None
-        if cert[0] == chr(0x70):  #TODO: Understand what this is
+        if cert[0] == chr(0x70):  #TODO: Is this always 0x70?
             cert = cert[4:]
         cert = decoder.decode(cert, asn1Spec=rfc2459.Certificate())[0]
         expiration = cert['tbsCertificate']['validity']['notAfter']
@@ -170,7 +158,7 @@ class Controller(object):
         if value.endswith('Z'):
             value = value[:-1]
         else:
-            # TODO: +-hhmm
+            # TODO: +/-hhmm
             pass
         dt = datetime.strptime(value + 'GMT', '%Y%m%d%H%M%S%Z')
         return int((dt - datetime.fromtimestamp(0)).total_seconds())

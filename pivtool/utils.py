@@ -27,6 +27,16 @@
 import re
 from getpass import getuser
 
+
+def test(fn, *args, **kwargs):
+    e_type = kwargs.pop('catches', Exception)
+    try:
+        fn(*args, **kwargs)
+        return True
+    except e_type:
+        return False
+
+
 # https://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/504.mspx?mfr=true
 
 # Password must contain characters from three of the following four categories:
