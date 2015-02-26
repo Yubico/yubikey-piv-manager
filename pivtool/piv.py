@@ -27,14 +27,14 @@
 from pivtool.libykpiv import *
 from pivtool.piv_cmd import YkPivCmd
 from pivtool.storage import settings
+from pivtool import messages as m
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
 
 
 class DeviceGoneError(Exception):
     def __init__(self):
-        super(DeviceGoneError, self).__init__(
-            'Communication error with the device')
+        super(DeviceGoneError, self).__init__(m.communication_error)
 
 
 class PivError(Exception):
@@ -45,7 +45,7 @@ class PivError(Exception):
         self.message = message
 
     def __str__(self):
-        return "YkPiv error %d: %s" % (self.code, self.message)
+        return m.ykpiv_error_2 % (self.code, self.message)
 
 
 def check(rc):
@@ -186,11 +186,9 @@ class YkPiv(object):
 
         if rc == YKPIV_WRONG_PIN:
             if tries.value > 0:
-                raise ValueError('PIN verification failed. %d tries remaining' %
-                                 tries.value)
+                raise ValueError(m.wrong_pin_tries_1 % tries.value)
             else:
-                raise ValueError('Your PIN has been blocked due to too many '
-                                 'incorrect attempts.')
+                raise ValueError(m.pin_blocked)
         check(rc)
         self._cmd.set_arg('-P', pin)
 
@@ -198,7 +196,7 @@ class YkPiv(object):
         if isinstance(pin, unicode):
             pin = pin.encode('utf8')
         if len(pin) > 8:
-            raise ValueError('PIN must be no more than 8 characters long.')
+            raise ValueError(m.pin_too_long)
         try:
             self._cmd.run('-a', 'change-pin', '-N', pin)
             self._cmd.set_arg('-P', pin)
@@ -211,7 +209,7 @@ class YkPiv(object):
         if isinstance(new_puk, unicode):
             new_puk = new_puk.encode('utf8')
         if len(new_puk) > 8:
-            raise ValueError('PUK must be no more than 8 characters long.')
+            raise ValueError(m.puk_too_long)
 
         pin = None
         args = self._cmd._base_args

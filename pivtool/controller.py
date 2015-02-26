@@ -26,6 +26,7 @@
 
 from pivtool.utils import complexity_check, test
 from pivtool.piv import PivError
+from pivtool import messages as m
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from getpass import getuser
@@ -67,7 +68,7 @@ def request_cert_from_ca(csr):
         with open(cert_fn, 'r') as cert:
             return cert.read()
     except OSError as e:
-        raise ValueError('Error running certreq: %s' % str(e))
+        raise ValueError(m.certreq_error_1 % e)
     finally:
         os.remove(csr_fn)
         if os.path.isfile(cert_fn):
@@ -94,7 +95,7 @@ class Controller(object):
 
         password = None  # TODO: Ask for password
         if password is None:
-            raise ValueError("Unable to authenticate")
+            raise ValueError(m.authentication_error)
         self._key.authenticate(derive_key(password, self._salt))
 
     def is_uninitialized(self):
@@ -102,12 +103,12 @@ class Controller(object):
 
     def initialize(self, pin, old_pin='123456'):
         self.change_pin(old_pin, pin)
-        for i in range(3):
+        for i in range(3):  # Invalidate the PUK
             test(self._key.set_puk, '', '', catches=ValueError)
 
     def change_pin(self, old_pin, new_pin):
         if not complexity_check(new_pin):
-            raise ValueError("New PIN does not meet complexity rules")
+            raise ValueError(m.pin_not_complex)
         self._key.verify_pin(old_pin)
         self._authenticate(old_pin)
         self._key.set_pin(new_pin)

@@ -87,6 +87,5 @@ class InitializeWidget(QtGui.QWidget):
             self.window().reset()
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
-            raise result
         else:
             self.window().setCentralWidget(StatusWidget(self._controller))

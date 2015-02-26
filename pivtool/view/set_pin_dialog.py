@@ -85,23 +85,25 @@ class SetPinDialog(QtGui.QDialog):
         else:
             self._ok_btn.setDisabled(True)
 
+    def _invalid_pin(self, title, reason):
+        QtGui.QMessageBox.warning(self, title, reason)
+        self._new_pin.setText('')
+        self._confirm_pin.setText('')
+        self._new_pin.setFocus()
+
     def _set_pin(self):
         old_pin = self._old_pin.text()
         new_pin = self._new_pin.text()
+
         if old_pin == new_pin:
-            QtGui.QMessageBox.warning(self, m.pin_not_changed,
-                                      m.pin_not_changed_desc)
-            return
-
-        if not complexity_check(new_pin):
-            QtGui.QMessageBox.warning(self, m.pin_not_complex,
-                                      m.pin_complexity_desc)
-            return
-
-        worker = QtCore.QCoreApplication.instance().worker
-        worker.post(m.changing_pin,
-                    (self._controller.change_pin, old_pin, new_pin),
-                    self._change_pin_callback, True)
+            self._invalid_pin(m.pin_not_changed, m.pin_not_changed_desc)
+        elif not complexity_check(new_pin):
+            self._invalid_pin(m.pin_not_complex, m.pin_complexity_desc)
+        else:
+            worker = QtCore.QCoreApplication.instance().worker
+            worker.post(m.changing_pin,
+                        (self._controller.change_pin, old_pin, new_pin),
+                        self._change_pin_callback, True)
 
     def _change_pin_callback(self, result):
         if isinstance(result, DeviceGoneError):
@@ -111,6 +113,5 @@ class SetPinDialog(QtGui.QDialog):
             QtGui.QMessageBox.warning(self, m.error, str(result))
             self._old_pin.setText('')
             self._old_pin.setFocus()
-            raise result
         else:
             self.accept()

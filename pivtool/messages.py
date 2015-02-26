@@ -61,8 +61,8 @@ pin_changed_desc = "Your PIN has been successfully changed."
 pin_not_changed = "PIN not changed"
 pin_not_changed_desc = "New PIN must be different from old PIN"
 pin_not_complex = "PIN doesn't meet complexity rules"
-pin_complexity_desc = """
-Your PIN must:
+pin_complexity_desc = """Your PIN must:
+
 * Not contain all or part of the user's account name
 * Be at least six characters in length
 * Contain characters from three of the following four categories:
@@ -84,6 +84,16 @@ cert_expires_1 = "Certificate expires: %s"
 cert_installed = "Certificate installed"
 cert_installed_desc = "A new certificate has been installed. You will need " \
     "to unplug, and re-insert your NEO before it can be used."
+communication_error = "Communication error with the device"
+ykpiv_error_2 = "YkPiv error %d: %s"
+wrong_pin_tries_1 = "PIN verification failed. %d tries remaining"
+pin_blocked = "Your PIN has been blocked due to too many incorrect attempts."
+pin_too_long = "PIN must be no more than 8 characters long.\n" \
+    "NOTE: Special characters may be counted more than once."
+puk_too_long = "PUK must be no more than 8 characters long.\n" \
+    "NOTE: Special characters may be counted more than once."
+certreq_error_1 = "Error running certreq: %s"
+authentication_error = "Unable to authenticate to device"
 
 
 def _translate(qt):
