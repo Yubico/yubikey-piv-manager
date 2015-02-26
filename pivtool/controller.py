@@ -64,6 +64,8 @@ def request_cert_from_ca(csr):
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
         out, err = p.communicate()
+        if p.returncode != 0:
+            raise ValueError(m.certreq_error_1 % out)
 
         with open(cert_fn, 'r') as cert:
             return cert.read()
