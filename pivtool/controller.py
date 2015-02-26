@@ -25,6 +25,7 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from pivtool.utils import complexity_check, test
+from pivtool.piv import PivError
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from getpass import getuser
@@ -65,9 +66,12 @@ def request_cert_from_ca(csr):
 
         with open(cert_fn, 'r') as cert:
             return cert.read()
+    except OSError as e:
+        raise ValueError('Error running certreq: %s' % str(e))
     finally:
         os.remove(csr_fn)
-        os.remove(cert_fn)
+        if os.path.isfile(cert_fn):
+            os.remove(cert_fn)
 
 
 class Controller(object):
@@ -76,16 +80,16 @@ class Controller(object):
         self._key = key
         try:
             self._salt = self._key.fetch_object(YKPIV_OBJ_PIN_SALT)
-        except ValueError:
+        except PivError:
             self._salt = ''
 
     def _authenticate(self, pin=None):
-        if test(self._key.authenticate, catches=ValueError):  # Default key
+        if test(self._key.authenticate, catches=PivError):  # Default key
             return
 
         if pin is not None:
             if test(self._key.authenticate, derive_key(pin, self._salt),
-                    catches=ValueError):  # Key derived from PIN
+                    catches=PivError):  # Key derived from PIN
                 return
 
         password = None  # TODO: Ask for password
@@ -131,7 +135,7 @@ class Controller(object):
         try:
             data = self._key.fetch_object(YKPIV_OBJ_PIN_TIMESTAMP)
             return struct.unpack('i', data)[0]
-        except ValueError:
+        except PivError:
             return None
 
     def is_pin_expired(self):

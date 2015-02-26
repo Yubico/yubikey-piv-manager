@@ -27,6 +27,7 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
+from pivtool.piv import DeviceGoneError
 from pivtool.view.set_pin_dialog import SetPinDialog
 from datetime import datetime
 
@@ -61,34 +62,43 @@ class StatusWidget(QtGui.QWidget):
         layout.addStretch()
         self.setLayout(layout)
 
+        self.startTimer(2500)
         self._refresh()
 
+    def timerEvent(self, event):
+        if QtGui.QApplication.activeWindow() == self.window():
+            self._refresh()
+
     def _refresh(self):
-        if self._controller.is_pin_expired():
-            self._cert_btn.setDisabled(True)
-            self._pin.setStyleSheet("QLabel { color: red; }")
-        else:
-            self._cert_btn.setDisabled(False)
-            self._pin.setStyleSheet("")
+        try:
+            if self._controller.is_pin_expired():
+                self._cert_btn.setDisabled(True)
+                self._pin.setStyleSheet("QLabel { color: red; }")
+            else:
+                self._cert_btn.setDisabled(False)
+                self._pin.setStyleSheet("")
 
-        last_changed = self._controller.get_pin_last_changed()
-        if last_changed is None:
-            last_changed = m.unknown
-        else:
-            last_changed = datetime.fromtimestamp(last_changed)
-        self._pin.setText(m.pin_last_changed_1 % last_changed)
+            last_changed = self._controller.get_pin_last_changed()
+            if last_changed is None:
+                last_changed = m.unknown
+            else:
+                last_changed = datetime.fromtimestamp(last_changed)
+            self._pin.setText(m.pin_last_changed_1 % last_changed)
 
-        if self._controller.is_cert_expired():
-            self._cert.setStyleSheet("QLabel { color: red; }")
-        else:
-            self._cert.setStyleSheet("")
+            if self._controller.is_cert_expired():
+                self._cert.setStyleSheet("QLabel { color: red; }")
+            else:
+                self._cert.setStyleSheet("")
 
-        cert_expires = self._controller.get_certificate_expiration()
-        if cert_expires is None:
-            self._cert.setText(m.cert_not_loaded)
-        else:
-            cert_expires = datetime.fromtimestamp(cert_expires)
-            self._cert.setText(m.cert_expires_1 % cert_expires)
+            cert_expires = self._controller.get_certificate_expiration()
+            if cert_expires is None:
+                self._cert.setText(m.cert_not_loaded)
+            else:
+                cert_expires = datetime.fromtimestamp(cert_expires)
+                self._cert.setText(m.cert_expires_1 % cert_expires)
+        except DeviceGoneError:
+            self.parentWidget().window().reset()
+
 
     def change_pin(self):
         dialog = SetPinDialog(self._controller, self)
@@ -114,10 +124,12 @@ class StatusWidget(QtGui.QWidget):
                         self._change_cert_callback, True)
 
     def _change_cert_callback(self, result):
-        if isinstance(result, Exception):
+        if isinstance(result, DeviceGoneError):
+            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.parentWidget().window().reset()
+        elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
-            raise result
-
-        self._refresh()
-        QtGui.QMessageBox.information(self, m.cert_installed,
-                                      m.cert_installed_desc)
+        else:
+            QtGui.QMessageBox.information(self, m.cert_installed,
+                                          m.cert_installed_desc)
+            self._refresh()

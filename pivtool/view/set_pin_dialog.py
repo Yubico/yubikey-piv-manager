@@ -26,6 +26,7 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
+from pivtool.piv import DeviceGoneError
 from pivtool.utils import complexity_check
 
 
@@ -103,8 +104,13 @@ class SetPinDialog(QtGui.QDialog):
                     self._change_pin_callback, True)
 
     def _change_pin_callback(self, result):
-        if isinstance(result, Exception):
+        if isinstance(result, DeviceGoneError):
+            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.parentWidget().window().reset()
+        elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
+            self._old_pin.setText('')
+            self._old_pin.setFocus()
             raise result
         else:
             self.accept()

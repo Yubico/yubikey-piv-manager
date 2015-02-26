@@ -26,7 +26,7 @@
 
 from PySide import QtGui
 from PySide import QtCore
-from pivtool.piv import YkPiv
+from pivtool.piv import YkPiv, DeviceGoneError
 from pivtool.controller import Controller
 from pivtool.storage import settings
 from pivtool import messages as m
@@ -52,17 +52,19 @@ class NoKeyPresent(QtGui.QWidget):
     def refresh_key(self):
         try:
             controller = Controller(YkPiv())
-            parent = self.parentWidget()
+            window = self.window()
             if controller.is_uninitialized():
-                parent.setCentralWidget(InitializeWidget(controller))
+                window.setCentralWidget(InitializeWidget(controller))
             elif controller.is_pin_expired():
                 dialog = SetPinDialog(controller, self, True)
                 if dialog.exec_():
                     QtGui.QMessageBox.information(self, m.pin_changed,
-                                                m.pin_changed_desc)
-                parent.setCentralWidget(StatusWidget(controller))
+                                                  m.pin_changed_desc)
+                window.setCentralWidget(StatusWidget(controller))
             else:
-                parent.setCentralWidget(StatusWidget(controller))
+                window.setCentralWidget(StatusWidget(controller))
+        except DeviceGoneError as e:
+            print e.message
         except ValueError as e:
             print e.message
 
@@ -72,7 +74,7 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.setMinimumWidth(360)
+        self.setMinimumWidth(480)
         self.setMinimumHeight(180)
 
         self.resize(settings.value('window/size', QtCore.QSize(0, 0)))
@@ -80,10 +82,13 @@ class MainWindow(QtGui.QMainWindow):
         if pos:
             self.move(pos)
 
-    def showEvent(self, event):
+    def reset(self):
         no_key = NoKeyPresent()
         self.setCentralWidget(no_key)
         no_key.refresh_key()
+
+    def showEvent(self, event):
+        self.reset()
         event.accept()
 
     def closeEvent(self, event):

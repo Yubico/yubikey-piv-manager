@@ -31,9 +31,28 @@ from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
 
 
+class DeviceGoneError(Exception):
+    def __init__(self):
+        super(DeviceGoneError, self).__init__(
+            'Communication error with the device')
+
+
+class PivError(Exception):
+    def __init__(self, code):
+        message = ykpiv_strerror(code)
+        super(PivError, self).__init__(code, message)
+        self.code = code
+        self.message = message
+
+    def __str__(self):
+        return "YkPiv error %d: %s" % (self.code, self.message)
+
+
 def check(rc):
-    if rc != YKPIV_OK:
-        raise ValueError('Error %d: %s' % (rc, ykpiv_strerror(rc)))
+    if rc == YKPIV_PCSC_ERROR:
+        raise DeviceGoneError()
+    elif rc != YKPIV_OK:
+        raise PivError(rc)
 
 
 KEY_LEN = 24
@@ -112,7 +131,7 @@ class YkPiv(object):
         try:
             chuid_data = self.fetch_object(YKPIV_OBJ_CHUID)[29:29+16]
             self._chuid = chuid_data.encode('hex')
-        except ValueError as e:  # No chuid set?
+        except PivError as e:  # No chuid set?
             if first_attempt:
                 self.set_chuid()
                 self._read_chuid(False)
@@ -170,7 +189,8 @@ class YkPiv(object):
                 raise ValueError('PIN verification failed. %d tries remaining' %
                                  tries.value)
             else:
-                raise ValueError('PIN blocked.')
+                raise ValueError('Your PIN has been blocked due to too many '
+                                 'incorrect attempts.')
         check(rc)
         self._cmd.set_arg('-P', pin)
 
@@ -238,5 +258,5 @@ class YkPiv(object):
     def read_cert(self):
         try:
             return self.fetch_object(YKPIV_OBJ_AUTHENTICATION)
-        except ValueError:
+        except PivError:
             return None

@@ -27,6 +27,7 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
+from pivtool.piv import DeviceGoneError
 from pivtool.view.status import StatusWidget
 from pivtool.view.set_pin_dialog import pin_field
 from pivtool.utils import complexity_check
@@ -81,8 +82,11 @@ class InitializeWidget(QtGui.QWidget):
                     self._init_callback, True)
 
     def _init_callback(self, result):
-        if isinstance(result, Exception):
+        if isinstance(result, DeviceGoneError):
+            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.window().reset()
+        elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
             raise result
         else:
-            self.parentWidget().setCentralWidget(StatusWidget(self._controller))
+            self.window().setCentralWidget(StatusWidget(self._controller))

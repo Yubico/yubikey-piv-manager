@@ -27,6 +27,7 @@
 from PySide import QtGui, QtCore
 from functools import partial
 from pivtool import messages as m
+import traceback
 
 
 class _Event(QtCore.QEvent):
@@ -77,6 +78,7 @@ class QtWorker(QtCore.QObject):
                 fn = (fn,)
             result = fn[0](*fn[1:])
         except Exception as e:
+            traceback.print_exc()
             result = e
             if not return_errors:
                 def callback(e): raise e
