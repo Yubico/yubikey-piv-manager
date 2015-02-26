@@ -78,6 +78,7 @@ change_cert_warning = "This will generate a new private key and request a " \
     "credential in slot 9a of your YubiKey's PIV applet. This action cannot " \
     "be undone."
 changing_cert = "Requesting certificate..."
+cert_not_loaded = "No certificate loaded"
 cert_expires_1 = "Certificate expires: %s"
 cert_installed = "Certificate installed"
 cert_installed_desc = "A new certificate has been installed. You will need " \

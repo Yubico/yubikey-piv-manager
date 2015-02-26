@@ -85,10 +85,10 @@ class StatusWidget(QtGui.QWidget):
 
         cert_expires = self._controller.get_certificate_expiration()
         if cert_expires is None:
-            cert_expires = m.unknown
+            self._cert.setText(m.cert_not_loaded)
         else:
             cert_expires = datetime.fromtimestamp(cert_expires)
-        self._cert.setText(m.cert_expires_1 % cert_expires)
+            self._cert.setText(m.cert_expires_1 % cert_expires)
 
     def change_pin(self):
         dialog = SetPinDialog(self._controller, self)
