@@ -26,7 +26,6 @@
 
 from pivtool.libykpiv import *
 from pivtool.piv_cmd import YkPivCmd
-from pivtool.storage import settings
 from pivtool import messages as m
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
@@ -61,24 +60,6 @@ DEFAULT_KEY = '010203040506070801020304050607080102030405060708'.decode('hex')
 ATTR_NAME = "name"
 
 
-def rename_group(old_name, new_name):
-    data = {}
-    try:
-        settings.beginGroup(old_name)
-        for key in settings.allKeys():
-            data[key] = settings.value(key)
-    finally:
-        settings.endGroup()
-    settings.remove(old_name)
-
-    try:
-        settings.beginGroup(new_name)
-        for key in data:
-            settings.setValue(key, data[key])
-    finally:
-        settings.endGroup()
-
-
 class YkPiv(object):
     def __init__(self, verbosity=0, reader=None):
         self._cmd = YkPivCmd(verbosity=verbosity, reader=reader)
@@ -92,28 +73,6 @@ class YkPiv(object):
         self._reader = reader
 
         self._connect()
-
-    def get(self, key, default=None):
-        return settings.value('%s/%s' % (self.chuid, key), default)
-
-    def __setitem__(self, key, value):
-        settings.setValue('%s/%s' % (self.chuid, key), value)
-
-    def __delitem__(self, key):
-        settings.remove('%s/%s' % (self.chuid, key))
-
-    def __getitem__(self, key):
-        return self.get(key)
-
-    def __nonzero__(self):
-        return True
-
-    def __len__(self):
-        try:
-            settings.beginGroup('%s' % self.chuid)
-            return len(settings.childKeys())
-        finally:
-            settings.endGroup()
 
     def _connect(self):
         check(ykpiv_init(byref(self._state), self._verbosity))
@@ -165,7 +124,6 @@ class YkPiv(object):
         finally:
             self._reset()
         self._read_chuid()
-        rename_group(old_chuid, self.chuid)
 
     def authenticate(self, key=DEFAULT_KEY):
         c_key = (c_ubyte * len(key)).from_buffer_copy(key)

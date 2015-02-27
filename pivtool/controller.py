@@ -26,6 +26,7 @@
 
 from pivtool.utils import complexity_check, test
 from pivtool.piv import PivError
+from pivtool.storage import settings
 from pivtool import messages as m
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
@@ -50,7 +51,7 @@ def derive_key(password, salt):
     return PBKDF2(password, salt, 24, 10000)
 
 
-def request_cert_from_ca(csr):
+def request_cert_from_ca(csr, cert_tmpl):
     try:
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(csr)
@@ -60,9 +61,9 @@ def request_cert_from_ca(csr):
             cert_fn = f.name
 
         p = subprocess.Popen(['certreq', '-submit', '-attrib',
-                              'CertificateTemplate:User', csr_fn, cert_fn],
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                              'CertificateTemplate:%s' % cert_tmpl, csr_fn,
+                              cert_fn], stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
         if p.returncode != 0:
             raise ValueError(m.certreq_error_1 % out)
@@ -77,6 +78,24 @@ def request_cert_from_ca(csr):
             os.remove(cert_fn)
 
 
+def rename_group(old_name, new_name):
+    data = {}
+    try:
+        settings.beginGroup(old_name)
+        for key in settings.allKeys():
+            data[key] = settings.value(key)
+    finally:
+        settings.endGroup()
+    settings.remove(old_name)
+
+    try:
+        settings.beginGroup(new_name)
+        for key in data:
+            settings.setValue(key, data[key])
+    finally:
+        settings.endGroup()
+
+
 class Controller(object):
 
     def __init__(self, key):
@@ -85,6 +104,28 @@ class Controller(object):
             self._salt = self._key.fetch_object(YKPIV_OBJ_PIN_SALT)
         except PivError:
             self._salt = ''
+
+    def get(self, key, default=None):
+        return settings.value('%s/%s' % (self._key.chuid, key), default)
+
+    def __setitem__(self, key, value):
+        settings.setValue('%s/%s' % (self._key.chuid, key), value)
+
+    def __delitem__(self, key):
+        settings.remove('%s/%s' % (self._key.chuid, key))
+
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def __nonzero__(self):
+        return True
+
+    def __len__(self):
+        try:
+            settings.beginGroup('%s' % self._key.chuid)
+            return len(settings.childKeys())
+        finally:
+            settings.endGroup()
 
     def _authenticate(self, pin=None):
         if test(self._key.authenticate, catches=PivError):  # Default key
@@ -124,15 +165,17 @@ class Controller(object):
         timestamp = struct.pack('i', int(time.time()))
         self._key.save_object(YKPIV_OBJ_PIN_TIMESTAMP, timestamp)
 
-    def request_certificate(self, pin):
+    def request_certificate(self, pin, cert_tmpl='User'):
         self._key.verify_pin(pin)
         self._authenticate(pin)
         pubkey = self._key.generate()
         subject = '/CN=%s/' % getuser()
         csr = self._key.create_csr(subject, pubkey)
-        cert = request_cert_from_ca(csr)
+        cert = request_cert_from_ca(csr, cert_tmpl)
         self._key.import_cert(cert)
+        old_chuid = self._key.chuid
         self._key.set_chuid()
+        rename_group(old_chuid, self._key.chuid)
 
     def get_pin_last_changed(self):
         try:

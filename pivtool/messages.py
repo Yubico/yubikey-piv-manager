@@ -84,6 +84,7 @@ cert_expires_1 = "Certificate expires: %s"
 cert_installed = "Certificate installed"
 cert_installed_desc = "A new certificate has been installed. You will need " \
     "to unplug, and re-insert your NEO before it can be used."
+cert_tmpl = "Certificate Template"
 communication_error = "Communication error with the device"
 ykpiv_error_2 = "YkPiv error %d: %s"
 wrong_pin_tries_1 = "PIN verification failed. %d tries remaining"

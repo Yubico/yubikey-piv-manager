@@ -99,7 +99,6 @@ class StatusWidget(QtGui.QWidget):
         except DeviceGoneError:
             self.parentWidget().window().reset()
 
-
     def change_pin(self):
         dialog = SetPinDialog(self._controller, self)
         if dialog.exec_():
@@ -118,9 +117,14 @@ class StatusWidget(QtGui.QWidget):
             if not status:
                 return
 
+            cert_tmpl, status = QtGui.QInputDialog.getText(
+                self, m.cert_tmpl, m.cert_tmpl, text="User")
+            if not status:
+                return
+
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(m.changing_cert,
-                        (self._controller.request_certificate, pin),
+                        (self._controller.request_certificate, pin, cert_tmpl),
                         self._change_cert_callback, True)
 
     def _change_cert_callback(self, result):
