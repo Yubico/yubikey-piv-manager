@@ -27,6 +27,7 @@
 from pivtool.libykpiv import *
 from pivtool.piv_cmd import YkPivCmd
 from pivtool import messages as m
+from pivtool.utils import der_read
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
 
@@ -118,7 +119,6 @@ class YkPiv(object):
         return self._chuid
 
     def set_chuid(self):
-        old_chuid = self.chuid
         try:
             self._cmd.run('-a', 'set-chuid')
         finally:
@@ -213,6 +213,11 @@ class YkPiv(object):
 
     def read_cert(self):
         try:
-            return self.fetch_object(YKPIV_OBJ_AUTHENTICATION)
+            data = self.fetch_object(YKPIV_OBJ_AUTHENTICATION)
         except PivError:
             return None
+        cert, rest = der_read(data, 0x70)
+        zipped, rest = der_read(rest, 0x71)
+        if zipped != chr(0):
+            pass  # TODO: cert is compressed, uncompress.
+        return cert

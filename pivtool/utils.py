@@ -63,3 +63,26 @@ def complexity_check(password):
         return False
 
     return True
+
+
+def der_read(der_data, expected_t=None):
+    t = ord(der_data[0])
+    if expected_t is not None and expected_t != t:
+        raise ValueError('Wrong tag. Expected: %x, got: %x' % (expected_t, t))
+    l = ord(der_data[1])
+    offs = 2
+    if l > 0x80:
+        n_bytes = l - 0x80
+        l = b2len(der_data[offs:offs+n_bytes])
+        offs = offs + n_bytes
+    v = der_data[offs:offs+l]
+    rest = der_data[offs+l:]
+    return v, rest
+
+
+def b2len(bs):
+    l = 0
+    for b in bs:
+        l *= 256
+        l += ord(b)
+    return l

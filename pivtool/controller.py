@@ -195,8 +195,6 @@ class Controller(object):
         cert = self._key.read_cert()
         if cert is None:
             return None
-        if cert[0] == chr(0x70):  # TODO: Is this always 0x70?
-            cert = cert[4:]
         cert = decoder.decode(cert, asn1Spec=rfc2459.Certificate())[0]
         expiration = cert['tbsCertificate']['validity']['notAfter']
         value = expiration.getComponentByName(expiration.getName()).asOctets()
