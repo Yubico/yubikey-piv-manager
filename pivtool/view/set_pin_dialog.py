@@ -51,7 +51,8 @@ class SetPinDialog(QtGui.QDialog):
 
     def _build_ui(self, forced):
         layout = QtGui.QVBoxLayout()
-        layout.addWidget(QtGui.QLabel(m.change_pin_forced_desc))
+        layout.addWidget(QtGui.QLabel(m.change_pin_forced_desc if forced \
+                                      else m.change_pin_desc))
 
         layout.addWidget(QtGui.QLabel(m.current_pin_label))
         self._old_pin = pin_field()
