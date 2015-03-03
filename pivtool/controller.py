@@ -175,17 +175,24 @@ class Controller(object):
             if flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY):
                 password = pin
             else:
-                password = None  # TODO: Ask for password
-            key = derive_key(password, self._data[TAG_SALT])
-            self._key.authenticate(key)
-        elif test(self._key.authenticate, catches=PivError):  # Default key
+                password, status = QtGui.QInputDialog.getText(
+                    self._window, m.enter_key, m.key_label,
+                    QtGui.QLineEdit.Password)
+                if not status:
+                    raise ValueError('No password given!')
+            self._key.authenticate(derive_key(password, self._data[TAG_SALT]))
+        elif test(self._key.authenticate, catches=PivError):  # Try default key
             pass
-        else:
-            key_hex = None  # TODO: Ask for key
+        else:  # Ask user
+            hex_key, status = QtGui.QInputDialog.getText(
+                self._window, m.enter_key, m.key_label)
+            if not status:
+                raise ValueError('No key given!')
+
             self._key.authenticate(key_hex.decode('hex'))
 
     def is_uninitialized(self):
-        return test(self._key.authenticate)
+        return not self._data and test(self._key.authenticate)
 
     def initialize(self, pin, puk=None, hex_key=None, old_pin='123456',
                    old_puk='12345678'):
