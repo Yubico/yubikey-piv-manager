@@ -52,9 +52,14 @@ class YkPivCmd(object):
     def set_arg(self, opt, value):
         try:
             index = self._base_args.index(opt)
-            self._base_args[index+1] = value
+            if value is None:
+                del self._base_args[index]
+                del self._base_args[index]
+            else:
+                self._base_args[index+1] = value
         except ValueError:
-            self._base_args.extend([opt, value])
+            if value is not None:
+                self._base_args.extend([opt, value])
 
     def run(self, *args, **kwargs):
         if subprocess.mswindows:  # Avoid showing console window on Windows

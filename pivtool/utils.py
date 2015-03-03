@@ -77,6 +77,8 @@ def der_read(der_data, expected_t=None):
         offs = offs + n_bytes
     v = der_data[offs:offs+l]
     rest = der_data[offs+l:]
+    if expected_t is None:
+        return t, v, rest
     return v, rest
 
 

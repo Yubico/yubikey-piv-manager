@@ -24,7 +24,7 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from pivtool.utils import complexity_check, test
+from pivtool.utils import complexity_check, test, der_read
 from pivtool.piv import PivError
 from pivtool.storage import settings
 from pivtool import messages as m
@@ -41,8 +41,42 @@ import struct
 import subprocess
 
 
-YKPIV_OBJ_PIN_TIMESTAMP = 0x5fff00
-YKPIV_OBJ_PIN_SALT = 0x5fff01
+YKPIV_OBJ_PIVTOOL_DATA = 0x5fff00
+
+TAG_PIVTOOL_DATA = 0x80  # Wrapper for PIV tool data
+TAG_FLAGS_1 = 0x81  # Flags 1
+TAG_SALT = 0x82  # Salt used for management key derivation
+TAG_PIN_TIMESTAMP = 0x83  # When the PIN was last changed
+
+FLAG1_PIN_AS_KEY = 0x01  # Derive management key from PIN
+
+
+def parse_pivtool_data(raw_data):
+    rest, _ = der_read(raw_data, TAG_PIVTOOL_DATA)
+    data = {}
+    while rest:
+        t, v, rest = der_read(rest)
+        data[t] = v
+    return data
+
+
+def serialize_pivtool_data(data):  # NOTE: Doesn't support values > 0x80 bytes.
+    buf = ''.join([chr(k) + chr(len(v)) + v for k, v in data.items()])
+    return chr(TAG_PIVTOOL_DATA) + chr(len(buf)) + buf
+
+
+def flag_set(data, flagkey, flagmask):
+    flags = ord(data.get(flagkey, chr(0)))
+    return bool(flags & flagmask)
+
+
+def set_flag(data, flagkey, flagmask, value=True):
+    flags = ord(data.get(flagkey, chr(0)))
+    if value:
+        flags |= flagmask
+    else:
+        flags &= ~flagmask
+    data[flagkey] = chr(flags)
 
 
 def derive_key(password, salt):
@@ -101,9 +135,10 @@ class Controller(object):
     def __init__(self, key):
         self._key = key
         try:
-            self._salt = self._key.fetch_object(YKPIV_OBJ_PIN_SALT)
+            raw_data = self._key.fetch_object(YKPIV_OBJ_PIVTOOL_DATA)
+            self._data = parse_pivtool_data(raw_data)
         except PivError:
-            self._salt = ''
+            self._data = {}
 
     def get(self, key, default=None):
         return settings.value('%s/%s' % (self._key.chuid, key), default)
@@ -127,27 +162,43 @@ class Controller(object):
         finally:
             settings.endGroup()
 
+    def _save_data(self):
+        raw_data = serialize_pivtool_data(self._data)
+        self._key.save_object(YKPIV_OBJ_PIVTOOL_DATA, raw_data)
+
     def _authenticate(self, pin=None):
-        if test(self._key.authenticate, catches=PivError):  # Default key
-            return
-
-        if pin is not None:
-            if test(self._key.authenticate, derive_key(pin, self._salt),
-                    catches=PivError):  # Key derived from PIN
-                return
-
-        password = None  # TODO: Ask for password
-        if password is None:
-            raise ValueError(m.authentication_error)
-        self._key.authenticate(derive_key(password, self._salt))
+        if TAG_SALT in self._data:
+            if flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY):
+                password = pin
+            else:
+                password = None  # TODO: Ask for password
+            key = derive_key(password, self._data[TAG_SALT])
+            self._key.authenticate(key)
+        elif test(self._key.authenticate, catches=PivError):  # Default key
+            pass
+        else:
+            key_hex = None  # TODO: Ask for key
+            self._key.authenticate(key_hex.decode('hex'))
 
     def is_uninitialized(self):
         return test(self._key.authenticate)
 
-    def initialize(self, pin, old_pin='123456'):
+    def initialize(self, pin, puk=None, hex_key=None, old_pin='123456',
+                   old_puk='12345678'):
+        if hex_key is None:
+            set_flag(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY)
+            puk = None  # PUK is worthless if key is derived from PIN
+        else:
+            set_flag(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY, False)
+            self._key.set_authentication(hex_key.decode('hex'))
+
+        if puk is not None:
+            self._key.set_puk(old_puk, puk)
+        else:
+            for i in range(3):  # Invalidate the PUK
+                test(self._key.set_puk, '', '', catches=ValueError)
+
         self.change_pin(old_pin, pin)
-        for i in range(3):  # Invalidate the PUK
-            test(self._key.set_puk, '', '', catches=ValueError)
 
     def change_pin(self, old_pin, new_pin):
         if not complexity_check(new_pin):
@@ -156,14 +207,15 @@ class Controller(object):
         self._authenticate(old_pin)
         self._key.set_pin(new_pin)
 
-        salt = get_random_bytes(16)
-        new_key = derive_key(new_pin, salt)
-        self._key.set_authentication(new_key)
-        self._key.save_object(YKPIV_OBJ_PIN_SALT, salt)
-        self._salt = salt
+        # Update management key if needed:
+        if flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY):
+            salt = get_random_bytes(16)
+            new_key = derive_key(new_pin, salt)
+            self._key.set_authentication(new_key)
+            self._data[TAG_SALT] = salt
 
-        timestamp = struct.pack('i', int(time.time()))
-        self._key.save_object(YKPIV_OBJ_PIN_TIMESTAMP, timestamp)
+        self._data[TAG_PIN_TIMESTAMP] = struct.pack('i', int(time.time()))
+        self._save_data()
 
     def request_certificate(self, pin, cert_tmpl='User'):
         self._key.verify_pin(pin)
@@ -178,11 +230,10 @@ class Controller(object):
         rename_group(old_chuid, self._key.chuid)
 
     def get_pin_last_changed(self):
-        try:
-            data = self._key.fetch_object(YKPIV_OBJ_PIN_TIMESTAMP)
-            return struct.unpack('i', data)[0]
-        except PivError:
-            return None
+        data = self._data.get(TAG_PIN_TIMESTAMP)
+        if data is not None:
+            data = struct.unpack('i', data)[0]
+        return data
 
     def is_pin_expired(self):
         last_changed = self.get_pin_last_changed()
@@ -191,8 +242,8 @@ class Controller(object):
         delta = timedelta(seconds=time.time() - last_changed)
         return delta.days > 30
 
-    def get_certificate_expiration(self):
-        cert = self._key.read_cert()
+    def get_certificate_expiration(self, slot='9a'):
+        cert = self._key.read_cert(slot)
         if cert is None:
             return None
         cert = decoder.decode(cert, asn1Spec=rfc2459.Certificate())[0]
@@ -211,8 +262,8 @@ class Controller(object):
         dt = datetime.strptime(value + 'GMT', '%Y%m%d%H%M%S%Z')
         return int((dt - datetime.fromtimestamp(0)).total_seconds())
 
-    def is_cert_expired(self):
-        expiry = self.get_certificate_expiration()
+    def is_cert_expired(self, slot='9a'):
+        expiry = self.get_certificate_expiration(slot)
         if expiry is None:
             return True
         else:

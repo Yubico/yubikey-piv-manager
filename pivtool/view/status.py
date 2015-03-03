@@ -118,7 +118,7 @@ class StatusWidget(QtGui.QWidget):
                 return
 
             cert_tmpl, status = QtGui.QInputDialog.getText(
-                self, m.cert_tmpl, m.cert_tmpl, text="User")
+                self, m.cert_tmpl, m.cert_tmpl)
             if not status:
                 return
 

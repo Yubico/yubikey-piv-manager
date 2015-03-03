@@ -101,5 +101,7 @@ ykpiv_fetch_object = define('ykpiv_fetch_object', [
 ykpiv_save_object = define('ykpiv_save_object', [
     POINTER(ykpiv_state), c_int, POINTER(c_ubyte), c_size_t], ykpiv_rc)
 
+ykpiv_check_version = define('ykpiv_check_version', [c_char_p], c_char_p)
+
 
 __all__ = [x for x in globals().keys() if x.lower().startswith('ykpiv')]

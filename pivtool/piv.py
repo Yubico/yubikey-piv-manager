@@ -31,6 +31,8 @@ from pivtool.utils import der_read
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
 
+libversion = ykpiv_check_version(None)
+
 
 class DeviceGoneError(Exception):
     def __init__(self):
@@ -57,6 +59,13 @@ def check(rc):
 
 KEY_LEN = 24
 DEFAULT_KEY = '010203040506070801020304050607080102030405060708'.decode('hex')
+
+CERT_SLOTS = {
+    '9a': YKPIV_OBJ_AUTHENTICATION,
+    '9c': YKPIV_OBJ_SIGNATURE,
+    '9d': YKPIV_OBJ_KEY_MANAGEMENT,
+    '9e': YKPIV_OBJ_CARD_AUTH
+}
 
 ATTR_NAME = "name"
 
@@ -178,8 +187,7 @@ class YkPiv(object):
             self._cmd.set_arg('-P', puk)
             self._cmd.run('-a', 'change-puk', '-N', new_puk)
         finally:
-            if pin is not None:
-                self._cmd.set_arg('-P', pin)
+            self._cmd.set_arg('-P', pin)
             self._reset()
 
     def fetch_object(self, object_id):
@@ -211,9 +219,9 @@ class YkPiv(object):
         finally:
             self._reset()
 
-    def read_cert(self):
+    def read_cert(self, slot):
         try:
-            data = self.fetch_object(YKPIV_OBJ_AUTHENTICATION)
+            data = self.fetch_object(CERT_SLOTS[slot])
         except PivError:
             return None
         cert, rest = der_read(data, 0x70)
