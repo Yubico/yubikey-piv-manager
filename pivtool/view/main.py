@@ -26,13 +26,24 @@
 
 from PySide import QtGui
 from PySide import QtCore
-from pivtool.piv import YkPiv, DeviceGoneError
+from pivtool.piv import YkPiv, DeviceGoneError, libversion as ykpiv_version
 from pivtool.controller import Controller
 from pivtool.storage import settings
-from pivtool import messages as m
+from pivtool import messages as m, __version__ as version
 from pivtool.view.status import StatusWidget
-from pivtool.view.initialize import InitializeWidget
+from pivtool.view.init_dialog import InitDialog
 from pivtool.view.set_pin_dialog import SetPinDialog
+from pivtool.view.settings_dialog import SettingsDialog
+
+
+ABOUT_TEXT = """
+<h2>%s</h2>
+%s<br>
+%s
+<h4>%s</h4>
+%%s
+<br><br>
+""" % (m.app_name, m.copyright, m.version_1, m.libraries)
 
 
 class NoKeyPresent(QtGui.QWidget):
@@ -54,7 +65,9 @@ class NoKeyPresent(QtGui.QWidget):
             controller = Controller(YkPiv())
             window = self.window()
             if controller.is_uninitialized():
-                window.setCentralWidget(InitializeWidget(controller))
+                dialog = InitDialog(controller, self)
+                if dialog.exec_():
+                    self.refresh_key()
             elif controller.is_pin_expired():
                 dialog = SetPinDialog(controller, self, True)
                 if dialog.exec_():
@@ -82,6 +95,19 @@ class MainWindow(QtGui.QMainWindow):
         if pos:
             self.move(pos)
 
+        self._build_menu_bar()
+
+    def _build_menu_bar(self):
+        file_menu = self.menuBar().addMenu(m.menu_file)
+        settings_action = QtGui.QAction(m.action_settings, file_menu)
+        settings_action.triggered.connect(self._settings)
+        file_menu.addAction(settings_action)
+
+        help_menu = self.menuBar().addMenu(m.menu_help)
+        about_action = QtGui.QAction(m.action_about, help_menu)
+        about_action.triggered.connect(self._about)
+        help_menu.addAction(about_action)
+
     def reset(self):
         no_key = NoKeyPresent()
         self.setCentralWidget(no_key)
@@ -98,3 +124,14 @@ class MainWindow(QtGui.QMainWindow):
 
     def customEvent(self, event):
         event.callback()
+
+    def _libversions(self):
+        return 'ykpiv: %s' % ykpiv_version
+
+    def _about(self):
+        QtGui.QMessageBox.about(self, m.about_1 % m.app_name, ABOUT_TEXT %
+                                (version, self._libversions()))
+
+    def _settings(self):
+        dialog = SettingsDialog(self)
+        dialog.exec_()
