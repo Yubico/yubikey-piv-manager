@@ -132,8 +132,9 @@ def rename_group(old_name, new_name):
 
 class Controller(object):
 
-    def __init__(self, key):
+    def __init__(self, key, window=None):
         self._key = key
+        self._window = window
         try:
             self._raw_data = self._key.fetch_object(YKPIV_OBJ_PIVTOOL_DATA)
             self._data = parse_pivtool_data(self._raw_data)

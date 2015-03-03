@@ -62,8 +62,8 @@ class NoKeyPresent(QtGui.QWidget):
 
     def refresh_key(self):
         try:
-            controller = Controller(YkPiv())
             window = self.window()
+            controller = Controller(YkPiv(), window)
             if controller.is_uninitialized():
                 dialog = InitDialog(controller, self)
                 if dialog.exec_():
