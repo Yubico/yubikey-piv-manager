@@ -198,11 +198,16 @@ class Controller(object):
             return
 
         if prompt:
-            # is_pin = flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY)
-            # TODO: Ask for PIN if flag set, password if salt set
-            key, status = QtGui.QInputDialog.getText(
-                self._window, m.enter_password, m.key_label,
-                QtGui.QLineEdit.Password)
+            echo_mode = QtGui.QLineEdit.Password
+            if flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY):
+                title, label = m.enter_pin, m.pin_label
+            elif salt is not None:
+                title, label = m.enter_password, m.password_label
+            else:
+                title, label = m.enter_key, m.key_label
+                echo_mode = QtGui.QLineEdit.Normal
+            key, status = QtGui.QInputDialog.getText(self._window, title, label,
+                                                     echo_mode)
             if not status:
                 raise ValueError('No password given!')
             self.authenticate(key, False)
