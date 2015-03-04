@@ -148,7 +148,15 @@ class Controller(object):
         self._window = window
         try:
             self._raw_data = self._key.fetch_object(YKPIV_OBJ_PIVTOOL_DATA)
-            self._data = parse_pivtool_data(self._raw_data)
+            # TODO: Remove in a few versions...
+            if self._raw_data[0] != TAG_PIVTOOL_DATA:
+                self._data = {}
+                self._data[TAG_PIN_TIMESTAMP] = self._raw_data
+                self._data[TAG_SALT] = self._key.fetch_object(
+                    YKPIV_OBJ_PIVTOOL_DATA + 1)
+            else:
+                # END legacy stuff
+                self._data = parse_pivtool_data(self._raw_data)
         except PivError:
             self._raw_data = ''
             self._data = {}
