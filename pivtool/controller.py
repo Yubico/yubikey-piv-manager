@@ -28,13 +28,14 @@ from pivtool.utils import complexity_check, test, der_read
 from pivtool.piv import PivError
 from pivtool.storage import settings
 from pivtool import messages as m
-from PySide import QtGui
+from PySide import QtGui, QtCore
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from getpass import getuser
 from pyasn1.codec.der import decoder
 from pyasn1_modules import rfc2459
 from datetime import datetime, timedelta
+from functools import partial
 import os
 import re
 import tempfile
@@ -184,10 +185,29 @@ class Controller(object):
     def authenticated(self):
         return self._authenticated
 
-    def authenticate(self, key=None, prompt=False):
+    def ensure_authenticated(self, guess=None):
+        if self.authenticated or test(self.authenticate) or \
+                test(self.authenticate, guess):
+            return
+
+        echo_mode = QtGui.QLineEdit.Password
+        if flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY):
+            title, label = m.enter_pin, m.pin_label
+        elif TAG_SALT in self._data:
+            title, label = m.enter_password, m.password_label
+        else:
+            title, label = m.enter_key, m.key_label
+            echo_mode = QtGui.QLineEdit.Normal
+        key, status = QtGui.QInputDialog.getText(self._window, title, label,
+                                                    echo_mode)
+        if not status:
+            raise ValueError('No password given!')
+        self.authenticate(key)
+
+    def authenticate(self, key=None):
         salt = self._data.get(TAG_SALT)
 
-        if salt is not None:
+        if key is not None and salt is not None:
             key = derive_key(key, salt)
         elif is_hex(key):
             key = key.decode('hex')
@@ -195,24 +215,8 @@ class Controller(object):
         self._authenticated = False
         if test(self._key.authenticate, key, catches=PivError):
             self._authenticated = True
-            return
-
-        if prompt:
-            echo_mode = QtGui.QLineEdit.Password
-            if flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY):
-                title, label = m.enter_pin, m.pin_label
-            elif salt is not None:
-                title, label = m.enter_password, m.password_label
-            else:
-                title, label = m.enter_key, m.key_label
-                echo_mode = QtGui.QLineEdit.Normal
-            key, status = QtGui.QInputDialog.getText(self._window, title, label,
-                                                     echo_mode)
-            if not status:
-                raise ValueError('No password given!')
-            self.authenticate(key, False)
         else:
-            raise ValueError('Invalid key')
+            raise ValueError(m.wrong_key)
 
     def is_uninitialized(self):
         return not self._data and test(self._key.authenticate)
@@ -227,7 +231,7 @@ class Controller(object):
             puk = None  # PUK is worthless if key is derived from PIN
         else:
             set_flag(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY, False)
-            self.set_authentication(None, key, use_password)
+            self.set_authentication(key, use_password)
 
         if puk is not None:
             self._key.set_puk(old_puk, puk)
@@ -237,9 +241,9 @@ class Controller(object):
 
         self.change_pin(old_pin, pin)
 
-    def set_authentication(self, old_key, new_key, use_password=False):
+    def set_authentication(self, new_key, use_password=False):
         if not self.authenticated:
-            self.authenticate(old_key)
+            raise ValueError('Not authenticated')
 
         if use_password:
             salt = get_random_bytes(16)
@@ -255,13 +259,14 @@ class Controller(object):
             raise ValueError(m.pin_not_complex)
 
         self._key.verify_pin(old_pin)
-        if not self.authenticated:
-            self.authenticate(old_pin, True)
+        key_is_pin = flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY)
+        if not self.authenticated and key_is_pin:
+            self.authenticate(old_pin)
         self._key.set_pin(new_pin)
 
         # Update management key if needed:
-        if flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY):
-            self.set_authentication(old_pin, new_pin, True)
+        if key_is_pin:
+            self.set_authentication(new_pin, True)
 
         self._data[TAG_PIN_TIMESTAMP] = struct.pack('i', int(time.time()))
         self._save_data()
@@ -269,7 +274,8 @@ class Controller(object):
     def request_certificate(self, pin, cert_tmpl='User'):
         self._key.verify_pin(pin)
         if not self.authenticated:
-            self.authenticate(pin, True)
+            raise ValueError('Not authenticated')
+
         pubkey = self._key.generate()
         subject = '/CN=%s/' % getuser()
         csr = self._key.create_csr(subject, pubkey)

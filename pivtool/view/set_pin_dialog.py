@@ -28,17 +28,7 @@ from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError
 from pivtool.utils import complexity_check
-
-
-PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'.{6,8}'))
-
-
-def pin_field():
-    field = QtGui.QLineEdit()
-    field.setEchoMode(QtGui.QLineEdit.Password)
-    field.setMaxLength(8)
-    field.setValidator(PIN_VALIDATOR)
-    return field
+from pivtool.view.utils import pin_field
 
 
 class SetPinDialog(QtGui.QDialog):
@@ -51,7 +41,7 @@ class SetPinDialog(QtGui.QDialog):
 
     def _build_ui(self, forced):
         layout = QtGui.QVBoxLayout()
-        layout.addWidget(QtGui.QLabel(m.change_pin_forced_desc if forced \
+        layout.addWidget(QtGui.QLabel(m.change_pin_forced_desc if forced
                                       else m.change_pin_desc))
 
         layout.addWidget(QtGui.QLabel(m.current_pin_label))
@@ -101,10 +91,14 @@ class SetPinDialog(QtGui.QDialog):
         elif not complexity_check(new_pin):
             self._invalid_pin(m.pin_not_complex, m.pin_complexity_desc)
         else:
-            worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.changing_pin,
-                        (self._controller.change_pin, old_pin, new_pin),
-                        self._change_pin_callback, True)
+            try:
+                self._controller.ensure_authenticated()
+                worker = QtCore.QCoreApplication.instance().worker
+                worker.post(m.changing_pin,
+                            (self._controller.change_pin, old_pin, new_pin),
+                            self._change_pin_callback, True)
+            except ValueError as e:
+                QtGui.QMessageBox.warning(self, m.error, str(e))
 
     def _change_pin_callback(self, result):
         if isinstance(result, DeviceGoneError):

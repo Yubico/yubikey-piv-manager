@@ -40,7 +40,6 @@ class _Event(QtCore.QEvent):
 
 class QtWorker(QtCore.QObject):
     _work_signal = QtCore.Signal(tuple)
-    _work_done = QtCore.Signal(object)
     _work_done_0 = QtCore.Signal()
 
     def __init__(self, window):
@@ -67,6 +66,8 @@ class QtWorker(QtCore.QObject):
         self.post_bg(fn, callback, return_errors)
 
     def post_bg(self, fn, callback=None, return_errors=False):
+        if isinstance(fn, tuple):
+            fn = partial(fn[0], *fn[1:])
         self._work_signal.emit((fn, callback, return_errors))
 
     @QtCore.Slot(tuple)
@@ -74,9 +75,7 @@ class QtWorker(QtCore.QObject):
         QtCore.QThread.msleep(10)  # Needed to yield
         (fn, callback, return_errors) = job
         try:
-            if not isinstance(fn, tuple):
-                fn = (fn,)
-            result = fn[0](*fn[1:])
+            result = fn()
         except Exception as e:
             traceback.print_exc()
             result = e

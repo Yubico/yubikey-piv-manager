@@ -27,8 +27,7 @@
 from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError
-from pivtool.view.status import StatusWidget
-from pivtool.view.set_pin_dialog import pin_field
+from pivtool.view.utils import pin_field
 from pivtool.utils import complexity_check
 
 KEY_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'[0-9a-fA-F]{48}'))
@@ -80,29 +79,35 @@ class InitDialog(QtGui.QDialog):
         self._key_type.currentIndexChanged.connect(self._change_key_type)
 
         self._key = QtGui.QLineEdit()
+        self._key.setValidator(KEY_VALIDATOR)
+        self._password = QtGui.QLineEdit()
+        self._password.setEchoMode(QtGui.QLineEdit.Password)
+        self._password_verify = QtGui.QLineEdit()
+        self._password_verify.setEchoMode(QtGui.QLineEdit.Password)
         return self._key_layout
 
     def _change_key_type(self, index):
-        self._key.hide()
-        self._key.setText('')
-        label = self._key_layout.labelForField(self._key)
-        if label is not None:
-            self._key_layout.removeWidget(label)
-            label.hide()
-        self._key_layout.removeWidget(self._key)
+        for widget in [self._key, self._password, self._password_verify]:
+            widget.setText('')
+            label = self._key_layout.labelForField(widget)
+            if label is not None:
+                self._key_layout.removeWidget(label)
+                label.hide()
+            self._key_layout.removeWidget(widget)
+            widget.hide()
         if index == 0:  # PIN
             return
 
         if index == 1:  # Password
-            self._key.setValidator(None)
-            self._key.setEchoMode(QtGui.QLineEdit.Password)
-            self._key_layout.addRow(m.password_label, self._key)
+            self._key_layout.addRow(m.password_label, self._password)
+            self._key_layout.addRow(m.verify_password_label, self._password_verify)
+            self._password.show()
+            self._password_verify.show()
+            self._password.setFocus()
         else:  # Key
-            self._key.setValidator(KEY_VALIDATOR)
-            self._key.setEchoMode(QtGui.QLineEdit.Normal)
             self._key_layout.addRow(m.key_label, self._key)
-        self._key.show()
-        self._key.setFocus()
+            self._key.show()
+            self._key.setFocus()
 
     def _check_confirm(self):
         new_pin = self._new_pin.text()
@@ -119,9 +124,28 @@ class InitDialog(QtGui.QDialog):
                                       m.pin_complexity_desc)
             return
 
-        worker = QtCore.QCoreApplication.instance().worker
-        worker.post(m.initializing, (self._controller.initialize, new_pin),
-                    self._init_callback, True)
+        index = self._key_type.currentIndex()
+        if index == 0:  # PIN
+            key = None
+            use_password = True
+        elif index == 1:  # Password
+            key = self._password.text()
+            use_password = True
+        else:  # Key
+            key = self._key.text()
+            use_password = False
+
+        try:
+            self._controller.ensure_authenticated()
+            worker = QtCore.QCoreApplication.instance().worker
+            worker.post(
+                m.initializing,
+                (self._controller.initialize, new_pin, None, key, use_password),
+                self._init_callback,
+                True
+            )
+        except ValueError as e:
+            QtGui.QMessageBox.warning(self, m.error, str(e))
 
     def _init_callback(self, result):
         if isinstance(result, DeviceGoneError):

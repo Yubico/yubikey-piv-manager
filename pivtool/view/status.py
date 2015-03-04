@@ -117,15 +117,20 @@ class StatusWidget(QtGui.QWidget):
             if not status:
                 return
 
+            # Ask for certificate template
             cert_tmpl, status = QtGui.QInputDialog.getText(
                 self, m.cert_tmpl, m.cert_tmpl)
             if not status:
                 return
 
-            worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.changing_cert,
-                        (self._controller.request_certificate, pin, cert_tmpl),
-                        self._change_cert_callback, True)
+            try:
+                self._controller.ensure_authenticated()
+                worker = QtCore.QCoreApplication.instance().worker
+                worker.post(m.changing_cert, (
+                    self._controller.request_certificate, pin, cert_tmpl),
+                    self._change_cert_callback, True)
+            except ValueError as e:
+                QtGui.QMessageBox.warning(self, m.error, str(e))
 
     def _change_cert_callback(self, result):
         if isinstance(result, DeviceGoneError):
