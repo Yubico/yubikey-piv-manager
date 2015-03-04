@@ -134,8 +134,12 @@ class YkPiv(object):
             self._reset()
         self._read_chuid()
 
-    def authenticate(self, key=DEFAULT_KEY):
-        c_key = (c_ubyte * len(key)).from_buffer_copy(key)
+    def authenticate(self, key=None):
+        if key is None:
+            key = DEFAULT_KEY
+        elif len(key) != KEY_LEN:
+            raise ValueError('Key must be %d bytes' % KEY_LEN)
+        c_key = (c_ubyte * KEY_LEN).from_buffer_copy(key)
         check(ykpiv_authenticate(self._state, c_key))
         self._cmd.set_arg('-k', key.encode('hex'))
 

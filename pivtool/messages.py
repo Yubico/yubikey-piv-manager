@@ -74,6 +74,7 @@ change_pin = "Change PIN"
 change_pin_desc = "Change your PIN"
 change_pin_forced_desc = "Your PIN has expired and must now be changed."
 changing_pin = "Setting PIN..."
+initializing = "Initializing..."
 pin_changed = "PIN changed"
 pin_changed_desc = "Your PIN has been successfully changed."
 pin_not_changed = "PIN not changed"
@@ -90,6 +91,8 @@ pin_complexity_desc = """Your PIN must:
    * Nonalphanumeric characters (e.g., !, $, #, %)
 """
 enter_pin = "Enter PIN"
+enter_passphrae = "Enter management passphrase"
+enter_key = "Enter management key"
 unknown = "Unknown"
 change_cert = "Request certificate"
 change_cert_warning = "This will generate a new private key and request a " \

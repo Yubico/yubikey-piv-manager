@@ -120,7 +120,7 @@ class InitDialog(QtGui.QDialog):
             return
 
         worker = QtCore.QCoreApplication.instance().worker
-        worker.post(m.changing_pin, (self._controller.initialize, new_pin),
+        worker.post(m.initializing, (self._controller.initialize, new_pin),
                     self._init_callback, True)
 
     def _init_callback(self, result):
