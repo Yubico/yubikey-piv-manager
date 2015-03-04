@@ -61,7 +61,7 @@ def parse_pivtool_data(raw_data):
 
 
 def serialize_pivtool_data(data):  # NOTE: Doesn't support values > 0x80 bytes.
-    buf = ''.join([chr(k) + chr(len(v)) + v for k, v in data.items()])
+    buf = ''.join([chr(k) + chr(len(v)) + v for k, v in sorted(data.items())])
     return chr(TAG_PIVTOOL_DATA) + chr(len(buf)) + buf
 
 
@@ -135,9 +135,10 @@ class Controller(object):
     def __init__(self, key):
         self._key = key
         try:
-            raw_data = self._key.fetch_object(YKPIV_OBJ_PIVTOOL_DATA)
-            self._data = parse_pivtool_data(raw_data)
+            self._raw_data = self._key.fetch_object(YKPIV_OBJ_PIVTOOL_DATA)
+            self._data = parse_pivtool_data(self._raw_data)
         except PivError:
+            self._raw_data = ''
             self._data = {}
 
     def get(self, key, default=None):
@@ -164,7 +165,9 @@ class Controller(object):
 
     def _save_data(self):
         raw_data = serialize_pivtool_data(self._data)
-        self._key.save_object(YKPIV_OBJ_PIVTOOL_DATA, raw_data)
+        if raw_data != self._raw_data:
+            self._key.save_object(YKPIV_OBJ_PIVTOOL_DATA, raw_data)
+            self._raw_data = raw_data
 
     def _authenticate(self, pin=None):
         if TAG_SALT in self._data:
