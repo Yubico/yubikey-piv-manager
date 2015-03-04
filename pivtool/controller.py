@@ -201,10 +201,10 @@ class Controller(object):
             # is_pin = flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY)
             # TODO: Ask for PIN if flag set, password if salt set
             key, status = QtGui.QInputDialog.getText(
-                self._window, m.enter_passphrase, m.key_label,
+                self._window, m.enter_password, m.key_label,
                 QtGui.QLineEdit.Password)
             if not status:
-                raise ValueError('No passphrase given!')
+                raise ValueError('No password given!')
             self.authenticate(key, False)
         else:
             raise ValueError('Invalid key')
@@ -212,7 +212,7 @@ class Controller(object):
     def is_uninitialized(self):
         return not self._data and test(self._key.authenticate)
 
-    def initialize(self, pin, puk=None, key=None, use_passphrase=False,
+    def initialize(self, pin, puk=None, key=None, use_password=False,
                    old_pin='123456', old_puk='12345678'):
         if not self.authenticated:
             self.authenticate()
@@ -222,7 +222,7 @@ class Controller(object):
             puk = None  # PUK is worthless if key is derived from PIN
         else:
             set_flag(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY, False)
-            self.set_authentication(None, key, use_passphrase)
+            self.set_authentication(None, key, use_password)
 
         if puk is not None:
             self._key.set_puk(old_puk, puk)
@@ -232,11 +232,11 @@ class Controller(object):
 
         self.change_pin(old_pin, pin)
 
-    def set_authentication(self, old_key, new_key, use_passphrase=False):
+    def set_authentication(self, old_key, new_key, use_password=False):
         if not self.authenticated:
             self.authenticate(old_key)
 
-        if use_passphrase:
+        if use_password:
             salt = get_random_bytes(16)
             new_key = derive_key(new_key, salt)
             self._data[TAG_SALT] = salt

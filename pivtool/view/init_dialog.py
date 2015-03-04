@@ -74,7 +74,7 @@ class InitDialog(QtGui.QDialog):
         self._key_layout.addRow(QtGui.QLabel(HEADER % m.management_key))
         self._key_type = QtGui.QComboBox()
         self._key_type.addItem(m.key_type_pin)
-        self._key_type.addItem(m.key_type_passphrase)
+        self._key_type.addItem(m.key_type_password)
         self._key_type.addItem(m.key_type_key)
         self._key_layout.addRow(m.key_type_label, self._key_type)
         self._key_type.currentIndexChanged.connect(self._change_key_type)
@@ -93,10 +93,10 @@ class InitDialog(QtGui.QDialog):
         if index == 0:  # PIN
             return
 
-        if index == 1:  # Passphrase
+        if index == 1:  # Password
             self._key.setValidator(None)
             self._key.setEchoMode(QtGui.QLineEdit.Password)
-            self._key_layout.addRow(m.passphrase_label, self._key)
+            self._key_layout.addRow(m.password_label, self._key)
         else:  # Key
             self._key.setValidator(KEY_VALIDATOR)
             self._key.setEchoMode(QtGui.QLineEdit.Normal)
