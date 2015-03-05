@@ -52,7 +52,6 @@ class InitDialog(QtGui.QDialog):
 
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
         self._ok_btn = buttons.button(QtGui.QDialogButtonBox.Ok)
-        self._ok_btn.setDisabled(True)
         buttons.accepted.connect(self._initialize)
         layout.addWidget(buttons)
         self.setLayout(layout)
@@ -64,8 +63,6 @@ class InitDialog(QtGui.QDialog):
         layout.addRow(m.new_pin_label, self._new_pin)
         self._confirm_pin = pin_field()
         layout.addRow(m.verify_pin_label, self._confirm_pin)
-        self._new_pin.textChanged.connect(self._check_confirm)
-        self._confirm_pin.textChanged.connect(self._check_confirm)
         return layout
 
     def _build_key_settings(self):
@@ -109,20 +106,54 @@ class InitDialog(QtGui.QDialog):
             self._key.show()
             self._key.setFocus()
 
-    def _check_confirm(self):
+    def _validate_data(self):
+        error = None
+
+        # Check PIN
         new_pin = self._new_pin.text()
-        if len(new_pin) > 0 and new_pin == self._confirm_pin.text():
-            self._ok_btn.setDisabled(False)
-        else:
-            self._ok_btn.setDisabled(True)
+        if not new_pin:
+            error = m.pin_empty
+        elif new_pin != self._confirm_pin.text():
+            error = m.pin_confirm_mismatch
+        elif not complexity_check(new_pin):  # TODO: Only if enforced
+            error = m.pin_complexity_desc
+
+        if error:
+            self._new_pin.setText('')
+            self._confirm_pin.setText('')
+            self._new_pin.setFocus()
+            raise ValueError(error)
+
+        # Check key
+        index = self._key_type.currentIndex()
+        if index == 1:  # Password
+            password = self._password.text()
+            if not password:
+                error = m.password_empty
+            elif password != self._password_verify.text():
+                error = m.password_confirm_mismatch
+            elif not complexity_check(password):  # TODO: Only if enforced
+                error = m.pin_complexity_desc
+
+            if error:
+                self._password.setText('')
+                self._password_verify.setText('')
+                self._password.setFocus()
+                raise ValueError(error)
+        elif index == 2:  # Key
+            if not self._key.hasAcceptableInput():
+                self._key.setText('')
+                self._key.setFocus()
+                raise ValueError(m.key_invalid_desc)
 
     def _initialize(self):
-        new_pin = self._new_pin.text()
-
-        if not complexity_check(new_pin):
-            QtGui.QMessageBox.warning(self, m.pin_not_complex,
-                                      m.pin_complexity_desc)
+        try:
+            self._validate_data()
+        except ValueError as e:
+            QtGui.QMessageBox.warning(self, m.error, str(e))
             return
+
+        new_pin = self._new_pin.text()
 
         index = self._key_type.currentIndex()
         if index == 0:  # PIN
@@ -132,6 +163,10 @@ class InitDialog(QtGui.QDialog):
             key = self._password.text()
             use_password = True
         else:  # Key
+            if not self._key.hasAcceptableInput():
+                QtGui.QMessageBox.warning(
+                    self, m.key_invalid, m.key_invalid_desc)
+                return
             key = self._key.text()
             use_password = False
 

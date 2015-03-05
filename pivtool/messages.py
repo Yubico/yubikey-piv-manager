@@ -66,8 +66,13 @@ initialize = "Please set up your device to get started."
 key_type_pin = "PIN (same as above)"
 key_type_password = "Password"
 key_type_key = "Key"
+key_invalid = "Invalid management key"
+key_invalid_desc = "The key you have provided is invalid. It should contain " \
+    "exactly 48 hexadecimal characters."
 password_label = "Password:"
 verify_password_label = "Repeat password:"
+password_confirm_mismatch = "Passwords don't match!"
+password_empty = "Password is empty"
 management_key = "Management key"
 key_type_label = "Key type:"
 key_label = "Key:"
@@ -80,8 +85,10 @@ pin_changed = "PIN changed"
 pin_changed_desc = "Your PIN has been successfully changed."
 pin_not_changed = "PIN not changed"
 pin_not_changed_desc = "New PIN must be different from old PIN"
+pin_confirm_mismatch = "PINs don't match!"
+pin_empty = "PIN is empty"
 pin_not_complex = "PIN doesn't meet complexity rules"
-pin_complexity_desc = """Your PIN must:
+pin_complexity_desc = """Your PIN/Password must:
 
 * Not contain all or part of the user's account name
 * Be at least six characters in length
@@ -107,6 +114,7 @@ cert_installed = "Certificate installed"
 cert_installed_desc = "A new certificate has been installed. You will need " \
     "to unplug, and re-insert your NEO before it can be used."
 cert_tmpl = "Certificate Template"
+error = "Error"
 wrong_key = "Incorrect management key"
 communication_error = "Communication error with the device"
 ykpiv_error_2 = "YkPiv error %d: %s"

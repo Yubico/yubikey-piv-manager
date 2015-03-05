@@ -69,6 +69,8 @@ class NoKeyPresent(QtGui.QWidget):
                 dialog = InitDialog(controller, self)
                 if dialog.exec_():
                     self.refresh_key()
+                else:
+                    QtCore.QCoreApplication.instance().quit()
             elif controller.is_pin_expired():
                 dialog = SetPinDialog(controller, self, True)
                 if dialog.exec_():
