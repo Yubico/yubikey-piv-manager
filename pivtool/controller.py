@@ -149,7 +149,7 @@ class Controller(object):
         try:
             self._raw_data = self._key.fetch_object(YKPIV_OBJ_PIVTOOL_DATA)
             # TODO: Remove in a few versions...
-            if self._raw_data[0] != TAG_PIVTOOL_DATA:
+            if self._raw_data[0] != chr(TAG_PIVTOOL_DATA):
                 self._data = {}
                 self._data[TAG_PIN_TIMESTAMP] = self._raw_data
                 self._data[TAG_SALT] = self._key.fetch_object(
@@ -287,7 +287,10 @@ class Controller(object):
         pubkey = self._key.generate()
         subject = '/CN=%s/' % getuser()
         csr = self._key.create_csr(subject, pubkey)
-        cert = request_cert_from_ca(csr, cert_tmpl)
+        try:
+            cert = request_cert_from_ca(csr, cert_tmpl)
+        except ValueError as e:
+            raise ValueError(m.certreq_error)
         self._key.import_cert(cert)
         old_chuid = self._key.chuid
         self._key.set_chuid()

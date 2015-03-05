@@ -54,11 +54,12 @@ class NoKeyPresent(QtGui.QWidget):
         layout = QtGui.QVBoxLayout()
         layout.addWidget(QtGui.QLabel(m.no_key))
 
-        self._refresh_btn = QtGui.QPushButton(m.refresh)
-        self._refresh_btn.clicked.connect(self.refresh_key)
-        layout.addWidget(self._refresh_btn)
-
         self.setLayout(layout)
+        self.startTimer(1500)
+
+    def timerEvent(self, event):
+        if QtGui.QApplication.activeWindow() == self.window():
+            self.refresh_key()
 
     def refresh_key(self):
         try:

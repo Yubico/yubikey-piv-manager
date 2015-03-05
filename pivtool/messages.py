@@ -49,7 +49,7 @@ ok = "OK"
 cancel = "Cancel"
 error = "Error"
 refresh = "Refresh"
-no_key = "No YubiKey found. Please insert a PIV enabled YubiKey and try again."
+no_key = "No YubiKey found. Please insert a PIV enabled YubiKey..."
 name = "Name"
 name_1 = "Name: %s"
 wait = "Please wait..."
@@ -116,6 +116,7 @@ pin_too_long = "PIN must be no more than 8 characters long.\n" \
     "NOTE: Special characters may be counted more than once."
 puk_too_long = "PUK must be no more than 8 characters long.\n" \
     "NOTE: Special characters may be counted more than once."
+certreq_error = "There was an error requesting a certificate."
 certreq_error_1 = "Error running certreq: %s"
 authentication_error = "Unable to authenticate to device"
 
