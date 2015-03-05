@@ -154,6 +154,7 @@ class Controller(object):
                 self._data[TAG_PIN_TIMESTAMP] = self._raw_data
                 self._data[TAG_SALT] = self._key.fetch_object(
                     YKPIV_OBJ_PIVTOOL_DATA + 1)
+                set_flag(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY)
             else:
                 # END legacy stuff
                 self._data = parse_pivtool_data(self._raw_data)
