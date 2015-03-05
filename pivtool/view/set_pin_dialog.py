@@ -92,7 +92,7 @@ class SetPinDialog(QtGui.QDialog):
             self._invalid_pin(m.pin_not_complex, m.pin_complexity_desc)
         else:
             try:
-                self._controller.ensure_authenticated()
+                self._controller.ensure_authenticated(old_pin)
                 worker = QtCore.QCoreApplication.instance().worker
                 worker.post(m.changing_pin,
                             (self._controller.change_pin, old_pin, new_pin),
