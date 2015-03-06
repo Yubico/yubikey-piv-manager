@@ -144,6 +144,8 @@ class YkPiv(object):
         self._cmd.set_arg('-k', key.encode('hex'))
 
     def set_authentication(self, key):
+        if len(key) != KEY_LEN:
+            raise ValueError('Key must be %d bytes' % KEY_LEN)
         c_key = (c_ubyte * len(key)).from_buffer_copy(key)
         check(ykpiv_set_mgmkey(self._state, c_key))
         self._cmd.set_arg('-k', key.encode('hex'))

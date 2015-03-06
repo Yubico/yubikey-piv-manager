@@ -28,14 +28,13 @@ from pivtool.utils import complexity_check, test, der_read
 from pivtool.piv import PivError
 from pivtool.storage import settings
 from pivtool import messages as m
-from PySide import QtGui, QtCore
+from PySide import QtGui
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from getpass import getuser
 from pyasn1.codec.der import decoder
 from pyasn1_modules import rfc2459
 from datetime import datetime, timedelta
-from functools import partial
 import os
 import re
 import tempfile
@@ -51,7 +50,7 @@ TAG_FLAGS_1 = 0x81  # Flags 1
 TAG_SALT = 0x82  # Salt used for management key derivation
 TAG_PIN_TIMESTAMP = 0x83  # When the PIN was last changed
 
-FLAG1_PIN_AS_KEY = 0x01  # Derive management key from PIN
+FLAG1_PIN_AS_KEY = 0x01  # Derive management key from PIN (UNUSED)
 
 
 def parse_pivtool_data(raw_data):
@@ -82,12 +81,12 @@ def set_flag(data, flagkey, flagmask, value=True):
     data[flagkey] = chr(flags)
 
 
-def derive_key(password, salt):
-    if password is None:
-        raise ValueError('Password must not be None!')
-    if isinstance(password, unicode):
-        password = password.encode('utf8')
-    return PBKDF2(password, salt, 24, 10000)
+def derive_key(pin, salt):
+    if pin is None:
+        raise ValueError('PIN must not be None!')
+    if isinstance(pin, unicode):
+        pin = pin.encode('utf8')
+    return PBKDF2(pin, salt, 24, 10000)
 
 
 def request_cert_from_ca(csr, cert_tmpl):
@@ -154,7 +153,6 @@ class Controller(object):
                 self._data[TAG_PIN_TIMESTAMP] = self._raw_data
                 self._data[TAG_SALT] = self._key.fetch_object(
                     YKPIV_OBJ_PIVTOOL_DATA + 1)
-                set_flag(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY)
             else:
                 # END legacy stuff
                 self._data = parse_pivtool_data(self._raw_data)
@@ -194,24 +192,23 @@ class Controller(object):
     def authenticated(self):
         return self._authenticated
 
-    def ensure_authenticated(self, guess=None):
-        if self.authenticated or test(self.authenticate) or \
-                test(self.authenticate, guess):
+    def ensure_authenticated(self, pin=None):
+        if self.authenticated or test(self.authenticate):
             return
 
-        echo_mode = QtGui.QLineEdit.Password
-        if flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY):
+        if TAG_SALT in self._data:
             title, label = m.enter_pin, m.pin_label
-        elif TAG_SALT in self._data:
-            title, label = m.enter_password, m.password_label
+            echo_mode = QtGui.QLineEdit.Password
         else:
             title, label = m.enter_key, m.key_label
             echo_mode = QtGui.QLineEdit.Normal
-        key, status = QtGui.QInputDialog.getText(self._window, title, label,
-                                                    echo_mode)
-        if not status:
-            raise ValueError('No password given!')
-        self.authenticate(key)
+
+        key = pin
+        while not test(self.authenticate, key):
+            key, status = QtGui.QInputDialog.getText(self._window, title, label,
+                                                     echo_mode)
+            if not status:
+                raise ValueError('No key given!')
 
     def authenticate(self, key=None):
         salt = self._data.get(TAG_SALT)
@@ -230,17 +227,15 @@ class Controller(object):
     def is_uninitialized(self):
         return not self._data and test(self._key.authenticate)
 
-    def initialize(self, pin, puk=None, key=None, use_password=False,
-                   old_pin='123456', old_puk='12345678'):
+    def initialize(self, pin, puk=None, key=None, old_pin='123456',
+                   old_puk='12345678'):
         if not self.authenticated:
             self.authenticate()
 
         if key is None:  # Derive key from PIN
-            set_flag(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY)
             puk = None  # PUK is worthless if key is derived from PIN
         else:
-            set_flag(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY, False)
-            self.set_authentication(key, use_password)
+            self.set_authentication(key)
 
         if puk is not None:
             self._key.set_puk(old_puk, puk)
@@ -250,32 +245,34 @@ class Controller(object):
 
         self.change_pin(old_pin, pin)
 
-    def set_authentication(self, new_key, use_password=False):
+    def set_authentication(self, new_key):
         if not self.authenticated:
             raise ValueError('Not authenticated')
 
-        if use_password:
-            salt = get_random_bytes(16)
-            new_key = derive_key(new_key, salt)
-            self._data[TAG_SALT] = salt
-            self._save_data()
-        elif is_hex(new_key):
+        if is_hex(new_key):
             new_key = new_key.decode('hex')
+
         self._key.set_authentication(new_key)
+        if TAG_SALT in self._data:
+            del self._data[TAG_SALT]
+            self._save_data()
 
     def change_pin(self, old_pin, new_pin):
         if not complexity_check(new_pin):  # TODO: If policy enforced.
             raise ValueError(m.pin_not_complex)
 
         self._key.verify_pin(old_pin)
-        key_is_pin = flag_set(self._data, TAG_FLAGS_1, FLAG1_PIN_AS_KEY)
+        key_is_pin = self._data.get(TAG_SALT)
         if not self.authenticated and key_is_pin:
             self.authenticate(old_pin)
         self._key.set_pin(new_pin)
 
         # Update management key if needed:
         if key_is_pin:
-            self.set_authentication(new_pin, True)
+            salt = get_random_bytes(16)
+            key = derive_key(new_pin, salt)
+            self._data[TAG_SALT] = salt
+            self._key.set_authentication(key)
 
         self._data[TAG_PIN_TIMESTAMP] = struct.pack('i', int(time.time()))
         self._save_data()
@@ -290,7 +287,7 @@ class Controller(object):
         csr = self._key.create_csr(subject, pubkey)
         try:
             cert = request_cert_from_ca(csr, cert_tmpl)
-        except ValueError as e:
+        except ValueError:
             raise ValueError(m.certreq_error)
         self._key.import_cert(cert)
         old_chuid = self._key.chuid

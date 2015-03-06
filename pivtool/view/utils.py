@@ -25,10 +25,11 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from PySide import QtGui, QtCore
-from pivtool import messages as m
 
+HEADER = "<br><b>%s</b>"
 
 PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'.{6,8}'))
+KEY_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'[0-9a-fA-F]{48}'))
 
 
 def pin_field():
@@ -37,5 +38,3 @@ def pin_field():
     field.setMaxLength(8)
     field.setValidator(PIN_VALIDATOR)
     return field
-
-
