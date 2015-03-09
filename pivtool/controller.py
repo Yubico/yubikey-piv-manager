@@ -26,7 +26,7 @@
 
 from pivtool.utils import complexity_check, test, der_read
 from pivtool.piv import PivError
-from pivtool.storage import Settings
+from pivtool.storage import get_settings
 from pivtool import messages as m
 from PySide import QtGui
 from Crypto.Protocol.KDF import PBKDF2
@@ -125,7 +125,7 @@ class Controller(object):
 
     def __init__(self, key, window=None):
         self._key = key
-        self._settings = Settings(key.chuid)
+        self._settings = get_settings(key.chuid)
         self._authenticated = False
         self._window = window
         try:

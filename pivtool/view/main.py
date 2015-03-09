@@ -28,7 +28,7 @@ from PySide import QtGui
 from PySide import QtCore
 from pivtool.piv import YkPiv, DeviceGoneError, libversion as ykpiv_version
 from pivtool.controller import Controller
-from pivtool.storage import Settings
+from pivtool.storage import get_settings
 from pivtool import messages as m, __version__ as version
 from pivtool.view.status import StatusWidget
 from pivtool.view.init_dialog import InitDialog
@@ -90,7 +90,7 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self._settings = Settings('window')
+        self._settings = get_settings('window')
 
         self.setMinimumWidth(480)
         self.setMinimumHeight(180)

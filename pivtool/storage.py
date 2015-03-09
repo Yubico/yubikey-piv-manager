@@ -30,93 +30,89 @@ from collections import MutableMapping
 
 __all__ = [
     'CONFIG_HOME',
-    'Settings',
+    'get_settings',
 ]
 
 CONFIG_HOME = os.path.join(os.path.expanduser('~'), '.pivtool')
-
 _settings = QtCore.QSettings(os.path.join(CONFIG_HOME, 'settings.ini'),
                              QtCore.QSettings.IniFormat)
+_mutex = QtCore.QMutex(QtCore.QMutex.Recursive)
 
 
-class SettingsLock(QtCore.QMutex):
-    def __init__(self):
-        super(SettingsLock, self).__init__(QtCore.QMutex.Recursive)
-        self._in_group = False
-
-    def with_lock(self, func):
-        def wrapped_f(caller, *args, **kwargs):
-            try:
-                self.lock()
-                group = caller._group
-                if not self._in_group and group is not None:
-                    try:
-                        self._in_group = True
-                        _settings.beginGroup(group)
-                        return func(caller, *args, **kwargs)
-                    finally:
-                        _settings.endGroup()
-                        self._in_group = False
-                return func(caller, *args, **kwargs)
-            finally:
-                self.unlock()
-        return wrapped_f
+def get_settings(group):
+    return PySettings(_settings, _mutex, group)
 
 
-_lock = SettingsLock()
-
-
-class Settings(MutableMapping):
-
-    def __init__(self, group=None):
-        super(Settings, self).__init__()
+class SettingsGroup(object):
+    def __init__(self, settings, mutex, group):
+        self._settings = settings
+        self._mutex = mutex
         self._group = group
 
-    @_lock.with_lock
+    def __getattr__(self, method_name):
+        if hasattr(self._settings, method_name):
+            fn = getattr(self._settings, method_name)
+
+            def wrapped(*args, **kwargs):
+                try:
+                    self._mutex.lock()
+                    self._settings.beginGroup(self._group)
+                    return fn(*args, **kwargs)
+                finally:
+                    self._settings.endGroup()
+                    self._mutex.unlock()
+            return wrapped
+
+    def rename(self, new_name):
+        data = dict((key, self.value(key)) for key in self.childKeys())
+        self.remove('')
+        self._group = new_name
+        for k, v in data.items():
+            self.setValue(k, v)
+
+    def __repr__(self):
+        return 'Group(%s)' % self._group
+
+
+class PySettings(MutableMapping):
+
+    def __init__(self, qsettings, mutex, group):
+        self._settings = SettingsGroup(qsettings, mutex, group)
+
     def get(self, key, default=None):
-        return _settings.value(key, default)
+        return self._settings.value(key, default)
 
     def __getitem__(self, key):
         return self.get(key)
 
-    @_lock.with_lock
     def __setitem__(self, key, value):
-        _settings.setValue(key, value)
+        self._settings.setValue(key, value)
 
-    @_lock.with_lock
     def __delitem__(self, key):
-        _settings.remove(key)
+        self._settings.remove(key)
 
-    @_lock.with_lock
     def __iter__(self):
-        return self.keys().__iter__()
+        for key in self.keys():
+            yield key
 
-    @_lock.with_lock
     def __len__(self):
-        return len(_settings.childKeys())
+        return len(self._settings.childKeys())
 
-    @_lock.with_lock
     def __contains__(self, key):
-        return _settings.contains(key)
+        return self._settings.contains(key)
 
-    @_lock.with_lock
     def keys(self):
-        return _settings.childKeys()
+        return self._settings.childKeys()
 
-    @_lock.with_lock
     def update(self, data):
         for key, value in data.items():
             self[key] = value
 
     def clear(self):
-        _settings.remove(self._group)
+        self._settings.remove('')
 
     def rename(self, new_name):
-        data = dict(self)
-        self.clear()
-
-        self._group = new_name
-        self.update(data)
+        self._settings.rename(new_name)
 
     def __repr__(self):
-        return 'Settings(%s): %s' % (self._group, dict(self))
+        return 'Settings(%s): %s' % (self._settings, dict(self))
