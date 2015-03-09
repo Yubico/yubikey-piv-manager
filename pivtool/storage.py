@@ -25,6 +25,7 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 import os
+from pivtool import messages as m
 from PySide import QtCore
 from collections import MutableMapping
 
@@ -40,7 +41,11 @@ _mutex = QtCore.QMutex(QtCore.QMutex.Recursive)
 
 
 def get_settings(group):
-    return PySettings(_settings, _mutex, group)
+    settings_group = SettingsGroup(_settings, _mutex, group)
+    if group == 'settings':
+        master = QtCore.QSettings(m.organization, m.app_name)
+        return PySettings(SettingsOverlay(master, settings_group))
+    return PySettings(settings_group)
 
 
 class SettingsGroup(object):
@@ -74,10 +79,36 @@ class SettingsGroup(object):
         return 'Group(%s)' % self._group
 
 
+class SettingsOverlay(object):
+    def __init__(self, master, overlay):
+        self._master = master
+        self._overlay = overlay
+
+    def __getattr__(self, method_name):
+        return getattr(self._overlay, method_name)
+
+    def rename(self, new_name):
+        raise NotImplementedError()
+
+    def value(self, key, default=None):
+        """Give preference to master"""
+        return self._master.value(key, self._overlay.value(key, default))
+
+    def childKeys(self):
+        """Combine keys of master and overlay"""
+        return list(set(self._master.childKeys() + self._overlay.childKeys()))
+
+    def __repr__(self):
+        return 'Overlay(%s)' % self._group
+
+
 class PySettings(MutableMapping):
 
-    def __init__(self, qsettings, mutex, group):
-        self._settings = SettingsGroup(qsettings, mutex, group)
+    def __init__(self, settings):
+        self._settings = settings
+
+    def __getattr__(self, method_name):
+        return getattr(self._settings, method_name)
 
     def get(self, key, default=None):
         return self._settings.value(key, default)
@@ -110,9 +141,6 @@ class PySettings(MutableMapping):
 
     def clear(self):
         self._settings.remove('')
-
-    def rename(self, new_name):
-        self._settings.rename(new_name)
 
     def __repr__(self):
         return 'Settings(%s): %s' % (self._settings, dict(self))
