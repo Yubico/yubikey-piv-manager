@@ -26,7 +26,7 @@
 
 from pivtool.utils import complexity_check, test, der_read
 from pivtool.piv import PivError
-from pivtool.storage import settings
+from pivtool.storage import Settings
 from pivtool import messages as m
 from PySide import QtGui
 from Crypto.Protocol.KDF import PBKDF2
@@ -116,24 +116,6 @@ def request_cert_from_ca(csr, cert_tmpl):
             os.remove(cert_fn)
 
 
-def rename_group(old_name, new_name):
-    data = {}
-    try:
-        settings.beginGroup(old_name)
-        for key in settings.allKeys():
-            data[key] = settings.value(key)
-    finally:
-        settings.endGroup()
-    settings.remove(old_name)
-
-    try:
-        settings.beginGroup(new_name)
-        for key in data:
-            settings.setValue(key, data[key])
-    finally:
-        settings.endGroup()
-
-
 def is_hex(string):
     return isinstance(string, basestring) and \
         bool(re.compile(r'[a-fA-F0-9]{48}').match(string))
@@ -143,6 +125,7 @@ class Controller(object):
 
     def __init__(self, key, window=None):
         self._key = key
+        self._settings = Settings(key.chuid)
         self._authenticated = False
         self._window = window
         try:
@@ -160,27 +143,9 @@ class Controller(object):
             self._raw_data = ''
             self._data = {}
 
-    def get(self, key, default=None):
-        return settings.value('%s/%s' % (self._key.chuid, key), default)
-
-    def __setitem__(self, key, value):
-        settings.setValue('%s/%s' % (self._key.chuid, key), value)
-
-    def __delitem__(self, key):
-        settings.remove('%s/%s' % (self._key.chuid, key))
-
-    def __getitem__(self, key):
-        return self.get(key)
-
-    def __nonzero__(self):
-        return True
-
-    def __len__(self):
-        try:
-            settings.beginGroup('%s' % self._key.chuid)
-            return len(settings.childKeys())
-        finally:
-            settings.endGroup()
+    @property
+    def settings(self):
+        return self._settings
 
     def _save_data(self):
         raw_data = serialize_pivtool_data(self._data)
@@ -290,9 +255,8 @@ class Controller(object):
         except ValueError:
             raise ValueError(m.certreq_error)
         self._key.import_cert(cert)
-        old_chuid = self._key.chuid
         self._key.set_chuid()
-        rename_group(old_chuid, self._key.chuid)
+        self._settings.rename(self._key.chuid)
 
     def get_pin_last_changed(self):
         data = self._data.get(TAG_PIN_TIMESTAMP)

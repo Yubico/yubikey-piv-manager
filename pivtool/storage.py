@@ -26,13 +26,97 @@
 
 import os
 from PySide import QtCore
+from collections import MutableMapping
 
 __all__ = [
     'CONFIG_HOME',
-    'settings',
+    'Settings',
 ]
 
 CONFIG_HOME = os.path.join(os.path.expanduser('~'), '.pivtool')
 
-settings = QtCore.QSettings(os.path.join(CONFIG_HOME, 'settings.ini'),
-                            QtCore.QSettings.IniFormat)
+_settings = QtCore.QSettings(os.path.join(CONFIG_HOME, 'settings.ini'),
+                             QtCore.QSettings.IniFormat)
+
+
+class SettingsLock(QtCore.QMutex):
+    def __init__(self):
+        super(SettingsLock, self).__init__(QtCore.QMutex.Recursive)
+        self._in_group = False
+
+    def with_lock(self, func):
+        def wrapped_f(caller, *args, **kwargs):
+            try:
+                self.lock()
+                group = caller._group
+                if not self._in_group and group is not None:
+                    try:
+                        self._in_group = True
+                        _settings.beginGroup(group)
+                        return func(caller, *args, **kwargs)
+                    finally:
+                        _settings.endGroup()
+                        self._in_group = False
+                return func(caller, *args, **kwargs)
+            finally:
+                self.unlock()
+        return wrapped_f
+
+
+_lock = SettingsLock()
+
+
+class Settings(MutableMapping):
+
+    def __init__(self, group=None):
+        super(Settings, self).__init__()
+        self._group = group
+
+    @_lock.with_lock
+    def get(self, key, default=None):
+        return _settings.value(key, default)
+
+    def __getitem__(self, key):
+        return self.get(key)
+
+    @_lock.with_lock
+    def __setitem__(self, key, value):
+        _settings.setValue(key, value)
+
+    @_lock.with_lock
+    def __delitem__(self, key):
+        _settings.remove(key)
+
+    @_lock.with_lock
+    def __iter__(self):
+        return self.keys().__iter__()
+
+    @_lock.with_lock
+    def __len__(self):
+        return len(_settings.childKeys())
+
+    @_lock.with_lock
+    def __contains__(self, key):
+        return _settings.contains(key)
+
+    @_lock.with_lock
+    def keys(self):
+        return _settings.childKeys()
+
+    @_lock.with_lock
+    def update(self, data):
+        for key, value in data.items():
+            self[key] = value
+
+    def clear(self):
+        _settings.remove(self._group)
+
+    def rename(self, new_name):
+        data = dict(self)
+        self.clear()
+
+        self._group = new_name
+        self.update(data)
+
+    def __repr__(self):
+        return 'Settings(%s): %s' % (self._group, dict(self))

@@ -28,7 +28,7 @@ from PySide import QtGui
 from PySide import QtCore
 from pivtool.piv import YkPiv, DeviceGoneError, libversion as ykpiv_version
 from pivtool.controller import Controller
-from pivtool.storage import settings
+from pivtool.storage import Settings
 from pivtool import messages as m, __version__ as version
 from pivtool.view.status import StatusWidget
 from pivtool.view.init_dialog import InitDialog
@@ -90,11 +90,13 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
+        self._settings = Settings('window')
+
         self.setMinimumWidth(480)
         self.setMinimumHeight(180)
 
-        self.resize(settings.value('window/size', QtCore.QSize(0, 0)))
-        pos = settings.value('window/pos')
+        self.resize(self._settings.get('size', QtCore.QSize(0, 0)))
+        pos = self._settings.get('pos')
         if pos:
             self.move(pos)
 
@@ -103,7 +105,7 @@ class MainWindow(QtGui.QMainWindow):
     def _build_menu_bar(self):
         file_menu = self.menuBar().addMenu(m.menu_file)
         settings_action = QtGui.QAction(m.action_settings, file_menu)
-        settings_action.triggered.connect(self._settings)
+        settings_action.triggered.connect(self._show_settings)
         file_menu.addAction(settings_action)
 
         help_menu = self.menuBar().addMenu(m.menu_help)
@@ -121,8 +123,8 @@ class MainWindow(QtGui.QMainWindow):
         event.accept()
 
     def closeEvent(self, event):
-        settings.setValue('window/size', self.size())
-        settings.setValue('window/pos', self.pos())
+        self._settings['size'] = self.size()
+        self._settings['pos'] = self.pos()
         event.accept()
 
     def customEvent(self, event):
@@ -135,6 +137,6 @@ class MainWindow(QtGui.QMainWindow):
         QtGui.QMessageBox.about(self, m.about_1 % m.app_name, ABOUT_TEXT %
                                 (version, self._libversions()))
 
-    def _settings(self):
+    def _show_settings(self):
         dialog = SettingsDialog(self)
         dialog.exec_()
