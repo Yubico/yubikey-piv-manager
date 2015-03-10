@@ -31,7 +31,9 @@ from collections import MutableMapping
 
 __all__ = [
     'CONFIG_HOME',
-    'get_settings',
+    'SETTINGS',
+    'get_store',
+    'settings'
 ]
 
 CONFIG_HOME = os.path.join(os.path.expanduser('~'), '.pivtool')
@@ -40,12 +42,18 @@ _settings = QtCore.QSettings(os.path.join(CONFIG_HOME, 'settings.ini'),
 _mutex = QtCore.QMutex(QtCore.QMutex.Recursive)
 
 
-def get_settings(group):
-    settings_group = SettingsGroup(_settings, _mutex, group)
-    if group == 'settings':
-        master = QtCore.QSettings(m.organization, m.app_name)
-        return PySettings(SettingsOverlay(master, settings_group))
-    return PySettings(settings_group)
+def get_store(group):
+    return PySettings(SettingsGroup(_settings, _mutex, group))
+
+
+def convert_to(value, target_type):
+    if target_type is int:
+        return int(value)
+    if target_type is float:
+        return float(value)
+    if target_type is bool:
+        return target_type not in ['', 'false', 'False']
+    return value
 
 
 class SettingsGroup(object):
@@ -98,8 +106,11 @@ class SettingsOverlay(object):
         """Combine keys of master and overlay"""
         return list(set(self._master.childKeys() + self._overlay.childKeys()))
 
+    def is_locked(self, key):
+        return self._master.contains(key)
+
     def __repr__(self):
-        return 'Overlay(%s)' % self._group
+        return 'Overlay(%s, %s)' % (self._master, self._overlay)
 
 
 class PySettings(MutableMapping):
@@ -111,7 +122,10 @@ class PySettings(MutableMapping):
         return getattr(self._settings, method_name)
 
     def get(self, key, default=None):
-        return self._settings.value(key, default)
+        val = self._settings.value(key, default)
+        if not isinstance(val, type(default)):
+            val = convert_to(val, type(default))
+        return val
 
     def __getitem__(self, key):
         return self.get(key)
@@ -143,4 +157,15 @@ class PySettings(MutableMapping):
         self._settings.remove('')
 
     def __repr__(self):
-        return 'Settings(%s): %s' % (self._settings, dict(self))
+        return 'Store(%s): %s' % (self._settings, dict(self))
+
+
+class SETTINGS:
+    FORCE_PIN_AS_KEY = "pin_as_key"
+    COMPLEX_PINS = "complex_pins"
+    CARD_READER = "card_reader"
+
+settings = PySettings(SettingsOverlay(
+    QtCore.QSettings(m.organization, m.app_name),
+    get_store('settings')
+))

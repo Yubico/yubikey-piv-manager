@@ -24,9 +24,9 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from pivtool.utils import complexity_check, test, der_read
+from pivtool.utils import test, der_read
 from pivtool.piv import PivError
-from pivtool.storage import get_settings
+from pivtool.storage import get_store
 from pivtool import messages as m
 from PySide import QtGui
 from Crypto.Protocol.KDF import PBKDF2
@@ -125,7 +125,7 @@ class Controller(object):
 
     def __init__(self, key, window=None):
         self._key = key
-        self._settings = get_settings(key.chuid)
+        self._settings = get_store(key.chuid)
         self._authenticated = False
         self._window = window
         try:
@@ -223,9 +223,8 @@ class Controller(object):
             self._save_data()
 
     def change_pin(self, old_pin, new_pin):
-        if not complexity_check(new_pin):  # TODO: If policy enforced.
-            raise ValueError(m.pin_not_complex)
-
+        if len(new_pin) < 4:
+            raise ValueError('PIN must be at least 4 characters')
         self._key.verify_pin(old_pin)
         key_is_pin = self._data.get(TAG_SALT)
         if not self.authenticated and key_is_pin:

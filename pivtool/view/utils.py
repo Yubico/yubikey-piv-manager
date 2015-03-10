@@ -26,7 +26,8 @@
 
 from PySide import QtGui, QtCore
 
-HEADER = "<br><b>%s</b>"
+TOP_SECTION = "<b>%s</b>"
+SECTION = "<br><b>%s</b>"
 
 PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'.{6,8}'))
 KEY_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'[0-9a-fA-F]{48}'))

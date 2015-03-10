@@ -24,26 +24,32 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from PySide import QtGui, QtCore
+from PySide import QtGui
 from pivtool import messages as m
-from pivtool.piv import DeviceGoneError
-from pivtool.utils import complexity_check
+from pivtool.storage import settings, SETTINGS
 
 
 class SettingsDialog(QtGui.QDialog):
 
     def __init__(self, parent=None):
         super(SettingsDialog, self).__init__(parent)
+        self.setWindowTitle(m.settings)
 
         self._build_ui()
 
     def _build_ui(self):
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(QtGui.QLabel(m.settings))
+        layout = QtGui.QFormLayout()
 
-        layout.addWidget(QtGui.QLabel(m.reader_name))
-        self._reader_pattern = QtGui.QLineEdit()
-        layout.addWidget(self._reader_pattern)
+        reader_pattern = settings.get(SETTINGS.CARD_READER)
+        self._reader_pattern = QtGui.QLineEdit(reader_pattern)
+        layout.addRow(m.reader_name, self._reader_pattern)
+
+        self._complex_pins = QtGui.QCheckBox(m.use_complex_pins)
+        self._complex_pins.setChecked(
+            settings.get(SETTINGS.COMPLEX_PINS, False))
+        if settings.is_locked(SETTINGS.COMPLEX_PINS):
+            self._complex_pins.setDisabled(True)
+        layout.addRow(self._complex_pins)
 
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
                                          QtGui.QDialogButtonBox.Cancel)
@@ -53,42 +59,6 @@ class SettingsDialog(QtGui.QDialog):
         self.setLayout(layout)
 
     def _save(self):
-            self.accept()
-
-    def _check_confirm(self):
-        new_pin = self._new_pin.text()
-        if len(new_pin) > 0 and new_pin == self._confirm_pin.text():
-            self._ok_btn.setDisabled(False)
-        else:
-            self._ok_btn.setDisabled(True)
-
-    def _invalid_pin(self, title, reason):
-        QtGui.QMessageBox.warning(self, title, reason)
-        self._new_pin.setText('')
-        self._confirm_pin.setText('')
-        self._new_pin.setFocus()
-
-    def _set_pin(self):
-        old_pin = self._old_pin.text()
-        new_pin = self._new_pin.text()
-
-        if old_pin == new_pin:
-            self._invalid_pin(m.pin_not_changed, m.pin_not_changed_desc)
-        elif not complexity_check(new_pin):
-            self._invalid_pin(m.pin_not_complex, m.pin_complexity_desc)
-        else:
-            worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.changing_pin,
-                        (self._controller.change_pin, old_pin, new_pin),
-                        self._change_pin_callback, True)
-
-    def _change_pin_callback(self, result):
-        if isinstance(result, DeviceGoneError):
-            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
-            self.parentWidget().window().reset()
-        elif isinstance(result, Exception):
-            QtGui.QMessageBox.warning(self, m.error, str(result))
-            self._old_pin.setText('')
-            self._old_pin.setFocus()
-        else:
-            self.accept()
+        settings[SETTINGS.COMPLEX_PINS] = self._complex_pins.isChecked()
+        settings[SETTINGS.CARD_READER] = self._reader_pattern.text()
+        self.accept()

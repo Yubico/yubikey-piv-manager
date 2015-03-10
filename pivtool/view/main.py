@@ -28,7 +28,7 @@ from PySide import QtGui
 from PySide import QtCore
 from pivtool.piv import YkPiv, DeviceGoneError, libversion as ykpiv_version
 from pivtool.controller import Controller
-from pivtool.storage import get_settings
+from pivtool.storage import get_store, settings, SETTINGS
 from pivtool import messages as m, __version__ as version
 from pivtool.view.status import StatusWidget
 from pivtool.view.init_dialog import InitDialog
@@ -64,7 +64,8 @@ class NoKeyPresent(QtGui.QWidget):
     def refresh_key(self):
         try:
             window = self.window()
-            controller = Controller(YkPiv(), window)
+            reader_pattern = settings.get(SETTINGS.CARD_READER)
+            controller = Controller(YkPiv(reader=reader_pattern), window)
             if controller.is_uninitialized():
                 dialog = InitDialog(controller, self)
                 if dialog.exec_():
@@ -90,7 +91,7 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self._settings = get_settings('window')
+        self._settings = get_store('window')
 
         self.setMinimumWidth(480)
         self.setMinimumHeight(180)

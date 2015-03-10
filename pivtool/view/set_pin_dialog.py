@@ -27,6 +27,7 @@
 from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError
+from pivtool.storage import settings, SETTINGS
 from pivtool.utils import complexity_check
 from pivtool.view.utils import pin_field
 
@@ -35,19 +36,22 @@ class SetPinDialog(QtGui.QDialog):
 
     def __init__(self, controller, parent=None, forced=False):
         super(SetPinDialog, self).__init__(parent)
+        self.setWindowTitle(m.change_pin)
 
+        self._complex = settings.get(SETTINGS.COMPLEX_PINS, False)
         self._controller = controller
         self._build_ui(forced)
 
     def _build_ui(self, forced):
         layout = QtGui.QVBoxLayout()
-        layout.addWidget(QtGui.QLabel(m.change_pin_forced_desc if forced
-                                      else m.change_pin_desc))
+        if forced:
+            layout.addWidget(QtGui.QLabel(m.change_pin_forced_desc))
 
         layout.addWidget(QtGui.QLabel(m.current_pin_label))
         self._old_pin = pin_field()
         layout.addWidget(self._old_pin)
-        layout.addWidget(QtGui.QLabel(m.new_pin_label))
+        label = m.new_complex_pin_label if self._complex else m.new_pin_label
+        layout.addWidget(QtGui.QLabel(label))
         self._new_pin = pin_field()
         layout.addWidget(self._new_pin)
         layout.addWidget(QtGui.QLabel(m.verify_pin_label))
@@ -88,7 +92,7 @@ class SetPinDialog(QtGui.QDialog):
 
         if old_pin == new_pin:
             self._invalid_pin(m.pin_not_changed, m.pin_not_changed_desc)
-        elif not complexity_check(new_pin):
+        elif self.__complex and not complexity_check(new_pin):
             self._invalid_pin(m.pin_not_complex, m.pin_complexity_desc)
         else:
             try:
