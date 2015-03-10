@@ -164,6 +164,7 @@ class SETTINGS:
     FORCE_PIN_AS_KEY = "pin_as_key"
     COMPLEX_PINS = "complex_pins"
     CARD_READER = "card_reader"
+    CERTREQ_TEMPLATE = "certreq_template"
 
 settings = PySettings(SettingsOverlay(
     QtCore.QSettings(m.organization, m.app_name),

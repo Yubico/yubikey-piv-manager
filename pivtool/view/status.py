@@ -28,6 +28,7 @@
 from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError
+from pivtool.storage import settings, SETTINGS
 from pivtool.view.set_pin_dialog import SetPinDialog
 from datetime import datetime
 
@@ -117,11 +118,13 @@ class StatusWidget(QtGui.QWidget):
             if not status:
                 return
 
-            # Ask for certificate template
-            cert_tmpl, status = QtGui.QInputDialog.getText(
-                self, m.cert_tmpl, m.cert_tmpl)
-            if not status:
-                return
+            cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
+            if cert_tmpl is None:
+                # Ask for certificate template
+                cert_tmpl, status = QtGui.QInputDialog.getText(
+                    self, m.cert_tmpl, m.cert_tmpl)
+                if not status:
+                    return
 
             try:
                 self._controller.ensure_authenticated()

@@ -26,7 +26,9 @@
 
 from PySide import QtGui
 from pivtool import messages as m
+from pivtool.view.utils import TOP_SECTION, SECTION
 from pivtool.storage import settings, SETTINGS
+import sys
 
 
 class SettingsDialog(QtGui.QDialog):
@@ -40,6 +42,8 @@ class SettingsDialog(QtGui.QDialog):
     def _build_ui(self):
         layout = QtGui.QFormLayout()
 
+        layout.addRow(QtGui.QLabel(TOP_SECTION % m.general))
+
         reader_pattern = settings.get(SETTINGS.CARD_READER)
         self._reader_pattern = QtGui.QLineEdit(reader_pattern)
         layout.addRow(m.reader_name, self._reader_pattern)
@@ -51,6 +55,16 @@ class SettingsDialog(QtGui.QDialog):
             self._complex_pins.setDisabled(True)
         layout.addRow(self._complex_pins)
 
+        if sys.platform == 'win32':
+            layout.addRow(QtGui.QLabel(SECTION % m.active_directory))
+            layout.addRow(QtGui.QLabel(m.active_directory_desc))
+
+            cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
+            self._certreq_tmpl = QtGui.QLineEdit(cert_tmpl)
+            if settings.is_locked(SETTINGS.CERTREQ_TEMPLATE):
+                self._certreq_tmpl.setDisabled(True)
+            layout.addRow(m.cert_tmpl, self._certreq_tmpl)
+
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
                                          QtGui.QDialogButtonBox.Cancel)
         buttons.accepted.connect(self._save)
@@ -61,4 +75,5 @@ class SettingsDialog(QtGui.QDialog):
     def _save(self):
         settings[SETTINGS.COMPLEX_PINS] = self._complex_pins.isChecked()
         settings[SETTINGS.CARD_READER] = self._reader_pattern.text()
+        settings[SETTINGS.CERTREQ_TEMPLATE] = self._certreq_tmpl.text()
         self.accept()
