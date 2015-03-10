@@ -28,7 +28,7 @@ from PySide import QtGui
 from pivtool import messages as m
 from pivtool.view.utils import TOP_SECTION, SECTION
 from pivtool.storage import settings, SETTINGS
-import sys
+from pivtool.utils import HAS_AD
 
 
 class SettingsDialog(QtGui.QDialog):
@@ -55,7 +55,7 @@ class SettingsDialog(QtGui.QDialog):
             self._complex_pins.setDisabled(True)
         layout.addRow(self._complex_pins)
 
-        if sys.platform == 'win32':
+        if HAS_AD:
             layout.addRow(QtGui.QLabel(SECTION % m.active_directory))
             layout.addRow(QtGui.QLabel(m.active_directory_desc))
 

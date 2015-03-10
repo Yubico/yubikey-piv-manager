@@ -29,6 +29,7 @@ from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError
 from pivtool.storage import settings, SETTINGS
+from pivtool.utils import HAS_AD
 from pivtool.view.set_pin_dialog import SetPinDialog
 from datetime import datetime
 
@@ -76,7 +77,7 @@ class StatusWidget(QtGui.QWidget):
                 self._cert_btn.setDisabled(True)
                 self._pin.setStyleSheet("QLabel { color: red; }")
             else:
-                self._cert_btn.setDisabled(False)
+                self._cert_btn.setDisabled(not HAS_AD)
                 self._pin.setStyleSheet("")
 
             last_changed = self._controller.get_pin_last_changed()

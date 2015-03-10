@@ -26,6 +26,16 @@
 
 import re
 from getpass import getuser
+import subprocess
+
+
+try:
+    HAS_AD = (0 == subprocess.call(
+        ['powershell', 'Import-Module ActiveDirectory'],
+        stdout=subprocess.PIPE
+    ))
+except OSError:
+    HAS_AD = False
 
 
 def test(fn, *args, **kwargs):
