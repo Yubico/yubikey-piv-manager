@@ -28,12 +28,10 @@ from pivtool.utils import test, der_read
 from pivtool.piv import PivError
 from pivtool.storage import get_store
 from pivtool import messages as m
-from PySide import QtGui
+from PySide import QtGui, QtNetwork
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from getpass import getuser
-from pyasn1.codec.der import decoder
-from pyasn1_modules import rfc2459
 from datetime import datetime, timedelta
 import os
 import re
@@ -270,29 +268,14 @@ class Controller(object):
         delta = timedelta(seconds=time.time() - last_changed)
         return delta.days > 30
 
-    def get_certificate_expiration(self, slot='9a'):
+    def get_certificate(self, slot):
         cert = self._key.read_cert(slot)
         if cert is None:
             return None
-        cert = decoder.decode(cert, asn1Spec=rfc2459.Certificate())[0]
-        expiration = cert['tbsCertificate']['validity']['notAfter']
-        value = expiration.getComponentByName(expiration.getName()).asOctets()
-        if expiration.getName() == 'utcTime':
-            if int(value[0:2]) < 50:
-                value = '20' + value
-            else:
-                value = '19' + value
-        if value.endswith('Z'):
-            value = value[:-1]
-        else:
-            # TODO: +/-hhmm
-            pass
-        dt = datetime.strptime(value + 'GMT', '%Y%m%d%H%M%S%Z')
-        return int((dt - datetime.fromtimestamp(0)).total_seconds())
+        return QtNetwork.QSslCertificate.fromData(cert, QtNetwork.QSsl.Der)[0]
 
     def is_cert_expired(self, slot='9a'):
-        expiry = self.get_certificate_expiration(slot)
-        if expiry is None:
+        cert = self.get_certificate(slot)
+        if cert is None:
             return True
-        else:
-            return time.time() > expiry
+        return not cert.isValid()

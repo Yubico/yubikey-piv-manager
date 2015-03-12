@@ -92,12 +92,12 @@ class StatusWidget(QtGui.QWidget):
             else:
                 self._cert.setStyleSheet("")
 
-            cert_expires = self._controller.get_certificate_expiration()
-            if cert_expires is None:
+            cert = self._controller.get_certificate('9a')
+            if cert is None:
                 self._cert.setText(m.cert_not_loaded)
             else:
-                cert_expires = datetime.fromtimestamp(cert_expires)
-                self._cert.setText(m.cert_expires_1 % cert_expires)
+                expiry = datetime.fromtimestamp(cert.expiryDate().toTime_t())
+                self._cert.setText(m.cert_expires_1 % expiry)
         except DeviceGoneError:
             self.parentWidget().window().reset()
 
