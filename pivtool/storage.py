@@ -163,6 +163,7 @@ class PySettings(MutableMapping):
 class SETTINGS:
     FORCE_PIN_AS_KEY = "pin_as_key"
     COMPLEX_PINS = "complex_pins"
+    PIN_EXPIRATION = "pin_expiration"
     CARD_READER = "card_reader"
     CERTREQ_TEMPLATE = "certreq_template"
 

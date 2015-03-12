@@ -26,13 +26,13 @@
 
 from pivtool.utils import test, der_read
 from pivtool.piv import PivError
-from pivtool.storage import get_store
+from pivtool.storage import get_store, settings, SETTINGS
 from pivtool import messages as m
 from PySide import QtGui, QtNetwork
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from getpass import getuser
-from datetime import datetime, timedelta
+from datetime import timedelta
 import os
 import re
 import tempfile
@@ -123,7 +123,7 @@ class Controller(object):
 
     def __init__(self, key, window=None):
         self._key = key
-        self._settings = get_store(key.chuid)
+        self._attributes = get_store(key.chuid)
         self._authenticated = False
         self._window = window
         try:
@@ -142,12 +142,13 @@ class Controller(object):
             self._data = {}
 
     @property
-    def settings(self):
-        return self._settings
+    def attributes(self):
+        return self._attributes
 
     def _save_data(self):
         raw_data = serialize_pivtool_data(self._data)
         if raw_data != self._raw_data:
+            self.ensure_authenticated()
             self._key.save_object(YKPIV_OBJ_PIVTOOL_DATA, raw_data)
             self._raw_data = raw_data
 
@@ -196,6 +197,7 @@ class Controller(object):
             self.authenticate()
 
         if key is None:  # Derive key from PIN
+            self._data[TAG_SALT] = ''  # Used as a marker
             puk = None  # PUK is worthless if key is derived from PIN
         else:
             self.set_authentication(key)
@@ -236,7 +238,8 @@ class Controller(object):
             self._data[TAG_SALT] = salt
             self._key.set_authentication(key)
 
-        self._data[TAG_PIN_TIMESTAMP] = struct.pack('i', int(time.time()))
+        if settings.get(SETTINGS.PIN_EXPIRATION, 0):
+            self._data[TAG_PIN_TIMESTAMP] = struct.pack('i', int(time.time()))
         self._save_data()
 
     def request_certificate(self, pin, cert_tmpl='User'):
@@ -262,6 +265,9 @@ class Controller(object):
         return data
 
     def is_pin_expired(self):
+        if not settings.get(SETTINGS.PIN_EXPIRATION, 0):
+            return False
+
         last_changed = self.get_pin_last_changed()
         if last_changed is None:
             return True

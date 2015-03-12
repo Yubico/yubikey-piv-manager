@@ -92,7 +92,7 @@ class SetPinDialog(QtGui.QDialog):
 
         if old_pin == new_pin:
             self._invalid_pin(m.pin_not_changed, m.pin_not_changed_desc)
-        elif self.__complex and not complexity_check(new_pin):
+        elif self._complex and not complexity_check(new_pin):
             self._invalid_pin(m.pin_not_complex, m.pin_complexity_desc)
         else:
             try:
