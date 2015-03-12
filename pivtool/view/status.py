@@ -73,19 +73,19 @@ class StatusWidget(QtGui.QWidget):
 
     def _refresh(self):
         try:
-            if self._controller.is_pin_expired():
-                self._cert_btn.setDisabled(True)
-                self._pin.setStyleSheet("QLabel { color: red; }")
-            else:
-                self._cert_btn.setDisabled(not HAS_AD)
-                self._pin.setStyleSheet("")
+            if self._controller.does_pin_expire():
+                self._pin.show()
+                if self._controller.is_pin_expired():
+                    self._cert_btn.setDisabled(True)
+                    self._pin.setStyleSheet("QLabel { color: red; }")
+                else:
+                    self._cert_btn.setDisabled(not HAS_AD)
+                    self._pin.setStyleSheet("")
 
-            last_changed = self._controller.get_pin_last_changed()
-            if last_changed is None:
-                last_changed = m.unknown
+                pin_days_left = self._controller.get_pin_days_left()
+                self._pin.setText(m.pin_days_left_1 % pin_days_left)
             else:
-                last_changed = datetime.fromtimestamp(last_changed)
-            self._pin.setText(m.pin_last_changed_1 % last_changed)
+                self._pin.hide()
 
             if self._controller.is_cert_expired():
                 self._cert.setStyleSheet("QLabel { color: red; }")

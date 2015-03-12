@@ -238,7 +238,7 @@ class Controller(object):
             self._data[TAG_SALT] = salt
             self._key.set_authentication(key)
 
-        if settings.get(SETTINGS.PIN_EXPIRATION, 0):
+        if self.does_pin_expire():
             self._data[TAG_PIN_TIMESTAMP] = struct.pack('i', int(time.time()))
         self._save_data()
 
@@ -258,14 +258,28 @@ class Controller(object):
         self._key.set_chuid()
         self._settings.rename(self._key.chuid)
 
+    def does_pin_expire(self):
+        return bool(settings.get(SETTINGS.PIN_EXPIRATION))
+
     def get_pin_last_changed(self):
         data = self._data.get(TAG_PIN_TIMESTAMP)
         if data is not None:
             data = struct.unpack('i', data)[0]
         return data
 
+    def get_pin_days_left(self):
+        validity = settings.get(SETTINGS.PIN_EXPIRATION, 0)
+        if not validity:
+            return -1
+        last_changed = self.get_pin_last_changed()
+        if last_changed is None:
+            return 0
+        time_passed = timedelta(seconds=time.time() - last_changed)
+        time_left = timedelta(days=validity) - time_passed
+        return max(time_left.days, 0)
+
     def is_pin_expired(self):
-        if not settings.get(SETTINGS.PIN_EXPIRATION, 0):
+        if not self.does_pin_expire():
             return False
 
         last_changed = self.get_pin_last_changed()
