@@ -34,8 +34,8 @@ class CertDialog(QtGui.QDialog):
 
     def __init__(self, controller, parent=None):
         super(CertDialog, self).__init__(parent)
-        self.setWindowTitle('TODO')
-        self.setFixedSize(480, 180)
+        self.setWindowTitle(m.certificates)
+        self.setFixedSize(540, 180)
 
         self._complex = settings.get(SETTINGS.COMPLEX_PINS, False)
         self._controller = controller
@@ -48,5 +48,11 @@ class CertDialog(QtGui.QDialog):
     def _build_ui(self):
         layout = QtGui.QVBoxLayout()
 
-        layout.addWidget(QtGui.QLabel('TODO: Manage Certificates'))
+        self._cert_tabs = QtGui.QTabWidget()
+        self._cert_tabs.addTab(QtGui.QLabel('Placeholder'), 'Authentication')
+        self._cert_tabs.addTab(QtGui.QLabel('Placeholder'), 'Digital Signature')
+        self._cert_tabs.addTab(QtGui.QLabel('Placeholder'), 'Key Management')
+        self._cert_tabs.addTab(QtGui.QLabel('Placeholder'), 'Card Authentication')
+        layout.addWidget(self._cert_tabs)
+
         self.setLayout(layout)

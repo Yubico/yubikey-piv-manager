@@ -45,6 +45,7 @@ action_about = "&About"
 action_settings = "&Settings"
 settings = "Settings"
 general = "General"
+certificates = "Certificates"
 active_directory = "Active Directory"
 active_directory_desc = "The following options are used when requesting a " \
     "certificate from the Windows CA"
