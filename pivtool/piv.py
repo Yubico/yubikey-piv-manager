@@ -27,7 +27,7 @@
 from pivtool.libykpiv import *
 from pivtool.piv_cmd import YkPivCmd
 from pivtool import messages as m
-from pivtool.utils import der_read
+from pivtool.utils import der_read, test
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
 
@@ -90,6 +90,7 @@ class YkPiv(object):
 
         self._read_version()
         self._read_chuid()
+        self._read_cert_index()
 
     def _read_version(self):
         v = create_string_buffer(10)
@@ -106,6 +107,11 @@ class YkPiv(object):
                 self._read_chuid(False)
             else:
                 raise e
+
+    def _read_cert_index(self):
+        self._cert_index =  dict([(k, test(self.fetch_object, v,
+                                           catches=PivError)) \
+                                  for (k, v) in CERT_SLOTS.items()])
 
     def __del__(self):
         check(ykpiv_done(self._state))
@@ -126,6 +132,10 @@ class YkPiv(object):
     @property
     def chuid(self):
         return self._chuid
+
+    @property
+    def cert_index(self):
+        return self._cert_index
 
     def set_chuid(self):
         try:

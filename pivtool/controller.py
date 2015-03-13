@@ -28,7 +28,7 @@ from pivtool.utils import test, der_read
 from pivtool.piv import PivError
 from pivtool.storage import get_store, settings, SETTINGS
 from pivtool import messages as m
-from PySide import QtGui, QtNetwork
+from PySide import QtCore, QtGui, QtNetwork
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from getpass import getuser
@@ -119,6 +119,20 @@ def is_hex(string):
         bool(re.compile(r'[a-fA-F0-9]{48}').match(string))
 
 
+def cert_info_str(getInfo):
+    parts = []
+    dc = getInfo(QtCore.QByteArray.fromRawData('DC'))
+    if dc:
+        parts.append('DC=' + dc)
+    ou = getInfo(QtNetwork.QSslCertificate.OrganizationalUnitName)
+    if ou:
+        parts.append('OU=' + ou)
+    cn = getInfo(QtNetwork.QSslCertificate.CommonName)
+    if cn:
+        parts.append('CN=' + cn)
+    return ', '.join(parts)
+
+
 class Controller(object):
 
     def __init__(self, key, window=None):
@@ -151,6 +165,10 @@ class Controller(object):
             self.ensure_authenticated()
             self._key.save_object(YKPIV_OBJ_PIVTOOL_DATA, raw_data)
             self._raw_data = raw_data
+
+    @property
+    def version(self):
+        return self._key.version
 
     @property
     def authenticated(self):
@@ -288,8 +306,15 @@ class Controller(object):
         delta = timedelta(seconds=time.time() - last_changed)
         return delta.days > 30
 
+    @property
+    def cert_index(self):
+        return self._key.cert_index
+
     def get_certificate(self, slot):
-        cert = self._key.read_cert(slot)
-        if cert is None:
+        data = self._key.read_cert(slot)
+        if data is None:
             return None
-        return QtNetwork.QSslCertificate.fromData(cert, QtNetwork.QSsl.Der)[0]
+        cert = QtNetwork.QSslCertificate.fromData(data, QtNetwork.QSsl.Der)[0]
+        cert.subject = cert.subjectInfo(QtNetwork.QSslCertificate.CommonName)
+        cert.issuer = cert.issuerInfo(QtNetwork.QSslCertificate.CommonName)
+        return cert

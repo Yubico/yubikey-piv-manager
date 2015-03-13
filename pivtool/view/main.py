@@ -30,10 +30,11 @@ from pivtool.piv import YkPiv, DeviceGoneError, libversion as ykpiv_version
 from pivtool.controller import Controller
 from pivtool.storage import get_store, settings, SETTINGS
 from pivtool import messages as m, __version__ as version
-from pivtool.view.status import StatusWidget
 from pivtool.view.init_dialog import InitDialog
 from pivtool.view.set_pin_dialog import SetPinDialog
 from pivtool.view.settings_dialog import SettingsDialog
+from pivtool.view.manage import ManageDialog
+from pivtool.view.cert import CertDialog
 
 
 ABOUT_TEXT = """
@@ -46,30 +47,86 @@ ABOUT_TEXT = """
 """ % (m.app_name, m.copyright, m.version_1, m.libraries)
 
 
-class NoKeyPresent(QtGui.QWidget):
+class MainWidget(QtGui.QWidget):
 
     def __init__(self):
-        super(NoKeyPresent, self).__init__()
+        super(MainWidget, self).__init__()
 
+        self._build_ui()
+        self.set_controller(self.refresh_controller())
+        self.startTimer(2000)
+
+    def _build_ui(self):
         layout = QtGui.QVBoxLayout()
-        layout.addWidget(QtGui.QLabel(m.no_key))
+
+        btns = QtGui.QHBoxLayout()
+        self._pin_btn = QtGui.QPushButton('Manage PIN/Key')
+        self._pin_btn.clicked.connect(self._manage_pin)
+        btns.addWidget(self._pin_btn)
+        self._cert_btn = QtGui.QPushButton('Certificates')
+        self._cert_btn.clicked.connect(self._manage_certs)
+        btns.addWidget(self._cert_btn)
+        layout.addLayout(btns)
+
+        self._messages = QtGui.QTextEdit()
+        self._messages.setReadOnly(True)
+        layout.addWidget(self._messages)
 
         self.setLayout(layout)
-        self.startTimer(1500)
+
+    def _manage_pin(self):
+        dialog = SetPinDialog(self._controller, self)
+        if dialog.exec_():
+            QtGui.QMessageBox.information(self, m.pin_changed,
+                                          m.pin_changed_desc)
+            self.refresh()
+
+        dialog = ManageDialog(self._controller, self)
+        if dialog.exec_():
+            self.refresh()
+
+    def _manage_certs(self):
+        dialog = CertDialog(self._controller, self)
+        if dialog.exec_():
+            self.refresh()
 
     def timerEvent(self, event):
         if QtGui.QApplication.activeWindow() == self.window():
-            self.refresh_key()
+            worker = QtCore.QCoreApplication.instance().worker
+            worker.post_bg(self.refresh_controller, self.set_controller, True)
 
-    def refresh_key(self):
+    def refresh_controller(self):
         try:
-            window = self.window()
             reader_pattern = settings.get(SETTINGS.CARD_READER)
-            controller = Controller(YkPiv(reader=reader_pattern), window)
+            return Controller(YkPiv(reader=reader_pattern), self.window())
+        except DeviceGoneError as e:
+            print e.message
+        except ValueError as e:
+            print e.message
+
+    def refresh(self):
+        self.set_controller(self.refresh_controller())
+
+    def set_controller(self, controller):
+        self._controller = controller
+        self._pin_btn.setDisabled(controller is None)
+        self._cert_btn.setDisabled(controller is None)
+
+        messages = []
+        if controller is None:
+            messages.append(m.no_key)
+        else:
+            messages.append('YubiKey present with applet version: %s' % controller.version)
+            n_certs = sum(controller.cert_index.values())
+            messages.append(m.certs_loaded_1 % n_certs or m.no)
+
+        self._messages.setHtml('<br>'.join(messages))
+
+        if controller:
             if controller.is_uninitialized():
                 dialog = InitDialog(controller, self)
                 if dialog.exec_():
-                    self.refresh_key()
+                    self.refresh()
                 else:
                     QtCore.QCoreApplication.instance().quit()
             elif controller.is_pin_expired():
@@ -77,13 +134,8 @@ class NoKeyPresent(QtGui.QWidget):
                 if dialog.exec_():
                     QtGui.QMessageBox.information(self, m.pin_changed,
                                                   m.pin_changed_desc)
-                window.setCentralWidget(StatusWidget(controller))
-            else:
-                window.setCentralWidget(StatusWidget(controller))
-        except DeviceGoneError as e:
-            print e.message
-        except ValueError as e:
-            print e.message
+                    self.refresh()
+
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -93,10 +145,9 @@ class MainWindow(QtGui.QMainWindow):
 
         self._settings = get_store('window')
 
-        self.setMinimumWidth(480)
-        self.setMinimumHeight(180)
+        self.setFixedWidth(480)
+        self.setFixedHeight(180)
 
-        self.resize(self._settings.get('size', QtCore.QSize(0, 0)))
         pos = self._settings.get('pos')
         if pos:
             self.move(pos)
@@ -114,17 +165,11 @@ class MainWindow(QtGui.QMainWindow):
         about_action.triggered.connect(self._about)
         help_menu.addAction(about_action)
 
-    def reset(self):
-        no_key = NoKeyPresent()
-        self.setCentralWidget(no_key)
-        no_key.refresh_key()
-
     def showEvent(self, event):
-        self.reset()
+        self.setCentralWidget(MainWidget())
         event.accept()
 
     def closeEvent(self, event):
-        self._settings['size'] = self.size()
         self._settings['pos'] = self.pos()
         event.accept()
 

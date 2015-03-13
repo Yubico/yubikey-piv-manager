@@ -43,25 +43,18 @@ class StatusWidget(QtGui.QWidget):
         self._build_ui()
 
     def _build_ui(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtGui.QFormLayout()
 
-        pin_row = QtGui.QHBoxLayout()
         self._pin = QtGui.QLabel()
-        pin_row.addWidget(self._pin, 3)
         pin_btn = QtGui.QPushButton(m.change_pin)
         pin_btn.clicked.connect(self.change_pin)
-        pin_row.addWidget(pin_btn, 2)
-        layout.addLayout(pin_row)
+        layout.addRow(self._pin, pin_btn)
 
-        cert_row = QtGui.QHBoxLayout()
         self._cert = QtGui.QLabel()
-        cert_row.addWidget(self._cert, 3)
         self._cert_btn = QtGui.QPushButton(m.change_cert)
         self._cert_btn.clicked.connect(self.change_cert)
-        cert_row.addWidget(self._cert_btn, 2)
-        layout.addLayout(cert_row)
+        layout.addRow(self._cert, self._cert_btn)
 
-        layout.addStretch()
         self.setLayout(layout)
 
         self.startTimer(2500)
