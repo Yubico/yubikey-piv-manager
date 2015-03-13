@@ -51,18 +51,33 @@ class SettingsDialog(QtGui.QDialog):
         self._complex_pins = QtGui.QCheckBox(m.use_complex_pins)
         self._complex_pins.setChecked(
             settings.get(SETTINGS.COMPLEX_PINS, False))
-        if settings.is_locked(SETTINGS.COMPLEX_PINS):
-            self._complex_pins.setDisabled(True)
+        self._complex_pins.setDisabled(
+            settings.is_locked(SETTINGS.COMPLEX_PINS))
         layout.addRow(self._complex_pins)
 
+        self._pin_expires = QtGui.QCheckBox(m.pin_expires)
+        self._pin_expires_days = QtGui.QSpinBox()
+        self._pin_expires_days.setMinimum(30)
+
+        pin_expires = settings.get(SETTINGS.PIN_EXPIRATION, 0)
+        pin_expiry_locked = settings.is_locked(SETTINGS.PIN_EXPIRATION)
+        self._pin_expires.setChecked(bool(pin_expires))
+        self._pin_expires_days.setValue(pin_expires)
+        self._pin_expires.setDisabled(pin_expiry_locked)
+        self._pin_expires_days.setDisabled(pin_expiry_locked or not pin_expires)
+        self._pin_expires.stateChanged.connect(
+            self._pin_expires_days.setEnabled)
+        layout.addRow(self._pin_expires)
+        layout.addRow(m.pin_expires_days, self._pin_expires_days)
+
+        cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
+        self._certreq_tmpl = QtGui.QLineEdit(cert_tmpl)
+        if settings.is_locked(SETTINGS.CERTREQ_TEMPLATE):
+            self._certreq_tmpl.setDisabled(True)
         if HAS_AD:
             layout.addRow(QtGui.QLabel(SECTION % m.active_directory))
             layout.addRow(QtGui.QLabel(m.active_directory_desc))
 
-            cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
-            self._certreq_tmpl = QtGui.QLineEdit(cert_tmpl)
-            if settings.is_locked(SETTINGS.CERTREQ_TEMPLATE):
-                self._certreq_tmpl.setDisabled(True)
             layout.addRow(m.cert_tmpl, self._certreq_tmpl)
 
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
@@ -72,8 +87,16 @@ class SettingsDialog(QtGui.QDialog):
         layout.addWidget(buttons)
         self.setLayout(layout)
 
+    def _pin_expires_changed(self, val):
+        print val
+        self._pin_expires_days.setEnabled(val)
+
     def _save(self):
         settings[SETTINGS.COMPLEX_PINS] = self._complex_pins.isChecked()
         settings[SETTINGS.CARD_READER] = self._reader_pattern.text()
         settings[SETTINGS.CERTREQ_TEMPLATE] = self._certreq_tmpl.text()
+        if self._pin_expires.isChecked():
+            settings[SETTINGS.PIN_EXPIRATION] = self._pin_expires_days.value()
+        else:
+            settings[SETTINGS.PIN_EXPIRATION] = 0
         self.accept()

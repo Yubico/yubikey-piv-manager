@@ -87,12 +87,12 @@ class StatusWidget(QtGui.QWidget):
             else:
                 self._pin.hide()
 
-            if self._controller.is_cert_expired():
+            cert = self._controller.get_certificate('9a')
+            if cert is None or not cert.isValid():
                 self._cert.setStyleSheet("QLabel { color: red; }")
             else:
                 self._cert.setStyleSheet("")
 
-            cert = self._controller.get_certificate('9a')
             if cert is None:
                 self._cert.setText(m.cert_not_loaded)
             else:

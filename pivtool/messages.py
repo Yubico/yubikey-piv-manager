@@ -135,7 +135,9 @@ puk_too_long = "PUK must be no more than 8 characters long.\n" \
 certreq_error = "There was an error requesting a certificate."
 certreq_error_1 = "Error running certreq: %s"
 authentication_error = "Unable to authenticate to device"
-use_complex_pins = "Enforce complex PINs"
+use_complex_pins = "Enforce complex PIN/PUKs"
+pin_expires = "Force periodic PIN change"
+pin_expires_days = "How often (days)?"
 
 
 def _translate(qt):

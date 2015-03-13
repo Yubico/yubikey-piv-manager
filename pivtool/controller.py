@@ -293,9 +293,3 @@ class Controller(object):
         if cert is None:
             return None
         return QtNetwork.QSslCertificate.fromData(cert, QtNetwork.QSsl.Der)[0]
-
-    def is_cert_expired(self, slot='9a'):
-        cert = self.get_certificate(slot)
-        if cert is None:
-            return True
-        return not cert.isValid()
