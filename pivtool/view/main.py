@@ -145,8 +145,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self._settings = get_store('window')
 
-        self.setFixedWidth(480)
-        self.setFixedHeight(180)
+        self.setFixedSize(480, 180)
 
         pos = self._settings.get('pos')
         if pos:

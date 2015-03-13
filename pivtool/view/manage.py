@@ -35,8 +35,7 @@ class ManageDialog(QtGui.QDialog):
     def __init__(self, controller, parent=None):
         super(ManageDialog, self).__init__(parent)
         self.setWindowTitle('TODO')
-        self.setFixedWidth(480)
-        self.setFixedHeight(180)
+        self.setFixedSize(480, 180)
 
         self._complex = settings.get(SETTINGS.COMPLEX_PINS, False)
         self._controller = controller
