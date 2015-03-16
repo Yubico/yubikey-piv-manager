@@ -318,3 +318,6 @@ class Controller(object):
         cert.issued_to = cert.subjectInfo(QtNetwork.QSslCertificate.CommonName)
         cert.issued_by = cert.issuerInfo(QtNetwork.QSslCertificate.CommonName)
         return cert
+
+    def delete_certificate(self, slot):
+        self._key.delete_cert(slot)

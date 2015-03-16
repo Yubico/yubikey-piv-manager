@@ -82,16 +82,21 @@ class YkPivCmd(object):
     def change_puk(self, old_puk, new_puk):
         self.run('-a', 'change-puk', '-P', old_puk, '-N', new_puk)
 
-    def generate(self, slot='9a'):
+    def generate(self, slot):
         return self.run('-s', slot, '-a', 'generate')
 
-    def create_csr(self, subject, pem, slot='9a'):
+    def create_csr(self, subject, pem, slot):
         if '-P' not in self._base_args:
             raise ValueError('PIN has not been verified')
         return self.run('-a', 'verify-pin', '-s', slot, '-a',
                         'request-certificate', '-S', subject, input=pem)
 
-    def import_cert(self, pem, slot='9a'):
+    def import_cert(self, pem, slot):
         if '-k' not in self._base_args:
             raise ValueError('Management key has not been provided')
         return self.run('-s', slot, '-a', 'import-certificate', input=pem)
+
+    def delete_cert(self, slot):
+        if '-k' not in self._base_args:
+            raise ValueError('Management key has not been provided')
+        return self.run('-s', slot, '-a', 'delete-certificate')

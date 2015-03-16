@@ -114,15 +114,21 @@ enter_pin = "Enter PIN"
 enter_key = "Enter management key"
 unknown = "Unknown"
 change_cert = "Request certificate"
-change_cert_warning = "This will generate a new private key and request a " \
+change_cert_warning_1 = "This will generate a new private key and request a " \
     "certificate from the Windows CA, overwriting any previously stored " \
-    "credential in slot 9a of your YubiKey's PIV applet. This action cannot " \
+    "credential in slot '%s' of your YubiKey's PIV applet. This action cannot " \
     "be undone."
 changing_cert = "Requesting certificate..."
 export_to_file = "Export to file"
 export_cert = "Export certificate"
+delete_cert = "Delete certificate"
+delete_cert_warning_1 = "This will delete the certificate stored in slot " \
+    "'%s' of your YubiKey, and cannot be undone."
+deleting_cert = "Deleting certificate..."
 cert_exported = "Certificate exported"
 cert_exported_desc_1 = "Certificate exported to file: %s"
+cert_deleted = "Certificate deleted"
+cert_deleted_desc = "Certificate deleted successfully"
 cert_not_loaded = "No certificate loaded"
 cert_expires_1 = "Certificate expires: %s"
 cert_installed = "Certificate installed"

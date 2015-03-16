@@ -50,7 +50,7 @@ class CertWidget(QtGui.QWidget):
         self.refresh()
 
     def _build_no_cert_ui(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtGui.QVBoxLayout(self)
 
         layout.addWidget(QtGui.QLabel(m.cert_not_loaded))
 
@@ -63,10 +63,9 @@ class CertWidget(QtGui.QWidget):
         layout.addLayout(buttons)
 
         layout.addStretch()
-        self.setLayout(layout)
 
     def _build_cert_ui(self, cert):
-        layout = QtGui.QVBoxLayout()
+        layout = QtGui.QVBoxLayout(self)
 
         status = QtGui.QGridLayout()
         status.addWidget(QtGui.QLabel(m.issued_to_label), 0, 0)
@@ -83,19 +82,22 @@ class CertWidget(QtGui.QWidget):
         status.addWidget(self._valid_to, 1, 3)
 
         layout.addLayout(status)
-        # TODO: Add buttons for export and delete cert.
         buttons = QtGui.QHBoxLayout()
 
         export_btn = QtGui.QPushButton(m.export_to_file)
         export_btn.clicked.connect(partial(self._export_cert, cert))
         buttons.addWidget(export_btn)
+
+        delete_btn = QtGui.QPushButton(m.delete_cert)
+        delete_btn.clicked.connect(self._delete_cert)
+        buttons.addWidget(delete_btn)
         layout.addLayout(buttons)
 
         layout.addStretch()
-        self.setLayout(layout)
 
     def refresh(self):
         cert = self._controller.get_certificate(self._slot)
+        QtGui.QWidget().setLayout(self.layout()) # Get rid of old layout.
         if cert is None:
             self._build_no_cert_ui()
         else:
@@ -112,9 +114,35 @@ class CertWidget(QtGui.QWidget):
         QtGui.QMessageBox.information(self, m.cert_exported,
                                       m.cert_exported_desc_1 % fn)
 
+    def _delete_cert(self):
+        res = QtGui.QMessageBox.warning(self, m.delete_cert,
+                                        m.delete_cert_warning_1 % self._slot,
+                                        QtGui.QMessageBox.Ok,
+                                        QtGui.QMessageBox.Cancel)
+        if res == QtGui.QMessageBox.Ok:
+            try:
+                self._controller.ensure_authenticated()
+                worker = QtCore.QCoreApplication.instance().worker
+                worker.post(m.deleting_cert, (
+                    self._controller.delete_certificate, self._slot),
+                    self._delete_cert_callback, True)
+            except ValueError as e:
+                QtGui.QMessageBox.warning(self, m.error, str(e))
+
+    def _delete_cert_callback(self, result):
+        if isinstance(result, DeviceGoneError):
+            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.window().accept()
+        elif isinstance(result, Exception):
+            QtGui.QMessageBox.warning(self, m.error, str(result))
+        else:
+            self.refresh()
+            QtGui.QMessageBox.information(self, m.cert_deleted,
+                                          m.cert_deleted_desc)
+
     def _request_cert(self):
         res = QtGui.QMessageBox.warning(self, m.change_cert,
-                                        m.change_cert_warning,
+                                        m.change_cert_warning_1 % self._slot,
                                         QtGui.QMessageBox.Ok,
                                         QtGui.QMessageBox.Cancel)
         if res == QtGui.QMessageBox.Ok:
@@ -143,13 +171,13 @@ class CertWidget(QtGui.QWidget):
     def _request_cert_callback(self, result):
         if isinstance(result, DeviceGoneError):
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
-            self.parentWidget().window().reset()
+            self.window().accept()
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
+            self.refresh()
             QtGui.QMessageBox.information(self, m.cert_installed,
                                           m.cert_installed_desc)
-            self.refresh()
 
 class CertDialog(QtGui.QDialog):
 

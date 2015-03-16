@@ -245,3 +245,12 @@ class YkPiv(object):
         if zipped != chr(0):
             pass  # TODO: cert is compressed, uncompress.
         return cert
+
+    def delete_cert(self, slot):
+        if not self.cert_index.get(slot):
+            raise ValueError('No certificate loaded in slot: %s' % slot)
+
+        try:
+            return self._cmd.delete_cert(slot)
+        finally:
+            self._reset()
