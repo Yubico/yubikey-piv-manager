@@ -26,8 +26,10 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
+from pivtool.utils import HAS_AD
 from pivtool.piv import DeviceGoneError
 from pivtool.storage import settings, SETTINGS
+from functools import partial
 
 SLOTS = {
     '9a': 'Authentication',
@@ -52,11 +54,12 @@ class CertWidget(QtGui.QWidget):
 
         layout.addWidget(QtGui.QLabel(m.cert_not_loaded))
 
-        # TODO: Button bar
+        # TODO: Add buttons for PXF importing and generate CSR.
         buttons = QtGui.QHBoxLayout()
         from_ca_btn = QtGui.QPushButton(m.change_cert)
         from_ca_btn.clicked.connect(self._request_cert)
-        buttons.addWidget(from_ca_btn)
+        if HAS_AD:
+            buttons.addWidget(from_ca_btn)
         layout.addLayout(buttons)
 
         layout.addStretch()
@@ -80,8 +83,12 @@ class CertWidget(QtGui.QWidget):
         status.addWidget(self._valid_to, 1, 3)
 
         layout.addLayout(status)
-        # TODO: Button bar
+        # TODO: Add buttons for export and delete cert.
         buttons = QtGui.QHBoxLayout()
+
+        export_btn = QtGui.QPushButton(m.export_to_file)
+        export_btn.clicked.connect(partial(self._export_cert, cert))
+        buttons.addWidget(export_btn)
         layout.addLayout(buttons)
 
         layout.addStretch()
@@ -93,6 +100,17 @@ class CertWidget(QtGui.QWidget):
             self._build_no_cert_ui()
         else:
             self._build_cert_ui(cert)
+
+    def _export_cert(self, cert):
+        fn, fn_filter = QtGui.QFileDialog.getSaveFileName(
+            self, m.export_cert, filter='PEM files (*.pem)')
+        if not fn:
+            return
+
+        with open(fn, 'w') as f:
+            f.write(cert.toPem().data())
+        QtGui.QMessageBox.information(self, m.cert_exported,
+                                      m.cert_exported_desc_1 % fn)
 
     def _request_cert(self):
         res = QtGui.QMessageBox.warning(self, m.change_cert,

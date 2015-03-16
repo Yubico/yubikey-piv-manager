@@ -119,6 +119,10 @@ change_cert_warning = "This will generate a new private key and request a " \
     "credential in slot 9a of your YubiKey's PIV applet. This action cannot " \
     "be undone."
 changing_cert = "Requesting certificate..."
+export_to_file = "Export to file"
+export_cert = "Export certificate"
+cert_exported = "Certificate exported"
+cert_exported_desc_1 = "Certificate exported to file: %s"
 cert_not_loaded = "No certificate loaded"
 cert_expires_1 = "Certificate expires: %s"
 cert_installed = "Certificate installed"
