@@ -29,6 +29,7 @@ from pivtool import messages as m
 from pivtool.utils import HAS_AD
 from pivtool.piv import DeviceGoneError
 from pivtool.storage import settings, SETTINGS
+from datetime import datetime
 from functools import partial
 
 SLOTS = {
@@ -54,7 +55,7 @@ class CertWidget(QtGui.QWidget):
 
         layout.addWidget(QtGui.QLabel(m.cert_not_loaded))
 
-        # TODO: Add buttons for PXF importing and generate CSR.
+        # TODO: Add buttons for generate key?, CSR?
         buttons = QtGui.QHBoxLayout()
         from_ca_btn = QtGui.QPushButton(m.change_cert)
         from_ca_btn.clicked.connect(self._request_cert)
@@ -74,17 +75,22 @@ class CertWidget(QtGui.QWidget):
 
         status = QtGui.QGridLayout()
         status.addWidget(QtGui.QLabel(m.issued_to_label), 0, 0)
-        self._subject = QtGui.QLabel(cert.issued_to)
-        status.addWidget(self._subject, 0, 1)
+        subject = QtGui.QLabel(cert.issued_to)
+        status.addWidget(subject, 0, 1)
         status.addWidget(QtGui.QLabel(m.issued_by_label), 0, 2)
-        self._issuer = QtGui.QLabel(cert.issued_by)
-        status.addWidget(self._issuer, 0, 3)
+        issuer = QtGui.QLabel(cert.issued_by)
+        status.addWidget(issuer, 0, 3)
         status.addWidget(QtGui.QLabel(m.valid_from_label), 1, 0)
-        self._valid_from = QtGui.QLabel(cert.effectiveDate().toString())
-        status.addWidget(self._valid_from, 1, 1)
+        valid_from = QtGui.QLabel(cert.effectiveDate().toString())
+        now = datetime.now()
+        if cert.effectiveDate().toPython() > now:
+            valid_from.setStyleSheet("QLabel { color: red; }")
+        status.addWidget(valid_from, 1, 1)
         status.addWidget(QtGui.QLabel(m.valid_to_label), 1, 2)
-        self._valid_to = QtGui.QLabel(cert.expiryDate().toString())
-        status.addWidget(self._valid_to, 1, 3)
+        valid_to = QtGui.QLabel(cert.expiryDate().toString())
+        if cert.expiryDate().toPython() < now:
+            valid_to.setStyleSheet("QLabel { color: red; }")
+        status.addWidget(valid_to, 1, 3)
 
         layout.addLayout(status)
         buttons = QtGui.QHBoxLayout()
@@ -146,6 +152,7 @@ class CertWidget(QtGui.QWidget):
                                           m.cert_deleted_desc)
 
     def _import_file(self):
+        # TODO: Support importing cert/private key from *.pem
         fn, fn_filter = QtGui.QFileDialog.getOpenFileName(
             self, m.import_from_file, filter='PKCS#12 files (*.pfx *.p12)')
         if not fn:
