@@ -96,6 +96,13 @@ class YkPivCmd(object):
             raise ValueError('Management key has not been provided')
         return self.run('-s', slot, '-a', 'import-certificate', input=pem)
 
+    def import_pfx(self, pfx_data, password, slot):
+        if '-k' not in self._base_args:
+            raise ValueError('Management key has not been provided')
+        return self.run('-s', slot, '-K', 'PKCS12', '-p', password,
+                        '-a', 'import-key', '-a', 'import-certificate',
+                        input=pfx_data*2)
+
     def delete_cert(self, slot):
         if '-k' not in self._base_args:
             raise ValueError('Management key has not been provided')

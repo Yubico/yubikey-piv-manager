@@ -112,6 +112,8 @@ pin_complexity_desc = """Your PIN/Password must:
 """
 enter_pin = "Enter PIN"
 enter_key = "Enter management key"
+enter_pfx_password = "Enter password to unlock file."
+password_label = "Password:"
 unknown = "Unknown"
 change_cert = "Request certificate"
 change_cert_warning_1 = "This will generate a new private key and request a " \
@@ -121,6 +123,8 @@ change_cert_warning_1 = "This will generate a new private key and request a " \
 changing_cert = "Requesting certificate..."
 export_to_file = "Export to file"
 export_cert = "Export certificate"
+import_from_file = "Import from file"
+importing_file = "Importing from file..."
 delete_cert = "Delete certificate"
 delete_cert_warning_1 = "This will delete the certificate stored in slot " \
     "'%s' of your YubiKey, and cannot be undone."

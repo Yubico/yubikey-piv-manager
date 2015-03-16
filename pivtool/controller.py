@@ -319,5 +319,8 @@ class Controller(object):
         cert.issued_by = cert.issuerInfo(QtNetwork.QSslCertificate.CommonName)
         return cert
 
+    def import_pfx(self, pfx_data, password, slot):
+        self._key.import_pfx(pfx_data, password, slot)
+
     def delete_certificate(self, slot):
         self._key.delete_cert(slot)

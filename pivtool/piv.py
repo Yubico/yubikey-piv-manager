@@ -235,6 +235,12 @@ class YkPiv(object):
         finally:
             self._reset()
 
+    def import_pfx(self, pfx_data, password, slot):
+        try:
+            return self._cmd.import_pfx(pfx_data, password, slot)
+        finally:
+            self._reset()
+
     def read_cert(self, slot):
         try:
             data = self.fetch_object(CERT_SLOTS[slot])

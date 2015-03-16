@@ -60,6 +60,11 @@ class CertWidget(QtGui.QWidget):
         from_ca_btn.clicked.connect(self._request_cert)
         if HAS_AD:
             buttons.addWidget(from_ca_btn)
+
+        from_file_btn = QtGui.QPushButton(m.import_from_file)
+        from_file_btn.clicked.connect(self._import_file)
+        buttons.addWidget(from_file_btn)
+
         layout.addLayout(buttons)
 
         layout.addStretch()
@@ -139,6 +144,41 @@ class CertWidget(QtGui.QWidget):
             self.refresh()
             QtGui.QMessageBox.information(self, m.cert_deleted,
                                           m.cert_deleted_desc)
+
+    def _import_file(self):
+        fn, fn_filter = QtGui.QFileDialog.getOpenFileName(
+            self, m.import_from_file, filter='PKCS#12 files (*.pfx *.p12)')
+        if not fn:
+            return
+
+        with open(fn, 'r') as pfx:
+            pfx_data = pfx.read()
+
+        password, status = QtGui.QInputDialog.getText(
+            self, m.enter_pfx_password, m.password_label,
+            QtGui.QLineEdit.Password)
+        if not status:
+            return
+
+        try:
+            self._controller.ensure_authenticated()
+            worker = QtCore.QCoreApplication.instance().worker
+            worker.post(m.importing_file, (
+                self._controller.import_pfx, pfx_data, password,
+                self._slot), self._import_file_callback, True)
+        except ValueError as e:
+            QtGui.QMessageBox.warning(self, m.error, str(e))
+
+    def _import_file_callback(self, result):
+        if isinstance(result, DeviceGoneError):
+            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.window().accept()
+        elif isinstance(result, Exception):
+            QtGui.QMessageBox.warning(self, m.error, str(result))
+        else:
+            self.refresh()
+            QtGui.QMessageBox.information(self, m.cert_installed,
+                                          m.cert_installed_desc)
 
     def _request_cert(self):
         res = QtGui.QMessageBox.warning(self, m.change_cert,
