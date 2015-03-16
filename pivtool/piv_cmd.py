@@ -91,10 +91,11 @@ class YkPivCmd(object):
         return self.run('-a', 'verify-pin', '-s', slot, '-a',
                         'request-certificate', '-S', subject, input=pem)
 
-    def import_cert(self, pem, slot):
+    def import_cert(self, data, slot, frmt='PEM'):
         if '-k' not in self._base_args:
             raise ValueError('Management key has not been provided')
-        return self.run('-s', slot, '-a', 'import-certificate', input=pem)
+        return self.run('-s', slot, '-a', 'import-certificate', '-K', frmt,
+                        input=data)
 
     def import_pfx(self, pfx_data, password, slot):
         if '-k' not in self._base_args:

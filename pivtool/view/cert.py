@@ -24,7 +24,7 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from PySide import QtGui, QtCore
+from PySide import QtGui, QtCore, QtNetwork
 from pivtool import messages as m
 from pivtool.utils import HAS_AD
 from pivtool.piv import DeviceGoneError
@@ -38,6 +38,47 @@ SLOTS = {
     '9d': 'Key Management',
     '9e': 'Card Authentication',
 }
+
+FILE_FILTER = 'Certificate/key files (*.pfx *.p12 *.cer *.crt *.key *.pem *.der)'
+
+
+def import_file(controller, slot, fn):
+    suffix = '.' in fn and fn.lower().rsplit('.', 1)[1]
+    with open(fn, 'r') as f:
+        data = f.read()
+
+    f_format = None
+    f_type = 0
+    if suffix in ['pfx', 'p12']:
+        f_format = 'pfx'
+    else:
+        f_format = 'pem' if data.startswith('-----') else 'der'
+        if f_format == 'pem':
+            f_type = 1 if 'CERTIFICATE' in data.splitlines()[0] else 2
+        elif suffix in ['cer', 'crt']:
+            f_type = 1
+        elif suffix in ['key']:
+            f_type = 2
+        else:
+            certs = QtNetwork.QSslCertificate.fromData(data, QtNetwork.QSsl.Der)
+            f_type = 1 if certs else 2
+
+    if f_type == 2 and f_format == 'der':
+        return None, None  # We don't know what type of key this is.
+
+    def func(password=None):
+        if f_format == 'pfx':
+            controller.import_pfx(data, password, slot)
+        elif f_format == 'pem':
+            if f_type == 1:
+                controller.import_certificate(data, slot, 'PEM')
+            elif f_type == 2:
+                pass
+                # TODO: import pem key
+        else:
+            controller.import_certificate(data, slot, 'DER')
+
+    return func, f_format == 'pfx'
 
 
 class CertWidget(QtGui.QWidget):
@@ -152,27 +193,27 @@ class CertWidget(QtGui.QWidget):
                                           m.cert_deleted_desc)
 
     def _import_file(self):
-        # TODO: Support importing cert/private key from *.pem
         fn, fn_filter = QtGui.QFileDialog.getOpenFileName(
-            self, m.import_from_file, filter='PKCS#12 files (*.pfx *.p12)')
+            self, m.import_from_file, filter=FILE_FILTER)
         if not fn:
             return
 
-        with open(fn, 'r') as pfx:
-            pfx_data = pfx.read()
-
-        password, status = QtGui.QInputDialog.getText(
-            self, m.enter_pfx_password, m.password_label,
-            QtGui.QLineEdit.Password)
-        if not status:
-            return
+        func, needs_password = import_file(self._controller, self._slot, fn)
+        if func is None:
+            QtGui.QMessageBox.warning(self, m.error, m.unsupported_file)
+        if needs_password:
+            password, status = QtGui.QInputDialog.getText(
+                self, m.enter_pfx_password, m.password_label,
+                QtGui.QLineEdit.Password)
+            if not status:
+                return
+            func = (func, password)
 
         try:
             self._controller.ensure_authenticated()
             worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.importing_file, (
-                self._controller.import_pfx, pfx_data, password,
-                self._slot), self._import_file_callback, True)
+            worker.post(m.importing_file, func, self._import_file_callback,
+                        True)
         except ValueError as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))
 

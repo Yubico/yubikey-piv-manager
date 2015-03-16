@@ -272,7 +272,7 @@ class Controller(object):
             cert = request_cert_from_ca(csr, cert_tmpl)
         except ValueError:
             raise ValueError(m.certreq_error)
-        self._key.import_cert(cert, slot)
+        self.import_certificate(cert, slot, 'PEM')
         self._key.set_chuid()
         self._settings.rename(self._key.chuid)
 
@@ -318,6 +318,9 @@ class Controller(object):
         cert.issued_to = cert.subjectInfo(QtNetwork.QSslCertificate.CommonName)
         cert.issued_by = cert.issuerInfo(QtNetwork.QSslCertificate.CommonName)
         return cert
+
+    def import_certificate(self, cert, slot, frmt='PEM'):
+        self._key.import_cert(cert, slot, frmt)
 
     def import_pfx(self, pfx_data, password, slot):
         self._key.import_pfx(pfx_data, password, slot)

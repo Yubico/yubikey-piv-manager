@@ -229,9 +229,9 @@ class YkPiv(object):
         finally:
             self._reset()
 
-    def import_cert(self, cert_pem, slot):
+    def import_cert(self, cert_pem, slot, frmt='PEM'):
         try:
-            return self._cmd.import_cert(cert_pem, slot)
+            return self._cmd.import_cert(cert_pem, slot, frmt)
         finally:
             self._reset()
 

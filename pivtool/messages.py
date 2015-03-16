@@ -125,6 +125,7 @@ export_to_file = "Export to file"
 export_cert = "Export certificate"
 import_from_file = "Import from file"
 importing_file = "Importing from file..."
+unsupported_file = "Unsupported file type"
 delete_cert = "Delete certificate"
 delete_cert_warning_1 = "This will delete the certificate stored in slot " \
     "'%s' of your YubiKey, and cannot be undone."
