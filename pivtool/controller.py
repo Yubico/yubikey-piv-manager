@@ -260,19 +260,19 @@ class Controller(object):
             self._data[TAG_PIN_TIMESTAMP] = struct.pack('i', int(time.time()))
         self._save_data()
 
-    def request_certificate(self, pin, cert_tmpl='User'):
+    def request_certificate(self, pin, cert_tmpl, slot):
         self._key.verify_pin(pin)
         if not self.authenticated:
             raise ValueError('Not authenticated')
 
-        pubkey = self._key.generate()
+        pubkey = self._key.generate(slot)
         subject = '/CN=%s/' % getuser()
-        csr = self._key.create_csr(subject, pubkey)
+        csr = self._key.create_csr(subject, pubkey, slot)
         try:
             cert = request_cert_from_ca(csr, cert_tmpl)
         except ValueError:
             raise ValueError(m.certreq_error)
-        self._key.import_cert(cert)
+        self._key.import_cert(cert, slot)
         self._key.set_chuid()
         self._settings.rename(self._key.chuid)
 
@@ -315,6 +315,6 @@ class Controller(object):
         if data is None:
             return None
         cert = QtNetwork.QSslCertificate.fromData(data, QtNetwork.QSsl.Der)[0]
-        cert.subject = cert.subjectInfo(QtNetwork.QSslCertificate.CommonName)
-        cert.issuer = cert.issuerInfo(QtNetwork.QSslCertificate.CommonName)
+        cert.issued_to = cert.subjectInfo(QtNetwork.QSslCertificate.CommonName)
+        cert.issued_by = cert.issuerInfo(QtNetwork.QSslCertificate.CommonName)
         return cert

@@ -141,6 +141,10 @@ authentication_error = "Unable to authenticate to device"
 use_complex_pins = "Enforce complex PIN/PUKs"
 pin_expires = "Force periodic PIN change"
 pin_expires_days = "How often (days)?"
+issued_to_label = "Issued to:"
+issued_by_label = "Issued by:"
+valid_from_label = "Valid from:"
+valid_to_label = "Valid to:"
 
 
 def _translate(qt):

@@ -217,19 +217,19 @@ class YkPiv(object):
         c_data = (c_ubyte * len(data)).from_buffer_copy(data)
         check(ykpiv_save_object(self._state, object_id, c_data, len(data)))
 
-    def generate(self, slot='9a'):
+    def generate(self, slot):
         try:
             return self._cmd.generate(slot)
         finally:
             self._reset()
 
-    def create_csr(self, subject, pubkey_pem, slot='9a'):
+    def create_csr(self, subject, pubkey_pem, slot):
         try:
             return self._cmd.create_csr(subject, pubkey_pem, slot)
         finally:
             self._reset()
 
-    def import_cert(self, cert_pem, slot='9a'):
+    def import_cert(self, cert_pem, slot):
         try:
             return self._cmd.import_cert(cert_pem, slot)
         finally:

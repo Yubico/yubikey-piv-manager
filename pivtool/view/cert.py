@@ -24,11 +24,114 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from PySide import QtGui
+from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError
 from pivtool.storage import settings, SETTINGS
 
+SLOTS = {
+    '9a': 'Authentication',
+    '9c': 'Digital Signature',
+    '9d': 'Key Management',
+    '9e': 'Card Authentication',
+}
+
+
+class CertWidget(QtGui.QWidget):
+
+    def __init__(self, controller, slot):
+        super(CertWidget, self).__init__()
+
+        self._controller = controller
+        self._slot = slot
+
+        self.refresh()
+
+    def _build_no_cert_ui(self):
+        layout = QtGui.QVBoxLayout()
+
+        layout.addWidget(QtGui.QLabel(m.cert_not_loaded))
+
+        # TODO: Button bar
+        buttons = QtGui.QHBoxLayout()
+        from_ca_btn = QtGui.QPushButton(m.change_cert)
+        from_ca_btn.clicked.connect(self._request_cert)
+        buttons.addWidget(from_ca_btn)
+        layout.addLayout(buttons)
+
+        layout.addStretch()
+        self.setLayout(layout)
+
+    def _build_cert_ui(self, cert):
+        layout = QtGui.QVBoxLayout()
+
+        status = QtGui.QGridLayout()
+        status.addWidget(QtGui.QLabel(m.issued_to_label), 0, 0)
+        self._subject = QtGui.QLabel(cert.issued_to)
+        status.addWidget(self._subject, 0, 1)
+        status.addWidget(QtGui.QLabel(m.issued_by_label), 0, 2)
+        self._issuer = QtGui.QLabel(cert.issued_by)
+        status.addWidget(self._issuer, 0, 3)
+        status.addWidget(QtGui.QLabel(m.valid_from_label), 1, 0)
+        self._valid_from = QtGui.QLabel(cert.effectiveDate().toString())
+        status.addWidget(self._valid_from, 1, 1)
+        status.addWidget(QtGui.QLabel(m.valid_to_label), 1, 2)
+        self._valid_to = QtGui.QLabel(cert.expiryDate().toString())
+        status.addWidget(self._valid_to, 1, 3)
+
+        layout.addLayout(status)
+        # TODO: Button bar
+        buttons = QtGui.QHBoxLayout()
+        layout.addLayout(buttons)
+
+        layout.addStretch()
+        self.setLayout(layout)
+
+    def refresh(self):
+        cert = self._controller.get_certificate(self._slot)
+        if cert is None:
+            self._build_no_cert_ui()
+        else:
+            self._build_cert_ui(cert)
+
+    def _request_cert(self):
+        res = QtGui.QMessageBox.warning(self, m.change_cert,
+                                        m.change_cert_warning,
+                                        QtGui.QMessageBox.Ok,
+                                        QtGui.QMessageBox.Cancel)
+        if res == QtGui.QMessageBox.Ok:
+            pin, status = QtGui.QInputDialog.getText(
+                self, m.enter_pin, m.pin_label, QtGui.QLineEdit.Password)
+            if not status:
+                return
+
+            cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
+            if cert_tmpl is None:
+                # Ask for certificate template
+                cert_tmpl, status = QtGui.QInputDialog.getText(
+                    self, m.cert_tmpl, m.cert_tmpl)
+                if not status:
+                    return
+
+            try:
+                self._controller.ensure_authenticated(pin)
+                worker = QtCore.QCoreApplication.instance().worker
+                worker.post(m.changing_cert, (
+                    self._controller.request_certificate, pin, cert_tmpl,
+                    self._slot), self._request_cert_callback, True)
+            except ValueError as e:
+                QtGui.QMessageBox.warning(self, m.error, str(e))
+
+    def _request_cert_callback(self, result):
+        if isinstance(result, DeviceGoneError):
+            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.parentWidget().window().reset()
+        elif isinstance(result, Exception):
+            QtGui.QMessageBox.warning(self, m.error, str(result))
+        else:
+            QtGui.QMessageBox.information(self, m.cert_installed,
+                                          m.cert_installed_desc)
+            self.refresh()
 
 class CertDialog(QtGui.QDialog):
 
@@ -49,10 +152,8 @@ class CertDialog(QtGui.QDialog):
         layout = QtGui.QVBoxLayout()
 
         self._cert_tabs = QtGui.QTabWidget()
-        self._cert_tabs.addTab(QtGui.QLabel('Placeholder'), 'Authentication')
-        self._cert_tabs.addTab(QtGui.QLabel('Placeholder'), 'Digital Signature')
-        self._cert_tabs.addTab(QtGui.QLabel('Placeholder'), 'Key Management')
-        self._cert_tabs.addTab(QtGui.QLabel('Placeholder'), 'Card Authentication')
+        for (slot, label) in SLOTS.items():
+            self._cert_tabs.addTab(CertWidget(self._controller, slot), label)
         layout.addWidget(self._cert_tabs)
 
         self.setLayout(layout)
