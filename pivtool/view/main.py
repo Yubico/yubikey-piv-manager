@@ -149,6 +149,8 @@ class MainWidget(QtGui.QWidget):
                     QtGui.QMessageBox.information(self, m.pin_changed,
                                                   m.pin_changed_desc)
                     self.refresh()
+                else:
+                    QtCore.QCoreApplication.instance().quit()
 
 
 class MainWindow(QtGui.QMainWindow):
