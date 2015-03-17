@@ -52,6 +52,8 @@ class MainWidget(QtGui.QWidget):
     def __init__(self):
         super(MainWidget, self).__init__()
 
+        self._lock = QtCore.QMutex()
+        self._controller = None
         self._build_ui()
         self.set_controller(self.refresh_controller())
         self.startTimer(2000)
@@ -61,10 +63,10 @@ class MainWidget(QtGui.QWidget):
 
         btns = QtGui.QHBoxLayout()
         self._pin_btn = QtGui.QPushButton('Manage PIN/Key')
-        self._pin_btn.clicked.connect(self._manage_pin)
+        self._pin_btn.clicked.connect(self._with_lock(self._manage_pin))
         btns.addWidget(self._pin_btn)
         self._cert_btn = QtGui.QPushButton('Certificates')
-        self._cert_btn.clicked.connect(self._manage_certs)
+        self._cert_btn.clicked.connect(self._with_lock(self._manage_certs))
         btns.addWidget(self._cert_btn)
         layout.addLayout(btns)
 
@@ -73,6 +75,17 @@ class MainWidget(QtGui.QWidget):
         layout.addWidget(self._messages)
 
         self.setLayout(layout)
+
+    def _with_lock(self, fn):
+        def try_run():
+            if self._lock.tryLock():
+                try:
+                    fn()
+                finally:
+                    self._lock.unlock()
+            else:
+                QtCore.QTimer.singleShot(100, try_run)
+        return try_run
 
     def _manage_pin(self):
         dialog = SetPinDialog(self._controller, self)
@@ -92,11 +105,17 @@ class MainWidget(QtGui.QWidget):
 
     def timerEvent(self, event):
         if QtGui.QApplication.activeWindow() == self.window():
-            worker = QtCore.QCoreApplication.instance().worker
-            worker.post_bg(self.refresh_controller, self.set_controller, True)
+            if self._lock.tryLock():
+                def cb(result):
+                    self.set_controller(result)
+                    self._lock.unlock()
+                worker = QtCore.QCoreApplication.instance().worker
+                worker.post_bg(self.refresh_controller, cb, True)
 
     def refresh_controller(self):
         try:
+            if self._controller is not None:
+                self._controller = None
             reader_pattern = settings.get(SETTINGS.CARD_READER)
             return Controller(YkPiv(reader=reader_pattern), self.window())
         except DeviceGoneError as e:
@@ -116,7 +135,7 @@ class MainWidget(QtGui.QWidget):
         if controller is None:
             messages.append(m.no_key)
         else:
-            messages.append('YubiKey present with applet version: %s' % controller.version)
+            messages.append(m.key_with_applet_1 % controller.version)
             n_certs = sum(controller.cert_index.values())
             messages.append(m.certs_loaded_1 % n_certs or m.no)
 
@@ -135,7 +154,6 @@ class MainWidget(QtGui.QWidget):
                     QtGui.QMessageBox.information(self, m.pin_changed,
                                                   m.pin_changed_desc)
                     self.refresh()
-
 
 
 class MainWindow(QtGui.QMainWindow):
