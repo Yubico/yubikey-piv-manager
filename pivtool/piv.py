@@ -109,9 +109,9 @@ class YkPiv(object):
                 raise e
 
     def _read_cert_index(self):
-        self._cert_index =  dict([(k, test(self.fetch_object, v,
-                                           catches=PivError)) \
-                                  for (k, v) in CERT_SLOTS.items()])
+        self._cert_index = dict([(k, test(self.fetch_object, v,
+                                          catches=PivError))
+                                 for (k, v) in CERT_SLOTS.items()])
 
     def __del__(self):
         check(ykpiv_done(self._state))
@@ -229,15 +229,15 @@ class YkPiv(object):
         finally:
             self._reset()
 
-    def import_cert(self, cert_pem, slot, frmt='PEM'):
+    def import_cert(self, cert_pem, slot, frmt='PEM', password=None):
         try:
-            return self._cmd.import_cert(cert_pem, slot, frmt)
+            return self._cmd.import_cert(cert_pem, slot, frmt, password)
         finally:
             self._reset()
 
-    def import_pfx(self, pfx_data, password, slot):
+    def import_key(self, cert_pem, slot, frmt='PEM', password=None):
         try:
-            return self._cmd.import_pfx(pfx_data, password, slot)
+            return self._cmd.import_key(cert_pem, slot, frmt, password)
         finally:
             self._reset()
 

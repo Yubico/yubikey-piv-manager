@@ -49,12 +49,16 @@ def import_file(controller, slot, fn):
 
     f_format = None
     f_type = 0
+    needs_password = False
     if suffix in ['pfx', 'p12']:
         f_format = 'pfx'
+        needs_password = True
     else:
         f_format = 'pem' if data.startswith('-----') else 'der'
         if f_format == 'pem':
-            f_type = 1 if 'CERTIFICATE' in data.splitlines()[0] else 2
+            first_line = data.splitlines()[0]
+            f_type = 1 if 'CERTIFICATE' in first_line else 2
+            needs_password = 'ENCRYPTED' in first_line
         elif suffix in ['cer', 'crt']:
             f_type = 1
         elif suffix in ['key']:
@@ -68,17 +72,17 @@ def import_file(controller, slot, fn):
 
     def func(password=None):
         if f_format == 'pfx':
-            controller.import_pfx(data, password, slot)
+            controller.import_key(data, slot, 'PKCS12', password)
+            controller.import_certificate(data, slot, 'PKCS12', password)
         elif f_format == 'pem':
             if f_type == 1:
-                controller.import_certificate(data, slot, 'PEM')
+                controller.import_certificate(data, slot, 'PEM', password)
             elif f_type == 2:
-                pass
-                # TODO: import pem key
+                controller.import_key(data, slot, 'PEM', password)
         else:
             controller.import_certificate(data, slot, 'DER')
 
-    return func, f_format == 'pfx'
+    return func, needs_password
 
 
 class CertWidget(QtGui.QWidget):
@@ -201,9 +205,10 @@ class CertWidget(QtGui.QWidget):
         func, needs_password = import_file(self._controller, self._slot, fn)
         if func is None:
             QtGui.QMessageBox.warning(self, m.error, m.unsupported_file)
+            return
         if needs_password:
             password, status = QtGui.QInputDialog.getText(
-                self, m.enter_pfx_password, m.password_label,
+                self, m.enter_file_password, m.password_label,
                 QtGui.QLineEdit.Password)
             if not status:
                 return

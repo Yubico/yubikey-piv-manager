@@ -319,11 +319,11 @@ class Controller(object):
         cert.issued_by = cert.issuerInfo(QtNetwork.QSslCertificate.CommonName)
         return cert
 
-    def import_certificate(self, cert, slot, frmt='PEM'):
-        self._key.import_cert(cert, slot, frmt)
+    def import_key(self, data, slot, frmt='PEM', password=None):
+        self._key.import_key(data, slot, frmt, password)
 
-    def import_pfx(self, pfx_data, password, slot):
-        self._key.import_pfx(pfx_data, password, slot)
+    def import_certificate(self, cert, slot, frmt='PEM', password=None):
+        self._key.import_cert(cert, slot, frmt, password)
 
     def delete_certificate(self, slot):
         self._key.delete_cert(slot)
