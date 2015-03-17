@@ -59,7 +59,8 @@ class ManageDialog(QtGui.QDialog):
         btns.addWidget(self._puk_btn)
         self._key_btn = QtGui.QPushButton(m.change_key)
         self._key_btn.clicked.connect(self._change_key)
-        btns.addWidget(self._key_btn)
+        if not settings.get(SETTINGS.FORCE_PIN_AS_KEY, False):
+            btns.addWidget(self._key_btn)
         layout.addLayout(btns)
 
         self._messages = QtGui.QTextEdit()
@@ -73,6 +74,9 @@ class ManageDialog(QtGui.QDialog):
                             self._controller.get_pin_days_left())
         if self._controller.pin_is_key:
             messages.append(m.pin_is_key)
+        if self._controller.puk_blocked:
+            messages.append(m.puk_blocked)
+        self._puk_btn.setDisabled(self._controller.puk_blocked)
         self._messages.setHtml('<br>'.join(messages))
 
     def _change_pin(self):

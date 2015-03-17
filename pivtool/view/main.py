@@ -55,8 +55,11 @@ class MainWidget(QtGui.QWidget):
         self._lock = QtCore.QMutex()
         self._controller = None
         self._build_ui()
-        self.set_controller(self.refresh_controller())
         self.startTimer(2000)
+
+    def showEvent(self, event):
+        self.set_controller(self.refresh_controller())
+        event.accept()
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
