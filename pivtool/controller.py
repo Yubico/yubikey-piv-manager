@@ -48,7 +48,7 @@ TAG_FLAGS_1 = 0x81  # Flags 1
 TAG_SALT = 0x82  # Salt used for management key derivation
 TAG_PIN_TIMESTAMP = 0x83  # When the PIN was last changed
 
-FLAG1_PIN_AS_KEY = 0x01  # Derive management key from PIN (UNUSED)
+FLAG1_PUK_BLOCKED = 0x01  # PUK is blocked
 
 
 def parse_pivtool_data(raw_data):
@@ -65,7 +65,7 @@ def serialize_pivtool_data(data):  # NOTE: Doesn't support values > 0x80 bytes.
     return chr(TAG_PIVTOOL_DATA) + chr(len(buf)) + buf
 
 
-def flag_set(data, flagkey, flagmask):
+def has_flag(data, flagkey, flagmask):
     flags = ord(data.get(flagkey, chr(0)))
     return bool(flags & flagmask)
 
@@ -114,7 +114,7 @@ def request_cert_from_ca(csr, cert_tmpl):
             os.remove(cert_fn)
 
 
-def is_hex(string):
+def is_hex_key(string):
     return isinstance(string, basestring) and \
         bool(re.compile(r'[a-fA-F0-9]{48}').match(string))
 
@@ -174,11 +174,19 @@ class Controller(object):
     def authenticated(self):
         return self._authenticated
 
+    @property
+    def pin_is_key(self):
+        return TAG_SALT in self._data
+
+    @property
+    def puk_blocked(self):
+        return has_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
+
     def ensure_authenticated(self, pin=None):
         if self.authenticated or test(self.authenticate):
             return
 
-        if TAG_SALT in self._data:
+        if self.pin_is_key:
             title, label = m.enter_pin, m.pin_label
             echo_mode = QtGui.QLineEdit.Password
         else:
@@ -197,7 +205,7 @@ class Controller(object):
 
         if key is not None and salt is not None:
             key = derive_key(key, salt)
-        elif is_hex(key):
+        elif is_hex_key(key):
             key = key.decode('hex')
 
         self._authenticated = False
@@ -215,50 +223,62 @@ class Controller(object):
             self.authenticate()
 
         if key is None:  # Derive key from PIN
-            self._data[TAG_SALT] = ''  # Used as a marker
-            puk = None  # PUK is worthless if key is derived from PIN
+            self._data[TAG_SALT] = ''  # Used as a marker for change_pin
         else:
             self.set_authentication(key)
-
-        if puk is not None:
-            self._key.set_puk(old_puk, puk)
-        else:
-            for i in range(3):  # Invalidate the PUK
-                test(self._key.set_puk, '', '', catches=ValueError)
+            if puk is not None:
+                self._key.set_puk(old_puk, puk)
 
         self.change_pin(old_pin, pin)
 
-    def set_authentication(self, new_key):
+    def set_authentication(self, new_key, is_pin=False):
         if not self.authenticated:
             raise ValueError('Not authenticated')
 
-        if is_hex(new_key):
-            new_key = new_key.decode('hex')
+        if is_pin:
+            self._key.verify_pin(new_key)
+            salt = get_random_bytes(16)
+            key = derive_key(new_key, salt)
+            self._data[TAG_SALT] = salt
+            self._key.set_authentication(key)
 
-        self._key.set_authentication(new_key)
-        if TAG_SALT in self._data:
-            del self._data[TAG_SALT]
-            self._save_data()
+            #Make sure PUK is invalidated:
+            if not has_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED):
+                set_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
+                for i in range(3):  # Invalidate the PUK
+                    test(self._key.set_puk, '', '', catches=ValueError)
+        else:
+            if is_hex_key(new_key):
+                new_key = new_key.decode('hex')
+
+            self._key.set_authentication(new_key)
+            if self.pin_is_key:
+                del self._data[TAG_SALT]
+
+        self._save_data()
 
     def change_pin(self, old_pin, new_pin):
         if len(new_pin) < 4:
             raise ValueError('PIN must be at least 4 characters')
         self._key.verify_pin(old_pin)
-        key_is_pin = self._data.get(TAG_SALT)
-        if not self.authenticated and key_is_pin:
+        if not self.authenticated and self.pin_is_key:
             self.authenticate(old_pin)
         self._key.set_pin(new_pin)
 
         # Update management key if needed:
-        if key_is_pin:
-            salt = get_random_bytes(16)
-            key = derive_key(new_pin, salt)
-            self._data[TAG_SALT] = salt
-            self._key.set_authentication(key)
+        if self.pin_is_key:
+            self.set_authentication(new_pin, True)
 
         if self.does_pin_expire():
             self._data[TAG_PIN_TIMESTAMP] = struct.pack('i', int(time.time()))
         self._save_data()
+
+    def change_puk(self, old_puk, new_puk):
+        if self.puk_blocked:
+            raise ValueError('PUK is disabled and cannot be changed')
+        if len(new_puk) < 4:
+            raise ValueError('PUK must be at least 4 characters')
+        self._key.set_puk(old_puk, new_puk)
 
     def request_certificate(self, pin, cert_tmpl, slot):
         self._key.verify_pin(pin)

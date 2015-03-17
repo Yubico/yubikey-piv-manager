@@ -59,22 +59,20 @@ class MainWidget(QtGui.QWidget):
         self.startTimer(2000)
 
     def _build_ui(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtGui.QVBoxLayout(self)
 
         btns = QtGui.QHBoxLayout()
-        self._pin_btn = QtGui.QPushButton('Manage PIN/Key')
-        self._pin_btn.clicked.connect(self._with_lock(self._manage_pin))
-        btns.addWidget(self._pin_btn)
-        self._cert_btn = QtGui.QPushButton('Certificates')
+        self._cert_btn = QtGui.QPushButton(m.certificates)
         self._cert_btn.clicked.connect(self._with_lock(self._manage_certs))
         btns.addWidget(self._cert_btn)
+        self._pin_btn = QtGui.QPushButton(m.manage_pin)
+        self._pin_btn.clicked.connect(self._with_lock(self._manage_pin))
+        btns.addWidget(self._pin_btn)
         layout.addLayout(btns)
 
         self._messages = QtGui.QTextEdit()
         self._messages.setReadOnly(True)
         layout.addWidget(self._messages)
-
-        self.setLayout(layout)
 
     def _with_lock(self, fn):
         def try_run():
@@ -88,12 +86,6 @@ class MainWidget(QtGui.QWidget):
         return try_run
 
     def _manage_pin(self):
-        dialog = SetPinDialog(self._controller, self)
-        if dialog.exec_():
-            QtGui.QMessageBox.information(self, m.pin_changed,
-                                          m.pin_changed_desc)
-            self.refresh()
-
         dialog = ManageDialog(self._controller, self)
         if dialog.exec_():
             self.refresh()

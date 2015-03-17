@@ -39,7 +39,8 @@ SLOTS = {
     '9e': 'Card Authentication',
 }
 
-FILE_FILTER = 'Certificate/key files (*.pfx *.p12 *.cer *.crt *.key *.pem *.der)'
+FILE_FILTER = "Certificate/key files " \
+    "(*.pfx *.p12 *.cer *.crt *.key *.pem *.der)"
 
 
 def import_file(controller, slot, fn):
@@ -153,7 +154,7 @@ class CertWidget(QtGui.QWidget):
 
     def refresh(self):
         cert = self._controller.get_certificate(self._slot)
-        QtGui.QWidget().setLayout(self.layout()) # Get rid of old layout.
+        QtGui.QWidget().setLayout(self.layout())  # Get rid of old layout.
         if cert is None:
             self._build_no_cert_ui()
         else:
@@ -271,6 +272,7 @@ class CertWidget(QtGui.QWidget):
             self.refresh()
             QtGui.QMessageBox.information(self, m.cert_installed,
                                           m.cert_installed_desc)
+
 
 class CertDialog(QtGui.QDialog):
 

@@ -34,27 +34,36 @@ from pivtool.view.utils import pin_field
 
 class SetPinDialog(QtGui.QDialog):
 
-    def __init__(self, controller, parent=None, forced=False):
+    def __init__(self, controller, parent=None, forced=False, puk=False):
         super(SetPinDialog, self).__init__(parent)
-        self.setWindowTitle(m.change_pin)
 
+        self._puk = puk
         self._complex = settings.get(SETTINGS.COMPLEX_PINS, False)
         self._controller = controller
-        self._build_ui(forced)
+        self._build_ui(forced, not puk)
 
-    def _build_ui(self, forced):
-        layout = QtGui.QVBoxLayout()
+    def _build_ui(self, forced, pin):
+        self.setWindowTitle(m.change_pin if pin else m.change_puk)
+
+        layout = QtGui.QVBoxLayout(self)
         if forced:
-            layout.addWidget(QtGui.QLabel(m.change_pin_forced_desc))
+            label = m.change_pin_forced_desc \
+                if pin else m.change_puk_forced_desc
+            layout.addWidget(QtGui.QLabel(label))
 
-        layout.addWidget(QtGui.QLabel(m.current_pin_label))
+        layout.addWidget(QtGui.QLabel(m.current_pin_label
+                                      if pin else m.current_puk_label))
         self._old_pin = pin_field()
         layout.addWidget(self._old_pin)
-        label = m.new_complex_pin_label if self._complex else m.new_pin_label
+        if self._complex:
+            label = m.new_complex_pin_label if pin else m.new_complex_puk_label
+        else:
+            label = m.new_pin_label if pin else m.new_puk_label
         layout.addWidget(QtGui.QLabel(label))
         self._new_pin = pin_field()
         layout.addWidget(self._new_pin)
-        layout.addWidget(QtGui.QLabel(m.verify_pin_label))
+        layout.addWidget(QtGui.QLabel(m.verify_pin_label
+                                      if pin else m.verify_puk_label))
         self._confirm_pin = pin_field()
         layout.addWidget(self._confirm_pin)
 
@@ -71,7 +80,6 @@ class SetPinDialog(QtGui.QDialog):
         buttons.accepted.connect(self._set_pin)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
-        self.setLayout(layout)
 
     def _check_confirm(self):
         new_pin = self._new_pin.text()
@@ -90,16 +98,27 @@ class SetPinDialog(QtGui.QDialog):
         old_pin = self._old_pin.text()
         new_pin = self._new_pin.text()
 
+        pin = not self._puk
+
         if old_pin == new_pin:
-            self._invalid_pin(m.pin_not_changed, m.pin_not_changed_desc)
+            if pin:
+                self._invalid_pin(m.pin_not_changed, m.pin_not_changed_desc)
+            else:
+                self._invalid_pin(m.puk_not_changed, m.puk_not_changed_desc)
         elif self._complex and not complexity_check(new_pin):
-            self._invalid_pin(m.pin_not_complex, m.pin_complexity_desc)
+            if pin:
+                self._invalid_pin(m.pin_not_complex, m.pin_complexity_desc)
+            else:
+                self._invalid_pin(m.puk_not_complex, m.puk_complexity_desc)
         else:
             try:
-                self._controller.ensure_authenticated(old_pin)
+                if pin:
+                    self._controller.ensure_authenticated(old_pin)
+                fn = self._controller.change_pin \
+                    if pin else self._controller.change_puk
                 worker = QtCore.QCoreApplication.instance().worker
-                worker.post(m.changing_pin,
-                            (self._controller.change_pin, old_pin, new_pin),
+                worker.post(m.changing_pin if pin else m.changing_puk,
+                            (fn, old_pin, new_pin),
                             self._change_pin_callback, True)
             except ValueError as e:
                 QtGui.QMessageBox.warning(self, m.error, str(e))

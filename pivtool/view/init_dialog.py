@@ -83,9 +83,9 @@ class KeyPanel(QtGui.QWidget):
         layout.addWidget(QtGui.QLabel(SECTION % m.management_key))
 
         self._key_type = QtGui.QButtonGroup(self)
-        self._kt_pin = QtGui.QRadioButton("PIN is key", self)
+        self._kt_pin = QtGui.QRadioButton(m.use_pin_as_key, self)
         self._kt_pin.setChecked(True)
-        self._kt_key = QtGui.QRadioButton("Use a separate key", self)
+        self._kt_key = QtGui.QRadioButton(m.use_separate_key, self)
         self._key_type.addButton(self._kt_pin)
         self._key_type.addButton(self._kt_key)
         self._key_type.buttonClicked.connect(self._change_key_type)
@@ -139,9 +139,9 @@ class AdvancedPanel(QtGui.QWidget):
         layout.addRow(self._key)
 
         buttons = QtGui.QDialogButtonBox()
-        self._randomize_btn = QtGui.QPushButton("Randomize")
+        self._randomize_btn = QtGui.QPushButton(m.randomize)
         self._randomize_btn.clicked.connect(self.randomize)
-        self._copy_btn = QtGui.QPushButton("Copy to clipboard")
+        self._copy_btn = QtGui.QPushButton(m.copy_clipboard)
         self._copy_btn.clicked.connect(self._copy)
         buttons.addButton(self._randomize_btn,
                           QtGui.QDialogButtonBox.ActionRole)
