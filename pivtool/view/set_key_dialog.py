@@ -129,6 +129,15 @@ class SetKeyDialog(QtGui.QDialog):
             self.reject()
             return
 
+        if not self._controller.puk_blocked and self.use_pin:
+            res = QtGui.QMessageBox.warning(self, m.block_puk,
+                                            m.block_puk_desc,
+                                            QtGui.QMessageBox.Ok,
+                                            QtGui.QMessageBox.Cancel)
+            if res != QtGui.QMessageBox.Ok:
+                return
+
+
         if self._controller.pin_is_key or self.use_pin:
             pin, status = QtGui.QInputDialog.getText(self, m.enter_pin,
                                                      m.pin_label,

@@ -42,11 +42,7 @@ class SettingsDialog(QtGui.QDialog):
     def _build_ui(self):
         layout = QtGui.QFormLayout()
 
-        layout.addRow(QtGui.QLabel(TOP_SECTION % m.general))
-
-        reader_pattern = settings.get(SETTINGS.CARD_READER)
-        self._reader_pattern = QtGui.QLineEdit(reader_pattern)
-        layout.addRow(m.reader_name, self._reader_pattern)
+        layout.addRow(QtGui.QLabel(TOP_SECTION % m.pin))
 
         self._complex_pins = QtGui.QCheckBox(m.use_complex_pins)
         self._complex_pins.setChecked(
@@ -79,6 +75,11 @@ class SettingsDialog(QtGui.QDialog):
             layout.addRow(QtGui.QLabel(m.active_directory_desc))
 
             layout.addRow(m.cert_tmpl, self._certreq_tmpl)
+
+        layout.addRow(QtGui.QLabel(SECTION % m.misc))
+        reader_pattern = settings.get(SETTINGS.CARD_READER)
+        self._reader_pattern = QtGui.QLineEdit(reader_pattern)
+        layout.addRow(m.reader_name, self._reader_pattern)
 
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
                                          QtGui.QDialogButtonBox.Cancel)
