@@ -153,6 +153,9 @@ generate_key = "Generate new key..."
 generate_key_warning_1 = "A new private key will be generated and stored in " \
     "slot '%s'. Anything currently in the slot will be deleted. This action " \
     "cannot be undone."
+generating_key = "Generating new key..."
+generated_key = "New key generated"
+generated_key_desc_1 = "A new private key has been generated in slot '%s'."
 import_from_file = "Import from file..."
 import_from_file_warning_1 = "Anything currently in slot '%s' will be " \
     "overwritten by the imported content. This action cannot be undone."

@@ -37,11 +37,6 @@ from pivtool.piv import YkPiv
 from pivtool.controller import Controller
 from pivtool.view.set_pin_dialog import SetPinDialog
 
-# For PyInstaller (TODO: do this in a cleaner way)
-from pyasn1.codec.der import decoder
-from pyasn1_modules import rfc2459
-
-
 if getattr(sys, 'frozen', False):
     # we are running in a PyInstaller bundle
     basedir = sys._MEIPASS

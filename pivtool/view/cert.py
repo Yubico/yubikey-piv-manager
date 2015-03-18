@@ -275,8 +275,6 @@ class CertWidget(QtGui.QWidget):
         if '.' not in fn:
             fn += '.csr' if csr else '.pem'
 
-        print "Save", csr, fn
-
         pin, status = QtGui.QInputDialog.getText(
             self, m.enter_pin, m.pin_label, QtGui.QLineEdit.Password)
         if not status:
@@ -292,7 +290,7 @@ class CertWidget(QtGui.QWidget):
         try:
             self._controller.ensure_authenticated(pin)
             worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.changing_cert, func, self._generate_key_callback, True)
+            worker.post(m.generating_key, func, self._generate_key_callback, True)
         except ValueError as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))
 
@@ -303,8 +301,8 @@ class CertWidget(QtGui.QWidget):
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
-            QtGui.QMessageBox.information(self, m.cert_installed,
-                                          m.cert_installed_desc)
+            QtGui.QMessageBox.information(self, m.generated_key,
+                                          m.cert_installed_desc_1 % self._slot)
 
     def _request_cert(self):
         res = QtGui.QMessageBox.warning(self, m.change_cert,
