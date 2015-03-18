@@ -52,19 +52,24 @@ YKPIV_WRONG_PIN = -10
 YKPIV_INVALID_OBJECT = -11
 YKPIV_ALGORITHM_ERROR = -12
 
-YKPIV_OBJ_CAPABILITY =  0x5fc107
+YKPIV_OBJ_CAPABILITY = 0x5fc107
 YKPIV_OBJ_CHUID = 0x5fc102
-YKPIV_OBJ_AUTHENTICATION = 0x5fc105 # cert for 9a key
+YKPIV_OBJ_AUTHENTICATION = 0x5fc105  # cert for 9a key
 YKPIV_OBJ_FINGERPRINTS = 0x5fc103
 YKPIV_OBJ_SECURITY = 0x5fc106
 YKPIV_OBJ_FACIAL = 0x5fc108
 YKPIV_OBJ_PRINTED = 0x5fc109
-YKPIV_OBJ_SIGNATURE = 0x5fc10a # cert for 9c key
-YKPIV_OBJ_KEY_MANAGEMENT = 0x5fc10b # cert for 9d key
-YKPIV_OBJ_CARD_AUTH = 0x5fc101 # cert for 9e key
+YKPIV_OBJ_SIGNATURE = 0x5fc10a  # cert for 9c key
+YKPIV_OBJ_KEY_MANAGEMENT = 0x5fc10b  # cert for 9d key
+YKPIV_OBJ_CARD_AUTH = 0x5fc101  # cert for 9e key
 YKPIV_OBJ_DISCOVERY = 0x7e
 YKPIV_OBJ_KEY_HISTORY = 0x5fc10c
 YKPIV_OBJ_IRIS = 0x5fc121
+
+YKPIV_ALGO_3DES = 0x03
+YKPIV_ALGO_RSA1024 = 0x06
+YKPIV_ALGO_RSA2048 = 0x07
+YKPIV_ALGO_ECCP256 = 0x11
 
 ykpiv_state = type('ykpiv_state', (Structure,), {})
 ykpiv_rc = c_int
@@ -90,7 +95,7 @@ ykpiv_set_mgmkey = define('ykpiv_set_mgmkey', [POINTER(ykpiv_state),
 ykpiv_hex_decode = define('ykpiv_hex_decode', [
     c_char_p, c_size_t, POINTER(c_ubyte), POINTER(c_size_t)], ykpiv_rc)
 ykpiv_sign_data = define('ykpiv_sign_data', [
-    POINTER(ykpiv_state), POINTER(c_ubyte), c_size_t, c_char_p,
+    POINTER(ykpiv_state), POINTER(c_ubyte), c_size_t, POINTER(c_ubyte),
     POINTER(c_size_t), c_ubyte, c_ubyte], ykpiv_rc)
 ykpiv_get_version = define('ykpiv_get_version', [POINTER(ykpiv_state), c_char_p,
                                                  c_size_t], ykpiv_rc)

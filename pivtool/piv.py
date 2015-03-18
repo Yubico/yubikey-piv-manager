@@ -210,7 +210,7 @@ class YkPiv(object):
         buf = (c_ubyte * 4096)()
         buf_len = c_size_t(sizeof(buf))
 
-        check(ykpiv_fetch_object(self._state, object_id, buf, buf_len))
+        check(ykpiv_fetch_object(self._state, object_id, buf, byref(buf_len)))
         return ''.join(map(chr, buf[:buf_len.value]))
 
     def save_object(self, object_id, data):
@@ -240,6 +240,14 @@ class YkPiv(object):
             return self._cmd.import_key(cert_pem, slot, frmt, password)
         finally:
             self._reset()
+
+    def sign_data(self, slot, hashed, algorithm=YKPIV_ALGO_RSA2048):
+        c_hashed = (c_ubyte * len(hashed)).from_buffer_copy(hashed)
+        buf = (c_ubyte * 4096)()
+        buf_len = c_size_t(sizeof(buf))
+        check(ykpiv_sign_data(self._state, c_hashed, len(hashed), buf,
+                              byref(buf_len), algorithm, int(slot, 16)))
+        return ''.join(map(chr, buf[:buf_len.value]))
 
     def read_cert(self, slot):
         try:
