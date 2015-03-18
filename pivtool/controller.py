@@ -217,6 +217,11 @@ class Controller(object):
     def is_uninitialized(self):
         return not self._data and test(self._key.authenticate)
 
+    def _invalidate_puk(self):
+        set_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
+        for i in range(8):  # Invalidate the PUK
+            test(self._key.set_puk, '', '', catches=ValueError)
+
     def initialize(self, pin, puk=None, key=None, old_pin='123456',
                    old_puk='12345678'):
         if not self.authenticated:
@@ -226,7 +231,9 @@ class Controller(object):
             self._data[TAG_SALT] = ''  # Used as a marker for change_pin
         else:
             self.set_authentication(key)
-            if puk is not None:
+            if puk is None:
+                self._invalidate_puk()
+            else:
                 self._key.set_puk(old_puk, puk)
 
         self.change_pin(old_pin, pin)
@@ -244,9 +251,7 @@ class Controller(object):
 
             #Make sure PUK is invalidated:
             if not has_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED):
-                set_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
-                for i in range(8):  # Invalidate the PUK
-                    test(self._key.set_puk, '', '', catches=ValueError)
+                self._invalidate_puk()
         else:
             if is_hex_key(new_key):
                 new_key = new_key.decode('hex')
