@@ -86,38 +86,18 @@ def import_file(controller, slot, fn):
     return func, needs_password
 
 
-class CertWidget(QtGui.QWidget):
+class CertPanel(QtGui.QWidget):
 
-    def __init__(self, controller, slot):
-        super(CertWidget, self).__init__()
+    def __init__(self, controller, slot, parent=None):
+        super(CertPanel, self).__init__(parent)
 
         self._controller = controller
         self._slot = slot
 
-        self.refresh()
+        cert = controller.get_certificate(slot)
 
-    def _build_no_cert_ui(self):
         layout = QtGui.QVBoxLayout(self)
-
-        layout.addWidget(QtGui.QLabel(m.cert_not_loaded))
-
-        # TODO: Add buttons for generate key?, CSR?
-        buttons = QtGui.QHBoxLayout()
-        from_ca_btn = QtGui.QPushButton(m.change_cert)
-        from_ca_btn.clicked.connect(self._request_cert)
-        if HAS_AD:
-            buttons.addWidget(from_ca_btn)
-
-        from_file_btn = QtGui.QPushButton(m.import_from_file)
-        from_file_btn.clicked.connect(self._import_file)
-        buttons.addWidget(from_file_btn)
-
-        layout.addLayout(buttons)
-
-        layout.addStretch()
-
-    def _build_cert_ui(self, cert):
-        layout = QtGui.QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         status = QtGui.QGridLayout()
         status.addWidget(QtGui.QLabel(m.issued_to_label), 0, 0)
@@ -149,16 +129,6 @@ class CertWidget(QtGui.QWidget):
         delete_btn.clicked.connect(self._delete_cert)
         buttons.addWidget(delete_btn)
         layout.addLayout(buttons)
-
-        layout.addStretch()
-
-    def refresh(self):
-        cert = self._controller.get_certificate(self._slot)
-        QtGui.QWidget().setLayout(self.layout())  # Get rid of old layout.
-        if cert is None:
-            self._build_no_cert_ui()
-        else:
-            self._build_cert_ui(cert)
 
     def _export_cert(self, cert):
         fn, fn_filter = QtGui.QFileDialog.getSaveFileName(
@@ -193,11 +163,64 @@ class CertWidget(QtGui.QWidget):
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
-            self.refresh()
+            self.parent().refresh()
             QtGui.QMessageBox.information(self, m.cert_deleted,
                                           m.cert_deleted_desc)
 
+
+class CertWidget(QtGui.QWidget):
+
+    def __init__(self, controller, slot):
+        super(CertWidget, self).__init__()
+
+        self._controller = controller
+        self._slot = slot
+
+        self._build_ui()
+
+        self.refresh()
+
+    def _build_ui(self):
+        layout = QtGui.QVBoxLayout(self)
+
+        self._status = QtGui.QLabel(m.cert_not_loaded)
+        layout.addWidget(self._status)
+        layout.addStretch()
+
+        buttons = QtGui.QHBoxLayout()
+        from_ca_btn = QtGui.QPushButton(m.change_cert)
+        from_ca_btn.clicked.connect(self._request_cert)
+        if HAS_AD:
+            buttons.addWidget(from_ca_btn)
+
+        from_file_btn = QtGui.QPushButton(m.import_from_file)
+        from_file_btn.clicked.connect(self._import_file)
+        buttons.addWidget(from_file_btn)
+
+        generate_btn = QtGui.QPushButton(m.generate_key)
+        generate_btn.clicked.connect(self._generate_key)
+        buttons.addWidget(generate_btn)
+
+        layout.addLayout(buttons)
+
+    def refresh(self):
+        self.layout().removeWidget(self._status)
+        self._status.hide()
+        if self._controller.cert_index[self._slot]:
+            self._status = CertPanel(self._controller, self._slot, self)
+        else:
+            self._status = QtGui.QLabel(m.cert_not_loaded)
+        self.layout().insertWidget(0, self._status)
+
     def _import_file(self):
+        res = QtGui.QMessageBox.warning(self, m.import_from_file,
+                                        m.import_from_file_warning_1 %
+                                        self._slot,
+                                        QtGui.QMessageBox.Ok,
+                                        QtGui.QMessageBox.Cancel)
+        if res != QtGui.QMessageBox.Ok:
+            return
+
         fn, fn_filter = QtGui.QFileDialog.getOpenFileName(
             self, m.import_from_file, filter=FILE_FILTER)
         if not fn:
@@ -234,6 +257,55 @@ class CertWidget(QtGui.QWidget):
             QtGui.QMessageBox.information(self, m.cert_installed,
                                           m.cert_installed_desc)
 
+    def _generate_key(self):
+        res = QtGui.QMessageBox.warning(self, m.generate_key,
+                                        m.generate_key_warning_1 % self._slot,
+                                        QtGui.QMessageBox.Ok,
+                                        QtGui.QMessageBox.Cancel)
+        if res != QtGui.QMessageBox.Ok:
+            return
+
+        fn, fn_filter = QtGui.QFileDialog.getSaveFileName(
+            self, m.export_cert, filter="Public key (*.pem);; " \
+            "Certificate Signing Request (*.csr)")
+        if not fn:
+            return
+
+        csr = '.csr' in fn_filter
+        if '.' not in fn:
+            fn += '.csr' if csr else '.pem'
+
+        print "Save", csr, fn
+
+        pin, status = QtGui.QInputDialog.getText(
+            self, m.enter_pin, m.pin_label, QtGui.QLineEdit.Password)
+        if not status:
+            return
+
+        def func():
+            data = self._controller.generate_key(self._slot, pin)
+            if csr:
+                data = self._controller.create_csr(self._slot, pin, data)
+            with open(fn, 'w') as f:
+                f.write(data)
+
+        try:
+            self._controller.ensure_authenticated(pin)
+            worker = QtCore.QCoreApplication.instance().worker
+            worker.post(m.changing_cert, func, self._generate_key_callback, True)
+        except ValueError as e:
+            QtGui.QMessageBox.warning(self, m.error, str(e))
+
+    def _generate_key_callback(self, result):
+        if isinstance(result, DeviceGoneError):
+            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.window().accept()
+        elif isinstance(result, Exception):
+            QtGui.QMessageBox.warning(self, m.error, str(result))
+        else:
+            QtGui.QMessageBox.information(self, m.cert_installed,
+                                          m.cert_installed_desc)
+
     def _request_cert(self):
         res = QtGui.QMessageBox.warning(self, m.change_cert,
                                         m.change_cert_warning_1 % self._slot,
@@ -257,8 +329,8 @@ class CertWidget(QtGui.QWidget):
                 self._controller.ensure_authenticated(pin)
                 worker = QtCore.QCoreApplication.instance().worker
                 worker.post(m.changing_cert, (
-                    self._controller.request_certificate, pin, cert_tmpl,
-                    self._slot), self._request_cert_callback, True)
+                    self._controller.request_from_ca, self._slot, pin,
+                    cert_tmpl), self._request_cert_callback, True)
             except ValueError as e:
                 QtGui.QMessageBox.warning(self, m.error, str(e))
 

@@ -92,7 +92,7 @@ key_invalid_desc = "The key you have provided is invalid. It should contain " \
     "exactly 48 hexadecimal characters."
 management_key = "Management key"
 key_type_label = "Key type:"
-key_label = "Key:"
+key_label = "Management Key:"
 use_pin_as_key = "Use PIN as key"
 use_separate_key = "Use a separate key"
 randomize = "Randomize"
@@ -147,20 +147,26 @@ change_cert_warning_1 = "This will generate a new private key and request a " \
     "credential in slot '%s' of your YubiKey's PIV applet. This action cannot " \
     "be undone."
 changing_cert = "Requesting certificate..."
-export_to_file = "Export to file"
+export_to_file = "Export certificate..."
 export_cert = "Export certificate"
-import_from_file = "Import from file"
+generate_key = "Generate new key..."
+generate_key_warning_1 = "A new private key will be generated and stored in " \
+    "slot '%s'. Anything currently in the slot will be deleted. This action " \
+    "cannot be undone."
+import_from_file = "Import from file..."
+import_from_file_warning_1 = "Anything currently in slot '%s' will be " \
+    "overwritten by the imported content. This action cannot be undone."
 importing_file = "Importing from file..."
 unsupported_file = "Unsupported file type"
 delete_cert = "Delete certificate"
-delete_cert_warning_1 = "This will delete the certificate stored in slot " \
-    "'%s' of your YubiKey, and cannot be undone."
+delete_cert_warning_1 = "This will delete the certificate  and key stored in " \
+    "slot '%s' of your YubiKey, and cannot be undone."
 deleting_cert = "Deleting certificate..."
 cert_exported = "Certificate exported"
 cert_exported_desc_1 = "Certificate exported to file: %s"
 cert_deleted = "Certificate deleted"
 cert_deleted_desc = "Certificate deleted successfully"
-cert_not_loaded = "No certificate loaded"
+cert_not_loaded = "No certificate loaded."
 cert_expires_1 = "Certificate expires: %s"
 cert_installed = "Certificate installed"
 cert_installed_desc = "A new certificate has been installed. You will need " \

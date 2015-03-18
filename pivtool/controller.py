@@ -245,7 +245,7 @@ class Controller(object):
             #Make sure PUK is invalidated:
             if not has_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED):
                 set_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
-                for i in range(3):  # Invalidate the PUK
+                for i in range(8):  # Invalidate the PUK
                     test(self._key.set_puk, '', '', catches=ValueError)
         else:
             if is_hex_key(new_key):
@@ -280,21 +280,35 @@ class Controller(object):
             raise ValueError('PUK must be at least 4 characters')
         self._key.set_puk(old_puk, new_puk)
 
-    def request_certificate(self, pin, cert_tmpl, slot):
+    def update_chuid(self):
+        if not self.authenticated:
+            raise ValueError('Not authenticated')
+        self._key.set_chuid()
+        self._attributes.rename(self._key.chuid)
+
+    def generate_key(self, slot, pin):
         self._key.verify_pin(pin)
         if not self.authenticated:
             raise ValueError('Not authenticated')
 
-        pubkey = self._key.generate(slot)
-        subject = '/CN=%s/' % getuser()
-        csr = self._key.create_csr(subject, pubkey, slot)
+        if self.cert_index[slot]:
+            self.delete_certificate(slot)
+        return self._key.generate(slot)
+
+    def create_csr(self, slot, pin, pubkey):
+        self._key.verify_pin(pin)
+        if not self.authenticated:
+            raise ValueError('Not authenticated')
+        return self._key.create_csr('/CN=%s/' % getuser(), pubkey, slot)
+
+    def request_from_ca(self, slot, pin, cert_tmpl):
+        pubkey = self.generate_key(slot, pin)
+        csr = self.create_csr(slot, pin, pubkey)
         try:
             cert = request_cert_from_ca(csr, cert_tmpl)
         except ValueError:
             raise ValueError(m.certreq_error)
         self.import_certificate(cert, slot, 'PEM')
-        self._key.set_chuid()
-        self._settings.rename(self._key.chuid)
 
     def does_pin_expire(self):
         return bool(settings.get(SETTINGS.PIN_EXPIRATION))
@@ -340,10 +354,17 @@ class Controller(object):
         return cert
 
     def import_key(self, data, slot, frmt='PEM', password=None):
+        if not self.authenticated:
+            raise ValueError('Not authenticated')
         self._key.import_key(data, slot, frmt, password)
 
     def import_certificate(self, cert, slot, frmt='PEM', password=None):
+        if not self.authenticated:
+            raise ValueError('Not authenticated')
         self._key.import_cert(cert, slot, frmt, password)
+        self.update_chuid()
 
     def delete_certificate(self, slot):
+        if not self.authenticated:
+            raise ValueError('Not authenticated')
         self._key.delete_cert(slot)
