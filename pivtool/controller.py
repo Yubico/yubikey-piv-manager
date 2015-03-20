@@ -135,11 +135,10 @@ def cert_info_str(getInfo):
 
 class Controller(object):
 
-    def __init__(self, key, window=None):
+    def __init__(self, key):
         self._key = key
         self._attributes = get_store(key.chuid)
         self._authenticated = False
-        self._window = window
         try:
             self._raw_data = self._key.fetch_object(YKPIV_OBJ_PIVTOOL_DATA)
             # TODO: Remove in a few versions...
@@ -154,6 +153,9 @@ class Controller(object):
         except PivError:
             self._raw_data = ''
             self._data = {}
+
+    def poll(self):
+        return test(self._key._read_chuid, False)
 
     @property
     def attributes(self):
@@ -182,8 +184,11 @@ class Controller(object):
     def puk_blocked(self):
         return has_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
 
+    def verify_pin(self, pin):
+        self._key.verify_pin(pin)
+
     def ensure_authenticated(self, pin=None):
-        if self.authenticated or test(self.authenticate):
+        if self.authenticated or test(self.authenticate, catches=ValueError):
             return
 
         if self.pin_is_key:
@@ -194,8 +199,10 @@ class Controller(object):
             echo_mode = QtGui.QLineEdit.Normal
 
         key = pin
-        while not test(self.authenticate, key):
-            key, status = QtGui.QInputDialog.getText(self._window, title, label,
+        window = QtGui.QApplication.activeWindow() \
+            or QtCore.QCoreApplication.instance().window
+        while not test(self.authenticate, key, catches=ValueError):
+            key, status = QtGui.QInputDialog.getText(window, title, label,
                                                      echo_mode)
             if not status:
                 raise ValueError('No key given!')
@@ -243,7 +250,7 @@ class Controller(object):
             raise ValueError('Not authenticated')
 
         if is_pin:
-            self._key.verify_pin(new_key)
+            self.verify_pin(new_key)
             salt = get_random_bytes(16)
             key = derive_key(new_key, salt)
             self._data[TAG_SALT] = salt
@@ -265,7 +272,7 @@ class Controller(object):
     def change_pin(self, old_pin, new_pin):
         if len(new_pin) < 4:
             raise ValueError('PIN must be at least 4 characters')
-        self._key.verify_pin(old_pin)
+        self.verify_pin(old_pin)
         if not self.authenticated and self.pin_is_key:
             self.authenticate(old_pin)
         self._key.set_pin(new_pin)
@@ -292,7 +299,7 @@ class Controller(object):
         self._attributes.rename(self._key.chuid)
 
     def generate_key(self, slot, pin):
-        self._key.verify_pin(pin)
+        self.verify_pin(pin)
         if not self.authenticated:
             raise ValueError('Not authenticated')
 
@@ -301,7 +308,7 @@ class Controller(object):
         return self._key.generate(slot)
 
     def create_csr(self, slot, pin, pubkey):
-        self._key.verify_pin(pin)
+        self.verify_pin(pin)
         if not self.authenticated:
             raise ValueError('Not authenticated')
         return self._key.create_csr('/CN=%s/' % getuser(), pubkey, slot)

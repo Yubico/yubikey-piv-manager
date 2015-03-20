@@ -144,6 +144,12 @@ class SetKeyDialog(QtGui.QDialog):
                                                      QtGui.QLineEdit.Password)
             if not status:
                 return
+            else:
+                try:
+                    self._controller.verify_pin(pin)
+                except ValueError as e:
+                    QtGui.QMessageBox.warning(self, m.error, str(e))
+                    return
         else:
             pin = None
 
@@ -151,11 +157,15 @@ class SetKeyDialog(QtGui.QDialog):
             if self._controller.pin_is_key else self._current_key.text()
         new_key = pin if self.use_pin else self._key.text()
 
-        self._controller.ensure_authenticated(current_key)
-        worker = QtCore.QCoreApplication.instance().worker
-        worker.post(m.changing_key, (self._controller.set_authentication,
-                                     new_key, self.use_pin),
-                    self._set_key_callback, True)
+        try:
+            self._controller.ensure_authenticated(current_key)
+            worker = QtCore.QCoreApplication.instance().worker
+            worker.post(m.changing_key, (self._controller.set_authentication,
+                                        new_key, self.use_pin),
+                        self._set_key_callback, True)
+        except (DeviceGoneError, PivError, ValueError) as e:
+            QtGui.QMessageBox.warning(self, m.error, str(result))
+            self.reject()
 
     def _set_key_callback(self, result):
         if isinstance(result, DeviceGoneError):

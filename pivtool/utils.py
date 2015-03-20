@@ -29,14 +29,19 @@ from getpass import getuser
 import subprocess
 
 
-try:
-    HAS_AD = (0 == subprocess.call(
-        ['powershell', 'Import-Module ActiveDirectory'],
-        stdout=subprocess.PIPE
-    ))
-except OSError:
-    HAS_AD = False
+def has_ad():
+    try:
+        if subprocess.mswindows:
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            return (0 == subprocess.call(['certutil', '-CAInfo'],
+                stdout=subprocess.PIPE, startupinfo=startupinfo
+            ))
+    except OSError:
+        pass
+    return False
 
+HAS_AD = has_ad()
 
 def test(fn, *args, **kwargs):
     e_type = kwargs.pop('catches', Exception)
@@ -54,7 +59,7 @@ CATEGORIES = [
     lambda c: c.isupper(),  # English uppercase characters (A through Z)
     lambda c: c.islower(),  # English lowercase characters (a through z)
     re.compile(r'[0-9]').match,  # Base 10 digits (0 through 9)
-    re.compile(r'\W', re.UNICODE).match # Nonalphanumeric characters (e.g., !, $, #, %)
+    re.compile(r'\W', re.UNICODE).match  # Nonalphanumeric characters (e.g., !, $, #, %)
 ]
 
 

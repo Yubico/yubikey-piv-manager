@@ -26,10 +26,10 @@
 
 from PySide import QtGui
 from PySide import QtCore
-from pivtool.piv import YkPiv, DeviceGoneError, libversion as ykpiv_version
-from pivtool.controller import Controller
-from pivtool.storage import get_store, settings, SETTINGS
 from pivtool import messages as m, __version__ as version
+from pivtool.piv import libversion as ykpiv_version
+from pivtool.storage import get_store
+from pivtool.watcher import ControllerWatcher
 from pivtool.view.init_dialog import InitDialog
 from pivtool.view.set_pin_dialog import SetPinDialog
 from pivtool.view.settings_dialog import SettingsDialog
@@ -53,12 +53,14 @@ class MainWidget(QtGui.QWidget):
         super(MainWidget, self).__init__()
 
         self._lock = QtCore.QMutex()
-        self._controller = None
+        self._controller = ControllerWatcher()
         self._build_ui()
-        self.startTimer(2000)
+        self._controller.on_found(self._refresh_controller, True)
+        self._controller.on_lost(self._no_controller)
+        self._no_controller()
 
     def showEvent(self, event):
-        self.set_controller(self.refresh_controller())
+        self.refresh()
         event.accept()
 
     def _build_ui(self):
@@ -66,10 +68,10 @@ class MainWidget(QtGui.QWidget):
 
         btns = QtGui.QHBoxLayout()
         self._cert_btn = QtGui.QPushButton(m.certificates)
-        self._cert_btn.clicked.connect(self._with_lock(self._manage_certs))
+        self._cert_btn.clicked.connect(self._manage_certs)
         btns.addWidget(self._cert_btn)
         self._pin_btn = QtGui.QPushButton(m.manage_pin)
-        self._pin_btn.clicked.connect(self._with_lock(self._manage_pin))
+        self._pin_btn.clicked.connect(self._manage_pin)
         btns.addWidget(self._pin_btn)
         layout.addLayout(btns)
 
@@ -77,80 +79,47 @@ class MainWidget(QtGui.QWidget):
         self._messages.setReadOnly(True)
         layout.addWidget(self._messages)
 
-    def _with_lock(self, fn):
-        def try_run():
-            if self._lock.tryLock():
-                try:
-                    fn()
-                finally:
-                    self._lock.unlock()
-            else:
-                QtCore.QTimer.singleShot(100, try_run)
-        return try_run
-
     def _manage_pin(self):
-        dialog = ManageDialog(self._controller, self)
-        if dialog.exec_():
-            self.refresh()
+        ManageDialog(self._controller, self).exec_()
+        self.refresh()
 
     def _manage_certs(self):
-        dialog = CertDialog(self._controller, self)
-        if dialog.exec_():
-            self.refresh()
-
-    def timerEvent(self, event):
-        if QtGui.QApplication.activeWindow() == self.window():
-            if self._lock.tryLock():
-                def cb(result):
-                    self.set_controller(result)
-                    self._lock.unlock()
-                worker = QtCore.QCoreApplication.instance().worker
-                worker.post_bg(self.refresh_controller, cb, True)
-
-    def refresh_controller(self):
-        try:
-            if self._controller is not None:
-                self._controller = None
-            reader_pattern = settings.get(SETTINGS.CARD_READER)
-            return Controller(YkPiv(reader=reader_pattern), self.window())
-        except DeviceGoneError as e:
-            print e.message
-        except ValueError as e:
-            print e.message
+        CertDialog(self._controller, self).exec_()
+        self.refresh()
 
     def refresh(self):
-        self.set_controller(self.refresh_controller())
+        self._controller.use(self._refresh_controller, True)
 
-    def set_controller(self, controller):
-        self._controller = controller
-        self._pin_btn.setDisabled(controller is None)
-        self._cert_btn.setDisabled(controller is None)
+    def _no_controller(self):
+        self._pin_btn.setEnabled(False)
+        self._cert_btn.setEnabled(False)
+        self._messages.setHtml(m.no_key)
+
+    def _refresh_controller(self, controller, release):
+        self._pin_btn.setEnabled(True)
+        self._cert_btn.setEnabled(True)
 
         messages = []
-        if controller is None:
-            messages.append(m.no_key)
-        else:
-            messages.append(m.key_with_applet_1 % controller.version)
-            n_certs = sum(controller.cert_index.values())
-            messages.append(m.certs_loaded_1 % n_certs or m.no)
+        messages.append(m.key_with_applet_1 % controller.version)
+        n_certs = sum(controller.cert_index.values())
+        messages.append(m.certs_loaded_1 % n_certs or m.no)
 
         self._messages.setHtml('<br>'.join(messages))
 
-        if controller:
-            if controller.is_uninitialized():
-                dialog = InitDialog(controller, self)
-                if dialog.exec_():
-                    self.refresh()
-                else:
-                    QtCore.QCoreApplication.instance().quit()
-            elif controller.is_pin_expired():
-                dialog = SetPinDialog(controller, self, True)
-                if dialog.exec_():
-                    QtGui.QMessageBox.information(self, m.pin_changed,
-                                                  m.pin_changed_desc)
-                    self.refresh()
-                else:
-                    QtCore.QCoreApplication.instance().quit()
+        if controller.is_uninitialized():
+            dialog = InitDialog(controller, self)
+            if dialog.exec_():
+                self.refresh()
+            else:
+                QtCore.QCoreApplication.instance().quit()
+        elif controller.is_pin_expired():
+            dialog = SetPinDialog(self._controller, self, True)
+            if dialog.exec_():
+                QtGui.QMessageBox.information(self, m.pin_changed,
+                                                m.pin_changed_desc)
+                self.refresh()
+            else:
+                QtCore.QCoreApplication.instance().quit()
 
 
 class MainWindow(QtGui.QMainWindow):

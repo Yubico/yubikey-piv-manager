@@ -26,10 +26,11 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
-from pivtool.piv import DeviceGoneError, KEY_LEN
+from pivtool.piv import DeviceGoneError, PivError, KEY_LEN
 from pivtool.view.utils import TOP_SECTION, SECTION, KEY_VALIDATOR, pin_field
 from pivtool.utils import complexity_check
 from pivtool.storage import settings, SETTINGS
+from functools import partial
 import os
 
 
@@ -209,8 +210,8 @@ class InitDialog(QtGui.QDialog):
         super(InitDialog, self).__init__(parent)
         self.setWindowTitle(m.initialize)
 
-        self._controller = controller
         self.setMinimumWidth(400)
+        self._controller = controller
         self._build_ui()
 
     def _build_ui(self):
@@ -251,7 +252,7 @@ class InitDialog(QtGui.QDialog):
                 self._init_callback,
                 True
             )
-        except ValueError as e:
+        except (DeviceGoneError, PivError, ValueError) as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))
 
     def _init_callback(self, result):

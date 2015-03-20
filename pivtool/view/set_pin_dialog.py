@@ -26,7 +26,7 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
-from pivtool.piv import DeviceGoneError
+from pivtool.piv import DeviceGoneError, PivError
 from pivtool.storage import settings, SETTINGS
 from pivtool.utils import complexity_check
 from pivtool.view.utils import pin_field
@@ -122,11 +122,14 @@ class SetPinDialog(QtGui.QDialog):
                             self._change_pin_callback, True)
             except ValueError as e:
                 QtGui.QMessageBox.warning(self, m.error, str(e))
+            except (DeviceGoneError, PivError) as e:
+                QtGui.QMessageBox.warning(self, m.error, str(e))
+                self.reject()
 
     def _change_pin_callback(self, result):
         if isinstance(result, DeviceGoneError):
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
-            self.parentWidget().window().reset()
+            self.reject()
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
             self._old_pin.setText('')

@@ -62,6 +62,9 @@ class QtWorker(QtCore.QObject):
 
     def post(self, title, fn, callback=None, return_errors=False):
         self.busy.setLabelText(title)
+        active_win = QtGui.QApplication.activeWindow()
+        if active_win:
+            self.busy.adjustPosition(active_win)
         self.busy.show()
         self.post_bg(fn, callback, return_errors)
 

@@ -41,7 +41,9 @@ class ManageDialog(QtGui.QDialog):
 
         self._controller = controller
         self._build_ui()
-        self.refresh()
+        self._controller.on_found(self.refresh)
+        self._controller.on_lost(self.accept)
+        self._controller.use(self.refresh)
 
     def showEvent(self, event):
         self.move(self.x() + 15, self.y() + 15)
@@ -52,13 +54,16 @@ class ManageDialog(QtGui.QDialog):
 
         btns = QtGui.QHBoxLayout()
         self._pin_btn = QtGui.QPushButton(m.change_pin)
-        self._pin_btn.clicked.connect(self._change_pin)
+        self._pin_btn.clicked.connect(self._controller.wrap(self._change_pin,
+                                                            True))
         btns.addWidget(self._pin_btn)
         self._puk_btn = QtGui.QPushButton(m.change_puk)
-        self._puk_btn.clicked.connect(self._change_puk)
+        self._puk_btn.clicked.connect(self._controller.wrap(self._change_puk,
+                                                            True))
         btns.addWidget(self._puk_btn)
         self._key_btn = QtGui.QPushButton(m.change_key)
-        self._key_btn.clicked.connect(self._change_key)
+        self._key_btn.clicked.connect(self._controller.wrap(self._change_key,
+                                                            True))
         if not settings.get(SETTINGS.FORCE_PIN_AS_KEY, False):
             btns.addWidget(self._key_btn)
         layout.addLayout(btns)
@@ -67,35 +72,35 @@ class ManageDialog(QtGui.QDialog):
         self._messages.setReadOnly(True)
         layout.addWidget(self._messages)
 
-    def refresh(self):
+    def refresh(self, controller):
         messages = []
-        if self._controller.does_pin_expire():
+        if controller.does_pin_expire():
             messages.append(m.pin_days_left_1 %
-                            self._controller.get_pin_days_left())
-        if self._controller.pin_is_key:
+                            controller.get_pin_days_left())
+        if controller.pin_is_key:
             messages.append(m.pin_is_key)
-        if self._controller.puk_blocked:
+        if controller.puk_blocked:
             messages.append(m.puk_blocked)
-        self._puk_btn.setDisabled(self._controller.puk_blocked)
+        self._puk_btn.setDisabled(controller.puk_blocked)
         self._messages.setHtml('<br>'.join(messages))
 
-    def _change_pin(self):
-        dialog = SetPinDialog(self._controller, self)
+    def _change_pin(self, controller, release):
+        dialog = SetPinDialog(controller, self)
         if dialog.exec_():
             QtGui.QMessageBox.information(self, m.pin_changed,
                                           m.pin_changed_desc)
-            self.refresh()
+            self.refresh(controller)
 
-    def _change_puk(self):
-        dialog = SetPinDialog(self._controller, self, puk=True)
+    def _change_puk(self, controller, release):
+        dialog = SetPinDialog(controller, self, puk=True)
         if dialog.exec_():
             QtGui.QMessageBox.information(self, m.puk_changed,
                                           m.puk_changed_desc)
-            self.refresh()
+            self.refresh(controller)
 
-    def _change_key(self):
-        dialog = SetKeyDialog(self._controller, self)
+    def _change_key(self, controller, release):
+        dialog = SetKeyDialog(controller, self)
         if dialog.exec_():
             QtGui.QMessageBox.information(self, m.key_changed,
                                           m.key_changed_desc)
-            self.refresh()
+            self.refresh(controller)

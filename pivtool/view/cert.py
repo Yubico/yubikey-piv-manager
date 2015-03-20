@@ -27,7 +27,7 @@
 from PySide import QtGui, QtCore, QtNetwork
 from pivtool import messages as m
 from pivtool.utils import HAS_AD
-from pivtool.piv import DeviceGoneError
+from pivtool.piv import PivError, DeviceGoneError
 from pivtool.storage import settings, SETTINGS
 from datetime import datetime
 from functools import partial
@@ -93,8 +93,10 @@ class CertPanel(QtGui.QWidget):
 
         self._controller = controller
         self._slot = slot
+        controller.use(self._build_ui)
 
-        cert = controller.get_certificate(slot)
+    def _build_ui(self, controller):
+        cert = controller.get_certificate(self._slot)
 
         layout = QtGui.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -126,13 +128,14 @@ class CertPanel(QtGui.QWidget):
         buttons.addWidget(export_btn)
 
         delete_btn = QtGui.QPushButton(m.delete_cert)
-        delete_btn.clicked.connect(self._delete_cert)
+        delete_btn.clicked.connect(
+            self._controller.wrap(self._delete_cert, True))
         buttons.addWidget(delete_btn)
         layout.addLayout(buttons)
 
     def _export_cert(self, cert):
         fn, fn_filter = QtGui.QFileDialog.getSaveFileName(
-            self, m.export_cert, filter='PEM files (*.pem)')
+            self, m.export_cert, filter='Public Key (*.pem)')
         if not fn:
             return
 
@@ -141,29 +144,30 @@ class CertPanel(QtGui.QWidget):
         QtGui.QMessageBox.information(self, m.cert_exported,
                                       m.cert_exported_desc_1 % fn)
 
-    def _delete_cert(self):
+    def _delete_cert(self, controller, release):
         res = QtGui.QMessageBox.warning(self, m.delete_cert,
                                         m.delete_cert_warning_1 % self._slot,
                                         QtGui.QMessageBox.Ok,
                                         QtGui.QMessageBox.Cancel)
         if res == QtGui.QMessageBox.Ok:
             try:
-                self._controller.ensure_authenticated()
+                controller.ensure_authenticated()
                 worker = QtCore.QCoreApplication.instance().worker
                 worker.post(m.deleting_cert, (
-                    self._controller.delete_certificate, self._slot),
-                    self._delete_cert_callback, True)
-            except ValueError as e:
+                    controller.delete_certificate, self._slot),
+                    partial(self._delete_cert_callback, controller, release),
+                    True)
+            except (DeviceGoneError, PivError, ValueError) as e:
                 QtGui.QMessageBox.warning(self, m.error, str(e))
 
-    def _delete_cert_callback(self, result):
+    def _delete_cert_callback(self, controller, release, result):
         if isinstance(result, DeviceGoneError):
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
             self.window().accept()
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
-            self.parent().refresh()
+            self.parent().refresh(controller)
             QtGui.QMessageBox.information(self, m.cert_deleted,
                                           m.cert_deleted_desc)
 
@@ -178,7 +182,7 @@ class CertWidget(QtGui.QWidget):
 
         self._build_ui()
 
-        self.refresh()
+        controller.use(self.refresh)
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
@@ -189,30 +193,33 @@ class CertWidget(QtGui.QWidget):
 
         buttons = QtGui.QHBoxLayout()
         from_ca_btn = QtGui.QPushButton(m.change_cert)
-        from_ca_btn.clicked.connect(self._request_cert)
+        from_ca_btn.clicked.connect(
+            self._controller.wrap(self._request_cert, True))
         if HAS_AD:
             buttons.addWidget(from_ca_btn)
 
         from_file_btn = QtGui.QPushButton(m.import_from_file)
-        from_file_btn.clicked.connect(self._import_file)
+        from_file_btn.clicked.connect(
+            self._controller.wrap(self._import_file, True))
         buttons.addWidget(from_file_btn)
 
         generate_btn = QtGui.QPushButton(m.generate_key)
-        generate_btn.clicked.connect(self._generate_key)
+        generate_btn.clicked.connect(
+            self._controller.wrap(self._generate_key, True))
         buttons.addWidget(generate_btn)
 
         layout.addLayout(buttons)
 
-    def refresh(self):
+    def refresh(self, controller):
         self.layout().removeWidget(self._status)
         self._status.hide()
-        if self._controller.cert_index[self._slot]:
+        if controller.cert_index[self._slot]:
             self._status = CertPanel(self._controller, self._slot, self)
         else:
             self._status = QtGui.QLabel(m.cert_not_loaded)
         self.layout().insertWidget(0, self._status)
 
-    def _import_file(self):
+    def _import_file(self, controller, release):
         res = QtGui.QMessageBox.warning(self, m.import_from_file,
                                         m.import_from_file_warning_1 %
                                         self._slot,
@@ -226,7 +233,7 @@ class CertWidget(QtGui.QWidget):
         if not fn:
             return
 
-        func, needs_password = import_file(self._controller, self._slot, fn)
+        func, needs_password = import_file(controller, self._slot, fn)
         if func is None:
             QtGui.QMessageBox.warning(self, m.error, m.unsupported_file)
             return
@@ -239,25 +246,25 @@ class CertWidget(QtGui.QWidget):
             func = (func, password)
 
         try:
-            self._controller.ensure_authenticated()
+            controller.ensure_authenticated()
             worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.importing_file, func, self._import_file_callback,
-                        True)
-        except ValueError as e:
+            worker.post(m.importing_file, func, partial(
+                self._import_file_callback, controller, release), True)
+        except (DeviceGoneError, PivError, ValueError) as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))
 
-    def _import_file_callback(self, result):
+    def _import_file_callback(self, controller, release, result):
         if isinstance(result, DeviceGoneError):
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
             self.window().accept()
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
-            self.refresh()
+            self.refresh(controller)
             QtGui.QMessageBox.information(self, m.cert_installed,
                                           m.cert_installed_desc)
 
-    def _generate_key(self):
+    def _generate_key(self, controller, release):
         res = QtGui.QMessageBox.warning(self, m.generate_key,
                                         m.generate_key_warning_1 % self._slot,
                                         QtGui.QMessageBox.Ok,
@@ -266,7 +273,7 @@ class CertWidget(QtGui.QWidget):
             return
 
         fn, fn_filter = QtGui.QFileDialog.getSaveFileName(
-            self, m.export_cert, filter="Public key (*.pem);; " \
+            self, m.export_cert, filter="Public Key (*.pem);; "
             "Certificate Signing Request (*.csr)")
         if not fn:
             return
@@ -281,20 +288,21 @@ class CertWidget(QtGui.QWidget):
             return
 
         def func():
-            data = self._controller.generate_key(self._slot, pin)
+            data = controller.generate_key(self._slot, pin)
             if csr:
-                data = self._controller.create_csr(self._slot, pin, data)
+                data = controller.create_csr(self._slot, pin, data)
             with open(fn, 'w') as f:
                 f.write(data)
 
         try:
-            self._controller.ensure_authenticated(pin)
+            controller.ensure_authenticated(pin)
             worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.generating_key, func, self._generate_key_callback, True)
-        except ValueError as e:
+            worker.post(m.generating_key, func, partial(
+                self._generate_key_callback, controller, release), True)
+        except (DeviceGoneError, PivError, ValueError) as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))
 
-    def _generate_key_callback(self, result):
+    def _generate_key_callback(self, controller, release, result):
         if isinstance(result, DeviceGoneError):
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
             self.window().accept()
@@ -302,9 +310,9 @@ class CertWidget(QtGui.QWidget):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
             QtGui.QMessageBox.information(self, m.generated_key,
-                                          m.cert_installed_desc_1 % self._slot)
+                                          m.generated_key_desc_1 % self._slot)
 
-    def _request_cert(self):
+    def _request_cert(self, controller, release):
         res = QtGui.QMessageBox.warning(self, m.change_cert,
                                         m.change_cert_warning_1 % self._slot,
                                         QtGui.QMessageBox.Ok,
@@ -324,22 +332,23 @@ class CertWidget(QtGui.QWidget):
                     return
 
             try:
-                self._controller.ensure_authenticated(pin)
+                controller.ensure_authenticated(pin)
                 worker = QtCore.QCoreApplication.instance().worker
                 worker.post(m.changing_cert, (
-                    self._controller.request_from_ca, self._slot, pin,
-                    cert_tmpl), self._request_cert_callback, True)
-            except ValueError as e:
+                    controller.request_from_ca, self._slot, pin, cert_tmpl),
+                    partial(self._request_cert_callback, controller, release),
+                    True)
+            except (DeviceGoneError, PivError, ValueError) as e:
                 QtGui.QMessageBox.warning(self, m.error, str(e))
 
-    def _request_cert_callback(self, result):
+    def _request_cert_callback(self, controller, release, result):
         if isinstance(result, DeviceGoneError):
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
             self.window().accept()
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
-            self.refresh()
+            self.refresh(controller)
             QtGui.QMessageBox.information(self, m.cert_installed,
                                           m.cert_installed_desc)
 
@@ -353,17 +362,18 @@ class CertDialog(QtGui.QDialog):
 
         self._complex = settings.get(SETTINGS.COMPLEX_PINS, False)
         self._controller = controller
-        self._build_ui()
+        controller.use(self._build_ui)
+        controller.on_lost(self.accept)
 
     def showEvent(self, event):
         self.move(self.x() + 15, self.y() + 15)
         event.accept()
 
-    def _build_ui(self):
+    def _build_ui(self, controller):
         layout = QtGui.QVBoxLayout()
 
         self._cert_tabs = QtGui.QTabWidget()
-        for (slot, label) in SLOTS.items():
+        for (slot, label) in sorted(SLOTS.items()):
             self._cert_tabs.addTab(CertWidget(self._controller, slot), label)
         layout.addWidget(self._cert_tabs)
 
