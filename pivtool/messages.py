@@ -195,6 +195,18 @@ issued_to_label = "Issued to:"
 issued_by_label = "Issued by:"
 valid_from_label = "Valid from:"
 valid_to_label = "Valid to:"
+usage_9a = "The X.509 Certificate for PIV Authentication and its associated " \
+    "private key, as defined in FIPS 201, is used to authenticate the card " \
+    "and the cardholder."
+usage_9c = "The X.509 Certificate for Digital Signature and its associated " \
+    "private key, as defined in FIPS 201, support the use of digital " \
+    "signatures for the purpose of document signing. "
+usage_9d = "The X.509 Certificate for Key Management and its associated " \
+    "private key, as defined in FIPS 201, support the use of encryption for " \
+    "the purpose of confidentiality."
+usage_9e = "FIPS 201 specifies the optional Card Authentication Key (CAK) as " \
+    "an asymmetric or symmetric key that is used to support additional " \
+    "physical access applications. "
 
 
 def _translate(qt):

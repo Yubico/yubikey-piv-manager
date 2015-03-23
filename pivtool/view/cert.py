@@ -39,6 +39,13 @@ SLOTS = {
     '9e': 'Card Authentication',
 }
 
+USAGES = {
+    '9a': m.usage_9a,
+    '9c': m.usage_9c,
+    '9d': m.usage_9d,
+    '9e': m.usage_9e,
+}
+
 FILE_FILTER = "Certificate/key files " \
     "(*.pfx *.p12 *.cer *.crt *.key *.pem *.der)"
 
@@ -216,7 +223,9 @@ class CertWidget(QtGui.QWidget):
         if controller.cert_index[self._slot]:
             self._status = CertPanel(self._controller, self._slot, self)
         else:
-            self._status = QtGui.QLabel(m.cert_not_loaded)
+            self._status = QtGui.QLabel("%s<br><br>%s" % (
+                USAGES[self._slot], m.cert_not_loaded))
+            self._status.setWordWrap(True)
         self.layout().insertWidget(0, self._status)
 
     def _import_file(self, controller, release):
