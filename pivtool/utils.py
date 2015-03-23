@@ -29,20 +29,20 @@ from getpass import getuser
 import subprocess
 
 
-def has_ad():
+def has_ca():
     try:
         if subprocess.mswindows:
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             out = subprocess.call(
-                ['certutil', '-CAInfo'], stdout=subprocess.PIPE,
+                ['certutil', '-dump'], stdout=subprocess.PIPE,
                 startupinfo=startupinfo)
             return 'Entry' in out
     except OSError:
         pass
     return False
 
-HAS_AD = has_ad()
+HAS_CA = has_ca()
 
 
 def test(fn, *args, **kwargs):

@@ -26,7 +26,7 @@
 
 from PySide import QtGui, QtCore, QtNetwork
 from pivtool import messages as m
-from pivtool.utils import HAS_AD
+from pivtool.utils import HAS_CA
 from pivtool.piv import PivError, DeviceGoneError
 from pivtool.storage import settings, SETTINGS
 from datetime import datetime
@@ -202,7 +202,7 @@ class CertWidget(QtGui.QWidget):
         from_ca_btn = QtGui.QPushButton(m.change_cert)
         from_ca_btn.clicked.connect(
             self._controller.wrap(self._request_cert, True))
-        if HAS_AD:
+        if HAS_CA:
             buttons.addWidget(from_ca_btn)
 
         from_file_btn = QtGui.QPushButton(m.import_from_file)

@@ -28,7 +28,7 @@ from PySide import QtGui
 from pivtool import messages as m
 from pivtool.view.utils import TOP_SECTION, SECTION
 from pivtool.storage import settings, SETTINGS
-from pivtool.utils import HAS_AD
+from pivtool.utils import HAS_CA
 
 
 class SettingsDialog(QtGui.QDialog):
@@ -70,7 +70,7 @@ class SettingsDialog(QtGui.QDialog):
         self._certreq_tmpl = QtGui.QLineEdit(cert_tmpl)
         if settings.is_locked(SETTINGS.CERTREQ_TEMPLATE):
             self._certreq_tmpl.setDisabled(True)
-        if HAS_AD:
+        if HAS_CA:
             layout.addRow(QtGui.QLabel(SECTION % m.active_directory))
             layout.addRow(QtGui.QLabel(m.active_directory_desc))
 
