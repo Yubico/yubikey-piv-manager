@@ -24,7 +24,7 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from PySide import QtGui
+from PySide import QtCore, QtGui
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError
 from pivtool.view.set_pin_dialog import SetPinDialog
@@ -37,6 +37,8 @@ class ManageDialog(QtGui.QDialog):
     def __init__(self, controller, parent=None):
         super(ManageDialog, self).__init__(parent)
         self.setWindowTitle(m.manage_pin)
+        self.setWindowFlags(self.windowFlags()
+                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setFixedSize(480, 180)
 
         self._controller = controller

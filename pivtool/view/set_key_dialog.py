@@ -27,9 +27,7 @@
 from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError, KEY_LEN
-from pivtool.view.utils import TOP_SECTION, SECTION, KEY_VALIDATOR, pin_field
-from pivtool.utils import complexity_check
-from pivtool.storage import settings, SETTINGS
+from pivtool.view.utils import KEY_VALIDATOR
 import os
 
 
@@ -47,6 +45,8 @@ class SetKeyDialog(QtGui.QDialog):
 
     def _build_ui(self):
         self.setWindowTitle(m.change_key)
+        self.setWindowFlags(self.windowFlags()
+                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setMinimumWidth(400)
 
         layout = QtGui.QVBoxLayout(self)

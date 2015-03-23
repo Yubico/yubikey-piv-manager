@@ -24,7 +24,7 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from PySide import QtGui
+from PySide import QtCore, QtGui
 from pivtool import messages as m
 from pivtool.view.utils import TOP_SECTION, SECTION
 from pivtool.storage import settings, SETTINGS
@@ -36,6 +36,8 @@ class SettingsDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         super(SettingsDialog, self).__init__(parent)
         self.setWindowTitle(m.settings)
+        self.setWindowFlags(self.windowFlags()
+                            ^ QtCore.Qt.WindowContextHelpButtonHint)
 
         self._build_ui()
 

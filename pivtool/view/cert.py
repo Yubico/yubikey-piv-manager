@@ -367,6 +367,8 @@ class CertDialog(QtGui.QDialog):
     def __init__(self, controller, parent=None):
         super(CertDialog, self).__init__(parent)
         self.setWindowTitle(m.certificates)
+        self.setWindowFlags(self.windowFlags()
+                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setFixedSize(540, 180)
 
         self._complex = settings.get(SETTINGS.COMPLEX_PINS, False)

@@ -43,6 +43,8 @@ class SetPinDialog(QtGui.QDialog):
         self._build_ui(forced, not puk)
 
     def _build_ui(self, forced, pin):
+        self.setWindowFlags(self.windowFlags()
+                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle(m.change_pin if pin else m.change_puk)
 
         layout = QtGui.QVBoxLayout(self)

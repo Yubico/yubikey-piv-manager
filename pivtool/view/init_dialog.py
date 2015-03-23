@@ -30,7 +30,6 @@ from pivtool.piv import DeviceGoneError, PivError, KEY_LEN
 from pivtool.view.utils import TOP_SECTION, SECTION, KEY_VALIDATOR, pin_field
 from pivtool.utils import complexity_check
 from pivtool.storage import settings, SETTINGS
-from functools import partial
 import os
 
 
@@ -210,6 +209,8 @@ class InitDialog(QtGui.QDialog):
         super(InitDialog, self).__init__(parent)
         self.setWindowTitle(m.initialize)
 
+        self.setWindowFlags(self.windowFlags()
+                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setMinimumWidth(400)
         self._controller = controller
         self._build_ui()
