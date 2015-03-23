@@ -34,14 +34,16 @@ def has_ad():
         if subprocess.mswindows:
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            return (0 == subprocess.call(['certutil', '-CAInfo'],
-                stdout=subprocess.PIPE, startupinfo=startupinfo
-            ))
+            out = subprocess.call(
+                ['certutil', '-CAInfo'], stdout=subprocess.PIPE,
+                startupinfo=startupinfo)
+            return 'Entry' in out
     except OSError:
         pass
     return False
 
 HAS_AD = has_ad()
+
 
 def test(fn, *args, **kwargs):
     e_type = kwargs.pop('catches', Exception)
