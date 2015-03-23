@@ -34,10 +34,11 @@ def has_ca():
         if subprocess.mswindows:
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            out = subprocess.call(
+            p = subprocess.Popen(
                 ['certutil', '-dump'], stdout=subprocess.PIPE,
                 startupinfo=startupinfo)
-            return 'Entry' in out
+            out, err = p.communicate()
+            return out.startswith('Entry')
     except OSError:
         pass
     return False
