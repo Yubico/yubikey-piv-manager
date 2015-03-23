@@ -35,7 +35,11 @@ class _Event(QtCore.QEvent):
 
     def __init__(self, callback):
         super(_Event, self).__init__(_Event.EVENT_TYPE)
-        self.callback = callback
+        self._callback = callback
+
+    def callback(self):
+        self._callback()
+        del self._callback
 
 
 class QtWorker(QtCore.QObject):

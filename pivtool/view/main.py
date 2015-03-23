@@ -158,6 +158,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def customEvent(self, event):
         event.callback()
+        event.accept()
 
     def _libversions(self):
         return 'ykpiv: %s' % ykpiv_version
