@@ -113,7 +113,7 @@ class MainWidget(QtGui.QWidget):
             else:
                 QtCore.QCoreApplication.instance().quit()
         elif controller.is_pin_expired():
-            dialog = SetPinDialog(self._controller, self, True)
+            dialog = SetPinDialog(controller, self, True)
             if dialog.exec_():
                 QtGui.QMessageBox.information(self, m.pin_changed,
                                                 m.pin_changed_desc)

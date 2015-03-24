@@ -186,6 +186,8 @@ class Controller(object):
         return has_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
 
     def verify_pin(self, pin):
+        if len(pin) > 8:
+            raise ValueError('PIN must be no longer than 8 bytes!')
         self._key.verify_pin(pin)
 
     def ensure_pin(self, pin=None, window=None):
@@ -199,6 +201,8 @@ class Controller(object):
             except WrongPinError as e:
                 if e.blocked:
                     raise
+                QtGui.QMessageBox.warning(window, m.error, str(e))
+            except ValueError as e:
                 QtGui.QMessageBox.warning(window, m.error, str(e))
 
         pin, status = QtGui.QInputDialog.getText(

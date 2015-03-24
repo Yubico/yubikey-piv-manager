@@ -26,7 +26,7 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
-from pivtool.piv import DeviceGoneError, PivError
+from pivtool.piv import DeviceGoneError, PivError, WrongPinError
 from pivtool.storage import settings, SETTINGS
 from pivtool.utils import complexity_check
 from pivtool.view.utils import pin_field
@@ -113,28 +113,22 @@ class SetPinDialog(QtGui.QDialog):
             else:
                 self._invalid_pin(m.puk_not_complex, m.puk_complexity_desc)
         else:
-            try:
-                if pin:
-                    self._controller.ensure_authenticated(old_pin)
-                fn = self._controller.change_pin \
-                    if pin else self._controller.change_puk
-                worker = QtCore.QCoreApplication.instance().worker
-                worker.post(m.changing_pin if pin else m.changing_puk,
-                            (fn, old_pin, new_pin),
-                            self._change_pin_callback, True)
-            except ValueError as e:
-                QtGui.QMessageBox.warning(self, m.error, str(e))
-            except (DeviceGoneError, PivError) as e:
-                QtGui.QMessageBox.warning(self, m.error, str(e))
-                self.reject()
+            fn = self._controller.change_pin \
+                if pin else self._controller.change_puk
+            worker = QtCore.QCoreApplication.instance().worker
+            worker.post(m.changing_pin if pin else m.changing_puk,
+                        (fn, old_pin, new_pin),
+                        self._change_pin_callback, True)
 
     def _change_pin_callback(self, result):
-        if isinstance(result, DeviceGoneError):
-            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
-            self.reject()
-        elif isinstance(result, Exception):
+        if isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
-            self._old_pin.setText('')
-            self._old_pin.setFocus()
+            if isinstance(result, WrongPinError):
+                self._old_pin.setText('')
+                self._old_pin.setFocus()
+                if result.blocked:
+                    self.reject()
+            else:
+                self.reject()
         else:
             self.accept()
