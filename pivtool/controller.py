@@ -25,8 +25,9 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from pivtool.utils import test, der_read
-from pivtool.piv import PivError
+from pivtool.piv import PivError, WrongPinError
 from pivtool.storage import get_store, settings, SETTINGS
+from pivtool.view.utils import get_active_window
 from pivtool import messages as m
 from PySide import QtCore, QtGui, QtNetwork
 from Crypto.Protocol.KDF import PBKDF2
@@ -187,25 +188,58 @@ class Controller(object):
     def verify_pin(self, pin):
         self._key.verify_pin(pin)
 
-    def ensure_authenticated(self, pin=None):
+    def ensure_pin(self, pin=None, window=None):
+        if window is None:
+            window = get_active_window()
+
+        if pin is not None:
+            try:
+                self.verify_pin(pin)
+                return pin
+            except WrongPinError as e:
+                if e.blocked:
+                    raise
+                QtGui.QMessageBox.warning(window, m.error, str(e))
+
+        pin, status = QtGui.QInputDialog.getText(
+            window, m.enter_pin, m.pin_label, QtGui.QLineEdit.Password)
+        if not status:
+            raise ValueError('PIN entry aborted!')
+        return self.ensure_pin(pin)
+
+    def ensure_authenticated(self, key=None, window=None):
         if self.authenticated or test(self.authenticate, catches=ValueError):
             return
 
-        if self.pin_is_key:
-            title, label = m.enter_pin, m.pin_label
-            echo_mode = QtGui.QLineEdit.Password
-        else:
-            title, label = m.enter_key, m.key_label
-            echo_mode = QtGui.QLineEdit.Normal
+        if window is None:
+            window = get_active_window()
 
-        key = pin
-        window = QtGui.QApplication.activeWindow() \
-            or QtCore.QCoreApplication.instance().window
-        while not test(self.authenticate, key, catches=ValueError):
-            key, status = QtGui.QInputDialog.getText(window, title, label,
-                                                     echo_mode)
-            if not status:
-                raise ValueError('No key given!')
+        if self.pin_is_key:
+            key = self.ensure_pin(key, window)
+            self.authenticate(key)
+            return
+        elif key is not None:
+            try:
+                self.authenticate(key)
+                return
+            except ValueError:
+                pass
+
+        self._do_ensure_auth(None, window)
+
+    def _do_ensure_auth(self, key, window):
+        if key is not None:
+            try:
+                self.authenticate(key)
+                return
+            except ValueError:
+                QtGui.QMessageBox.warning(window, m.error, str(e))
+
+        key, status = QtGui.QInputDialog.getText(
+            window, m.enter_key, m.key_label)
+        if not status:
+            raise ValueError('Key entry aborted!')
+        self._do_ensure_auth(key, window)
 
     def authenticate(self, key=None):
         salt = self._data.get(TAG_SALT)
@@ -298,8 +332,7 @@ class Controller(object):
         self._key.set_chuid()
         self._attributes.rename(self._key.chuid)
 
-    def generate_key(self, slot, pin):
-        self.verify_pin(pin)
+    def generate_key(self, slot):
         if not self.authenticated:
             raise ValueError('Not authenticated')
 

@@ -27,6 +27,7 @@
 from PySide import QtGui, QtCore
 from functools import partial
 from pivtool import messages as m
+from pivtool.view.utils import get_active_window
 import traceback
 
 
@@ -68,9 +69,7 @@ class QtWorker(QtCore.QObject):
 
     def post(self, title, fn, callback=None, return_errors=False):
         self.busy.setLabelText(title)
-        active_win = QtGui.QApplication.activeWindow()
-        if active_win:
-            self.busy.adjustPosition(active_win)
+        self.busy.adjustPosition(get_active_window())
         self.busy.show()
         self.post_bg(fn, callback, return_errors)
 

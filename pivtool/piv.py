@@ -50,6 +50,17 @@ class PivError(Exception):
         return m.ykpiv_error_2 % (self.code, self.message)
 
 
+class WrongPinError(ValueError):
+    def __init__(self, tries):
+        super(WrongPinError, self).__init__(m.wrong_pin_tries_1 % tries \
+                                            if tries > 0 else m.pin_blocked)
+        self.tries = tries
+
+    @property
+    def blocked(self):
+        return self.tries == 0
+
+
 def check(rc):
     if rc == YKPIV_PCSC_ERROR:
         raise DeviceGoneError()
@@ -168,10 +179,7 @@ class YkPiv(object):
         rc = ykpiv_verify(self._state, buf, byref(tries))
 
         if rc == YKPIV_WRONG_PIN:
-            if tries.value > 0:
-                raise ValueError(m.wrong_pin_tries_1 % tries.value)
-            else:
-                raise ValueError(m.pin_blocked)
+            raise WrongPinError(tries.value)
         check(rc)
         self._cmd.set_arg('-P', pin)
 

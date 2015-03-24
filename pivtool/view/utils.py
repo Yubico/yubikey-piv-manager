@@ -39,3 +39,17 @@ def pin_field():
     field.setMaxLength(8)
     field.setValidator(PIN_VALIDATOR)
     return field
+
+
+def get_active_window():
+    active_win = QtGui.QApplication.activeWindow()
+    if active_win is not None:
+        return active_win
+
+    wins = filter(lambda w: isinstance(w, QtGui.QDialog) and w.isVisible(),
+                  QtGui.QApplication.topLevelWidgets())
+
+    if not wins:
+        return QtCore.QCoreApplication.instance().window
+
+    return wins[0]  # TODO: If more than one candidates remain, find best one.
