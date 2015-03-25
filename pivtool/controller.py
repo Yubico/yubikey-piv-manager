@@ -340,7 +340,7 @@ class Controller(object):
         if not self.authenticated:
             raise ValueError('Not authenticated')
 
-        if self.cert_index[slot]:
+        if slot in self.certs:
             self.delete_certificate(slot)
         return self._key.generate(slot)
 
@@ -390,17 +390,14 @@ class Controller(object):
         return delta.days > 30
 
     @property
-    def cert_index(self):
-        return self._key.cert_index
+    def certs(self):
+        return self._key.certs
 
     def get_certificate(self, slot):
         data = self._key.read_cert(slot)
         if data is None:
             return None
-        cert = QtNetwork.QSslCertificate.fromData(data, QtNetwork.QSsl.Der)[0]
-        cert.issued_to = cert.subjectInfo(QtNetwork.QSslCertificate.CommonName)
-        cert.issued_by = cert.issuerInfo(QtNetwork.QSslCertificate.CommonName)
-        return cert
+        return QtNetwork.QSslCertificate.fromData(data, QtNetwork.QSsl.Der)[0]
 
     def import_key(self, data, slot, frmt='PEM', password=None):
         if not self.authenticated:

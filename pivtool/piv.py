@@ -52,7 +52,7 @@ class PivError(Exception):
 
 class WrongPinError(ValueError):
     def __init__(self, tries):
-        super(WrongPinError, self).__init__(m.wrong_pin_tries_1 % tries \
+        super(WrongPinError, self).__init__(m.wrong_pin_tries_1 % tries
                                             if tries > 0 else m.pin_blocked)
         self.tries = tries
 
@@ -92,8 +92,10 @@ class YkPiv(object):
         self._chuid = None
         self._verbosity = verbosity
         self._reader = reader
+        self._certs = {}
 
         self._connect()
+        self._read_status()
 
     def _connect(self):
         check(ykpiv_init(byref(self._state), self._verbosity))
@@ -101,7 +103,29 @@ class YkPiv(object):
 
         self._read_version()
         self._read_chuid()
-        self._read_cert_index()
+
+    def _read_status(self):
+        try:
+            data = self._cmd.run('-a', 'status')
+            lines = data.splitlines()
+            chunk = []
+            while lines:
+                line = lines.pop(0)
+                if chunk and not line.startswith('\t'):
+                    self._parse_status(chunk)
+                    chunk = []
+                chunk.append(line)
+            self._status = data
+        finally:
+            self._reset()
+
+    def _parse_status(self, chunk):
+        parts, rest = chunk[0].split(), chunk[1:]
+        if parts[0] == 'Slot' and rest:
+            self._parse_slot(parts[1][:-1], rest)
+
+    def _parse_slot(self, slot, lines):
+        self._certs[slot] = dict(l.strip().split(':\t', 1) for l in lines)
 
     def _read_version(self):
         v = create_string_buffer(10)
@@ -118,11 +142,6 @@ class YkPiv(object):
                 self._read_chuid(False)
             else:
                 raise e
-
-    def _read_cert_index(self):
-        self._cert_index = dict([(k, test(self.fetch_object, v,
-                                          catches=PivError))
-                                 for (k, v) in CERT_SLOTS.items()])
 
     def __del__(self):
         check(ykpiv_done(self._state))
@@ -145,8 +164,8 @@ class YkPiv(object):
         return self._chuid
 
     @property
-    def cert_index(self):
-        return self._cert_index
+    def certs(self):
+        return dict(self._certs)
 
     def set_chuid(self):
         try:
@@ -242,6 +261,7 @@ class YkPiv(object):
             return self._cmd.import_cert(cert_pem, slot, frmt, password)
         finally:
             self._reset()
+            self._read_status()
 
     def import_key(self, cert_pem, slot, frmt='PEM', password=None):
         try:
@@ -269,10 +289,11 @@ class YkPiv(object):
         return cert
 
     def delete_cert(self, slot):
-        if not self.cert_index.get(slot):
+        if slot not in self._certs:
             raise ValueError('No certificate loaded in slot: %s' % slot)
 
         try:
             return self._cmd.delete_cert(slot)
         finally:
             self._reset()
+            self._read_status()

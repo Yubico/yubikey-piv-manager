@@ -104,17 +104,18 @@ class CertPanel(QtGui.QWidget):
 
     def _build_ui(self, controller):
         cert = controller.get_certificate(self._slot)
+        data = controller.certs[self._slot]
 
         layout = QtGui.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
         status = QtGui.QGridLayout()
         status.addWidget(QtGui.QLabel(m.issued_to_label), 0, 0)
-        subject = QtGui.QLabel(cert.issued_to)
-        status.addWidget(subject, 0, 1)
+        issued_to = cert.subjectInfo(QtNetwork.QSslCertificate.CommonName)
+        status.addWidget(QtGui.QLabel(issued_to), 0, 1)
         status.addWidget(QtGui.QLabel(m.issued_by_label), 0, 2)
-        issuer = QtGui.QLabel(cert.issued_by)
-        status.addWidget(issuer, 0, 3)
+        issued_by = cert.issuerInfo(QtNetwork.QSslCertificate.CommonName)
+        status.addWidget(QtGui.QLabel(issued_by), 0, 3)
         status.addWidget(QtGui.QLabel(m.valid_from_label), 1, 0)
         valid_from = QtGui.QLabel(cert.effectiveDate().toString())
         now = datetime.now()
@@ -220,7 +221,7 @@ class CertWidget(QtGui.QWidget):
     def refresh(self, controller):
         self.layout().removeWidget(self._status)
         self._status.hide()
-        if controller.cert_index[self._slot]:
+        if self._slot in controller.certs:
             self._status = CertPanel(self._controller, self._slot, self)
         else:
             self._status = QtGui.QLabel("%s<br><br>%s" % (

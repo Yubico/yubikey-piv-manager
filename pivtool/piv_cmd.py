@@ -76,6 +76,9 @@ class YkPivCmd(object):
 
         return out
 
+    def status(self):
+        return self.run('-a', 'status')
+
     def change_pin(self, old_pin, new_pin):
         self.run('-a', 'change-pin', '-P', old_pin, '-N', new_pin)
 

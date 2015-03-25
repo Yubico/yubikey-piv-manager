@@ -101,7 +101,7 @@ class MainWidget(QtGui.QWidget):
 
         messages = []
         messages.append(m.key_with_applet_1 % controller.version)
-        n_certs = sum(controller.cert_index.values())
+        n_certs = len(controller.certs)
         messages.append(m.certs_loaded_1 % n_certs or m.no)
 
         self._messages.setHtml('<br>'.join(messages))
