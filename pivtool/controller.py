@@ -351,7 +351,7 @@ class Controller(object):
         return self._key.create_csr('/CN=%s/' % getuser(), pubkey, slot)
 
     def request_from_ca(self, slot, pin, cert_tmpl):
-        pubkey = self.generate_key(slot, pin)
+        pubkey = self.generate_key(slot)
         csr = self.create_csr(slot, pin, pubkey)
         try:
             cert = request_cert_from_ca(csr, cert_tmpl)
