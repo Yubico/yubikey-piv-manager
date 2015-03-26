@@ -36,7 +36,6 @@ from datetime import timedelta
 import re
 import time
 import struct
-import subprocess
 
 
 YKPIV_OBJ_PIVTOOL_DATA = 0x5fff00
@@ -264,7 +263,7 @@ class Controller(object):
             self._data[TAG_SALT] = salt
             self._key.set_authentication(key)
 
-            #Make sure PUK is invalidated:
+            # Make sure PUK is invalidated:
             if not has_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED):
                 self._invalidate_puk()
         else:

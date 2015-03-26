@@ -26,7 +26,7 @@
 
 from PySide import QtGui, QtCore, QtNetwork
 from pivtool import messages as m
-from pivtool.piv import PivError, DeviceGoneError, WrongPinError
+from pivtool.piv import PivError, DeviceGoneError
 from pivtool.storage import settings, SETTINGS
 from pivtool.view.generate_dialog import GenerateKeyDialog
 from datetime import datetime
@@ -50,13 +50,10 @@ FILE_FILTER = "Certificate/key files " \
     "(*.pfx *.p12 *.cer *.crt *.key *.pem *.der)"
 
 
-def import_file(controller, slot, fn):
+def detect_type(data, fn):
     suffix = '.' in fn and fn.lower().rsplit('.', 1)[1]
-    with open(fn, 'r') as f:
-        data = f.read()
-
-    f_format = None
-    f_type = 0
+    f_format = None  # pfx, pem or der
+    f_type = 0  # 1 for certificate, 2 for key
     needs_password = False
     if suffix in ['pfx', 'p12']:
         f_format = 'pfx'
@@ -74,6 +71,14 @@ def import_file(controller, slot, fn):
         else:
             certs = QtNetwork.QSslCertificate.fromData(data, QtNetwork.QSsl.Der)
             f_type = 1 if certs else 2
+    return f_type, f_format, needs_password
+
+
+def import_file(controller, slot, fn):
+    with open(fn, 'r') as f:
+        data = f.read()
+
+    f_type, f_format, needs_password = detect_type(data, fn)
 
     if f_type == 2 and f_format == 'der':
         return None, None  # We don't know what type of key this is.
@@ -270,8 +275,8 @@ class CertWidget(QtGui.QWidget):
 
     def _generate_key(self, controller, release):
         dialog = GenerateKeyDialog(controller, self._slot, self)
-        dialog.exec_()
-        self.refresh(controller)
+        if dialog.exec_():
+            self.refresh(controller)
 
 
 class CertDialog(QtGui.QDialog):

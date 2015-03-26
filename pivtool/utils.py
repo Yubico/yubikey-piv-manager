@@ -92,7 +92,8 @@ CATEGORIES = [
     lambda c: c.isupper(),  # English uppercase characters (A through Z)
     lambda c: c.islower(),  # English lowercase characters (a through z)
     re.compile(r'[0-9]').match,  # Base 10 digits (0 through 9)
-    re.compile(r'\W', re.UNICODE).match  # Nonalphanumeric characters (e.g., !, $, #, %)
+    re.compile(r'\W', re.UNICODE).match
+    #   Nonalphanumeric characters (e.g., !, $, #, %)
 ]
 
 
@@ -121,10 +122,10 @@ def der_read(der_data, expected_t=None):
     offs = 2
     if l > 0x80:
         n_bytes = l - 0x80
-        l = b2len(der_data[offs:offs+n_bytes])
+        l = b2len(der_data[offs:offs + n_bytes])
         offs = offs + n_bytes
-    v = der_data[offs:offs+l]
-    rest = der_data[offs+l:]
+    v = der_data[offs:offs + l]
+    rest = der_data[offs + l:]
     if expected_t is None:
         return t, v, rest
     return v, rest

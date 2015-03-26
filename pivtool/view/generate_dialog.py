@@ -27,7 +27,6 @@
 from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.utils import HAS_CA, request_cert_from_ca
-from pivtool.piv import DeviceGoneError, PivError, WrongPinError
 from pivtool.storage import settings, SETTINGS
 from pivtool.view.utils import TOP_SECTION, SECTION
 from getpass import getuser
@@ -84,8 +83,6 @@ class GenerateKeyDialog(QtGui.QDialog):
         layout.addWidget(self._out_pk)
         layout.addWidget(self._out_csr)
         layout.addWidget(self._out_ssc)
-
-
 
         if HAS_CA:
             self._out_ca = QtGui.QRadioButton(m.out_ca, self)
@@ -164,11 +161,10 @@ class GenerateKeyDialog(QtGui.QDialog):
             self._controller.import_certificate(cert, self._slot)
 
     def _generate_callback(self, result):
+        self.accept()
         if isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
-            self.reject()
         else:
-            self.accept()
             out_fmt = self._out_type.checkedButton()
             message = m.generated_key_desc_1 % self._slot
             if out_fmt is self._out_pk:

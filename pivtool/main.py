@@ -51,7 +51,8 @@ if sys.platform == 'darwin':
     if (10, 9) <= mac_version < (10, 10):  # Mavericks
         QtGui.QFont.insertSubstitution(".Lucida Grande UI", "Lucida Grande")
     if (10, 10) <= mac_version:  # Yosemite
-        QtGui.QFont.insertSubstitution(".Helvetica Neue DeskInterface", "Helvetica Neue")
+        QtGui.QFont.insertSubstitution(".Helvetica Neue DeskInterface",
+                                       "Helvetica Neue")
 
 
 class PivtoolApplication(QtGui.QApplication):
@@ -90,7 +91,7 @@ class PivtoolApplication(QtGui.QApplication):
                 dialog = SetPinDialog(controller, None, True)
                 if dialog.exec_():
                     QtGui.QMessageBox.information(None, m.pin_changed,
-                                                    m.pin_changed_desc)
+                                                  m.pin_changed_desc)
         except:
             print "No YubiKey PIV applet detected"
 
@@ -120,5 +121,5 @@ def main():
     status = app.exec_()
     app.worker.thread().quit()
     app.deleteLater()
-    time.sleep(0.01) # Without this the process sometimes stalls.
+    time.sleep(0.01)  # Without this the process sometimes stalls.
     sys.exit(status)

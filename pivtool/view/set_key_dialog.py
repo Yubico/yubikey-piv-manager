@@ -26,7 +26,7 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
-from pivtool.piv import DeviceGoneError, KEY_LEN
+from pivtool.piv import DeviceGoneError, PivError, KEY_LEN
 from pivtool.view.utils import KEY_VALIDATOR
 import os
 
@@ -150,10 +150,10 @@ class SetKeyDialog(QtGui.QDialog):
             self._controller.ensure_authenticated(current_key)
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(m.changing_key, (self._controller.set_authentication,
-                                        new_key, self.use_pin),
+                                         new_key, self.use_pin),
                         self._set_key_callback, True)
         except (DeviceGoneError, PivError, ValueError) as e:
-            QtGui.QMessageBox.warning(self, m.error, str(result))
+            QtGui.QMessageBox.warning(self, m.error, str(e))
             self.reject()
 
     def _set_key_callback(self, result):

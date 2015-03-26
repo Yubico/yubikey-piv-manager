@@ -56,7 +56,7 @@ class YkPivCmd(object):
                 del self._base_args[index]
                 del self._base_args[index]
             else:
-                self._base_args[index+1] = value
+                self._base_args[index + 1] = value
         except ValueError:
             if value is not None:
                 self._base_args.extend([opt, value])

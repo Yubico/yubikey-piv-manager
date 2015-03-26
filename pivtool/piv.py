@@ -134,7 +134,7 @@ class YkPiv(object):
 
     def _read_chuid(self, first_attempt=True):
         try:
-            chuid_data = self.fetch_object(YKPIV_OBJ_CHUID)[29:29+16]
+            chuid_data = self.fetch_object(YKPIV_OBJ_CHUID)[29:29 + 16]
             self._chuid = chuid_data.encode('hex')
         except PivError as e:  # No chuid set?
             if first_attempt:
