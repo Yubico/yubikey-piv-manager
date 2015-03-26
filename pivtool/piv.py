@@ -244,15 +244,21 @@ class YkPiv(object):
         c_data = (c_ubyte * len(data)).from_buffer_copy(data)
         check(ykpiv_save_object(self._state, object_id, c_data, len(data)))
 
-    def generate(self, slot):
+    def generate(self, slot, algorithm):
         try:
-            return self._cmd.generate(slot)
+            return self._cmd.generate(slot, algorithm)
         finally:
             self._reset()
 
     def create_csr(self, subject, pubkey_pem, slot):
         try:
             return self._cmd.create_csr(subject, pubkey_pem, slot)
+        finally:
+            self._reset()
+
+    def create_selfsigned_cert(self, subject, pubkey_pem, slot):
+        try:
+            return self._cmd.create_ssc(subject, pubkey_pem, slot)
         finally:
             self._reset()
 
@@ -293,7 +299,7 @@ class YkPiv(object):
             raise ValueError('No certificate loaded in slot: %s' % slot)
 
         try:
-            return self._cmd.delete_cert(slot)
+            self._cmd.delete_cert(slot)
+            del self._certs[slot]
         finally:
             self._reset()
-            self._read_status()

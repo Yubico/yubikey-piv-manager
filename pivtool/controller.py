@@ -32,11 +32,8 @@ from pivtool import messages as m
 from PySide import QtCore, QtGui, QtNetwork
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
-from getpass import getuser
 from datetime import timedelta
-import os
 import re
-import tempfile
 import time
 import struct
 import subprocess
@@ -86,33 +83,6 @@ def derive_key(pin, salt):
     if isinstance(pin, unicode):
         pin = pin.encode('utf8')
     return PBKDF2(pin, salt, 24, 10000)
-
-
-def request_cert_from_ca(csr, cert_tmpl):
-    try:
-        with tempfile.NamedTemporaryFile(delete=False) as f:
-            f.write(csr)
-            csr_fn = f.name
-
-        with tempfile.NamedTemporaryFile() as f:
-            cert_fn = f.name
-
-        p = subprocess.Popen(['certreq', '-submit', '-attrib',
-                              'CertificateTemplate:%s' % cert_tmpl, csr_fn,
-                              cert_fn], stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        if p.returncode != 0:
-            raise ValueError(m.certreq_error_1 % out)
-
-        with open(cert_fn, 'r') as cert:
-            return cert.read()
-    except OSError as e:
-        raise ValueError(m.certreq_error_1 % e)
-    finally:
-        os.remove(csr_fn)
-        if os.path.isfile(cert_fn):
-            os.remove(cert_fn)
 
 
 def is_hex_key(string):
@@ -236,7 +206,7 @@ class Controller(object):
             try:
                 self.authenticate(key)
                 return
-            except ValueError:
+            except ValueError as e:
                 QtGui.QMessageBox.warning(window, m.error, str(e))
 
         key, status = QtGui.QInputDialog.getText(
@@ -336,28 +306,25 @@ class Controller(object):
         self._key.set_chuid()
         self._attributes.rename(self._key.chuid)
 
-    def generate_key(self, slot):
+    def generate_key(self, slot, algorithm='RSA2048'):
         if not self.authenticated:
             raise ValueError('Not authenticated')
 
         if slot in self.certs:
             self.delete_certificate(slot)
-        return self._key.generate(slot)
+        return self._key.generate(slot, algorithm)
 
-    def create_csr(self, slot, pin, pubkey):
+    def create_csr(self, slot, pin, pubkey, subject):
         self.verify_pin(pin)
         if not self.authenticated:
             raise ValueError('Not authenticated')
-        return self._key.create_csr('/CN=%s/' % getuser(), pubkey, slot)
+        return self._key.create_csr(subject, pubkey, slot)
 
-    def request_from_ca(self, slot, pin, cert_tmpl):
-        pubkey = self.generate_key(slot)
-        csr = self.create_csr(slot, pin, pubkey)
-        try:
-            cert = request_cert_from_ca(csr, cert_tmpl)
-        except ValueError:
-            raise ValueError(m.certreq_error)
-        self.import_certificate(cert, slot, 'PEM')
+    def selfsign_certificate(self, slot, pin, pubkey, subject):
+        self.verify_pin(pin)
+        if not self.authenticated:
+            raise ValueError('Not authenticated')
+        return self._key.create_selfsigned_cert(subject, pubkey, slot)
 
     def does_pin_expire(self):
         return bool(settings.get(SETTINGS.PIN_EXPIRATION))

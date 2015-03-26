@@ -26,9 +26,9 @@
 
 from PySide import QtGui, QtCore, QtNetwork
 from pivtool import messages as m
-from pivtool.utils import HAS_CA
 from pivtool.piv import PivError, DeviceGoneError, WrongPinError
 from pivtool.storage import settings, SETTINGS
+from pivtool.view.generate_dialog import GenerateKeyDialog
 from datetime import datetime
 from functools import partial
 
@@ -104,7 +104,6 @@ class CertPanel(QtGui.QWidget):
 
     def _build_ui(self, controller):
         cert = controller.get_certificate(self._slot)
-        data = controller.certs[self._slot]
 
         layout = QtGui.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -143,7 +142,7 @@ class CertPanel(QtGui.QWidget):
 
     def _export_cert(self, cert):
         fn, fn_filter = QtGui.QFileDialog.getSaveFileName(
-            self, m.export_cert, filter='Public Key (*.pem)')
+            self, m.export_cert, filter='Certificate (*.pem, *.crt)')
         if not fn:
             return
 
@@ -200,11 +199,6 @@ class CertWidget(QtGui.QWidget):
         layout.addStretch()
 
         buttons = QtGui.QHBoxLayout()
-        from_ca_btn = QtGui.QPushButton(m.change_cert)
-        from_ca_btn.clicked.connect(
-            self._controller.wrap(self._request_cert, True))
-        if HAS_CA:
-            buttons.addWidget(from_ca_btn)
 
         from_file_btn = QtGui.QPushButton(m.import_from_file)
         from_file_btn.clicked.connect(
@@ -275,88 +269,9 @@ class CertWidget(QtGui.QWidget):
                                           m.cert_installed_desc)
 
     def _generate_key(self, controller, release):
-        res = QtGui.QMessageBox.warning(self, m.generate_key,
-                                        m.generate_key_warning_1 % self._slot,
-                                        QtGui.QMessageBox.Ok,
-                                        QtGui.QMessageBox.Cancel)
-        if res != QtGui.QMessageBox.Ok:
-            return
-
-        fn, fn_filter = QtGui.QFileDialog.getSaveFileName(
-            self, m.export_cert, filter="Public Key (*.pem);; "
-            "Certificate Signing Request (*.csr)")
-        if not fn:
-            return
-
-        csr = '.csr' in fn_filter
-        if '.' not in fn:
-            fn += '.csr' if csr else '.pem'
-
-        def func(pin=None):
-            data = controller.generate_key(self._slot)
-            if csr:
-                data = controller.create_csr(self._slot, pin, data)
-            with open(fn, 'w') as f:
-                f.write(data)
-
-        try:
-            pin = None
-            if csr:
-                pin = controller.ensure_pin()
-            controller.ensure_authenticated(pin)
-            worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.generating_key, (func, pin), partial(
-                self._generate_key_callback, controller, release), True)
-        except (DeviceGoneError, PivError, ValueError) as e:
-            QtGui.QMessageBox.warning(self, m.error, str(e))
-
-    def _generate_key_callback(self, controller, release, result):
-        if isinstance(result, DeviceGoneError):
-            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
-            self.window().accept()
-        elif isinstance(result, Exception):
-            QtGui.QMessageBox.warning(self, m.error, str(result))
-        else:
-            QtGui.QMessageBox.information(self, m.generated_key,
-                                          m.generated_key_desc_1 % self._slot)
-
-    def _request_cert(self, controller, release):
-        res = QtGui.QMessageBox.warning(self, m.change_cert,
-                                        m.change_cert_warning_1 % self._slot,
-                                        QtGui.QMessageBox.Ok,
-                                        QtGui.QMessageBox.Cancel)
-        if res != QtGui.QMessageBox.Ok:
-            return
-
-        try:
-            pin = controller.ensure_pin()
-            controller.ensure_authenticated(pin)
-            cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
-            if cert_tmpl is None:
-                # Ask for certificate template
-                cert_tmpl, status = QtGui.QInputDialog.getText(
-                    self, m.cert_tmpl, m.cert_tmpl)
-                if not status:
-                    return
-
-            worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.changing_cert, (
-                controller.request_from_ca, self._slot, pin, cert_tmpl),
-                partial(self._request_cert_callback, controller, release),
-                True)
-        except (DeviceGoneError, PivError, ValueError) as e:
-            QtGui.QMessageBox.warning(self, m.error, str(e))
-
-    def _request_cert_callback(self, controller, release, result):
-        if isinstance(result, DeviceGoneError):
-            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
-            self.window().accept()
-        elif isinstance(result, Exception):
-            QtGui.QMessageBox.warning(self, m.error, str(result))
-        else:
-            self.refresh(controller)
-            QtGui.QMessageBox.information(self, m.cert_installed,
-                                          m.cert_installed_desc)
+        dialog = GenerateKeyDialog(controller, self._slot, self)
+        dialog.exec_()
+        self.refresh(controller)
 
 
 class CertDialog(QtGui.QDialog):

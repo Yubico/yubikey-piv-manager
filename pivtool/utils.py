@@ -24,9 +24,12 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-import re
 from getpass import getuser
+from pivtool import messages as m
+import re
 import subprocess
+import os
+import tempfile
 
 
 def has_ca():
@@ -44,6 +47,33 @@ def has_ca():
     return False
 
 HAS_CA = has_ca()
+
+
+def request_cert_from_ca(csr, cert_tmpl):
+    try:
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(csr)
+            csr_fn = f.name
+
+        with tempfile.NamedTemporaryFile() as f:
+            cert_fn = f.name
+
+        p = subprocess.Popen(['certreq', '-submit', '-attrib',
+                              'CertificateTemplate:%s' % cert_tmpl, csr_fn,
+                              cert_fn], stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        if p.returncode != 0:
+            raise ValueError(m.certreq_error_1 % out)
+
+        with open(cert_fn, 'r') as cert:
+            return cert.read()
+    except OSError as e:
+        raise ValueError(m.certreq_error_1 % e)
+    finally:
+        os.remove(csr_fn)
+        if os.path.isfile(cert_fn):
+            os.remove(cert_fn)
 
 
 def test(fn, *args, **kwargs):

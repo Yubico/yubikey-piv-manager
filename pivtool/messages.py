@@ -149,6 +149,8 @@ change_cert_warning_1 = "This will generate a new private key and request a " \
 changing_cert = "Requesting certificate..."
 export_to_file = "Export certificate..."
 export_cert = "Export certificate"
+save_pk = "Save Public Key as..."
+save_csr = "Save Certificate Signing Request as..."
 generate_key = "Generate new key..."
 generate_key_warning_1 = "A new private key will be generated and stored in " \
     "slot '%s'. Anything currently in the slot will be deleted. This action " \
@@ -156,6 +158,10 @@ generate_key_warning_1 = "A new private key will be generated and stored in " \
 generating_key = "Generating new key..."
 generated_key = "New key generated"
 generated_key_desc_1 = "A new private key has been generated in slot '%s'."
+gen_out_pk_1 = "The corresponding public key has been saved to:\n%s"
+gen_out_csr_1 = "A certificate signing request has been saved to:\n%s"
+gen_out_ssc = "A self-signed certificate has been loaded."
+gen_out_ca = "A certificate from the CA has been loaded."
 import_from_file = "Import from file..."
 import_from_file_warning_1 = "Anything currently in slot '%s' will be " \
     "overwritten by the imported content. This action cannot be undone."
@@ -207,6 +213,15 @@ usage_9d = "The X.509 Certificate for Key Management and its associated " \
 usage_9e = "FIPS 201 specifies the optional Card Authentication Key (CAK) as " \
     "an asymmetric or symmetric key that is used to support additional " \
     "physical access applications. "
+algorithm = "Algorithm"
+alg_rsa_1024 = "RSA (1024 bits)"
+alg_rsa_2048 = "RSA (2048 bits)"
+alg_ecc_p256 = "ECC (P-256)"
+output = "Output"
+out_pk = "Public key"
+out_csr = "Certificate Signing Request (CSR)"
+out_ssc = "Create a self-signed certificate"
+out_ca = "Get a certificate from a Windows CA"
 
 
 def _translate(qt):
