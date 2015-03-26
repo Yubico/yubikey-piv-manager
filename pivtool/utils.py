@@ -40,7 +40,7 @@ def has_ca():
             p = subprocess.Popen(
                 ['certutil', '-dump'], stdout=subprocess.PIPE,
                 startupinfo=startupinfo)
-            out, err = p.communicate()
+            out, _ = p.communicate()
             return out.startswith('Entry')
     except OSError:
         pass
@@ -62,7 +62,7 @@ def request_cert_from_ca(csr, cert_tmpl):
                               'CertificateTemplate:%s' % cert_tmpl, csr_fn,
                               cert_fn], stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
+        out, _ = p.communicate()
         if p.returncode != 0:
             raise ValueError(m.certreq_error_1 % out)
 
@@ -97,18 +97,22 @@ CATEGORIES = [
 ]
 
 
+def contains_category(password, category):
+    return any(category(p) for p in password)
+
+
 def complexity_check(password):
     # Be at least six characters in length
     if len(password) < 6:
         return False
 
     # Contain characters from at least 3 groups:
-    if sum(map(lambda c: any(map(c, password)), CATEGORIES)) < 3:
+    if sum(contains_category(password, c) for c in CATEGORIES) < 3:
         return False
 
     # Not contain all or part of the user's account name
-    parts = [p for p in re.split('\W', getuser().lower()) if len(p) >= 3]
-    if any(map(lambda part: part in password.lower(), parts)):
+    parts = [p for p in re.split(r'\W', getuser().lower()) if len(p) >= 3]
+    if any(part in password.lower() for part in parts):
         return False
 
     return True

@@ -165,8 +165,9 @@ class CertPanel(QtGui.QWidget):
             try:
                 controller.ensure_authenticated()
                 worker = QtCore.QCoreApplication.instance().worker
-                worker.post(m.deleting_cert, (
-                    controller.delete_certificate, self._slot),
+                worker.post(
+                    m.deleting_cert,
+                    (controller.delete_certificate, self._slot),
                     partial(self._delete_cert_callback, controller, release),
                     True)
             except (DeviceGoneError, PivError, ValueError) as e:

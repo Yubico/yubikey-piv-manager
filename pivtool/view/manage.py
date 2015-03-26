@@ -26,7 +26,6 @@
 
 from PySide import QtCore, QtGui
 from pivtool import messages as m
-from pivtool.piv import DeviceGoneError
 from pivtool.view.set_pin_dialog import SetPinDialog
 from pivtool.view.set_key_dialog import SetKeyDialog
 from pivtool.storage import settings, SETTINGS

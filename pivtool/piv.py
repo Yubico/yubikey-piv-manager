@@ -27,7 +27,7 @@
 from pivtool.libykpiv import *
 from pivtool.piv_cmd import YkPivCmd
 from pivtool import messages as m
-from pivtool.utils import der_read, test
+from pivtool.utils import der_read
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
 

@@ -124,7 +124,7 @@ block_puk_desc = "Using your PIN as Management Key will block your PUK. " \
 pin_confirm_mismatch = "PINs don't match!"
 pin_empty = "PIN is empty"
 pin_not_complex = "PIN doesn't meet complexity rules"
-pin_complexity_desc = """Your PIN/Password must:
+pin_complexity_desc = """Your PIN/PUK must:
 
 * Not contain all or part of the user's account name
 * Be at least six characters in length

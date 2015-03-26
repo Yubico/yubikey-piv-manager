@@ -26,7 +26,7 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
-from pivtool.piv import DeviceGoneError, PivError, WrongPinError
+from pivtool.piv import WrongPinError
 from pivtool.storage import settings, SETTINGS
 from pivtool.utils import complexity_check
 from pivtool.view.utils import pin_field
@@ -49,8 +49,7 @@ class SetPinDialog(QtGui.QDialog):
 
         layout = QtGui.QVBoxLayout(self)
         if forced:
-            label = m.change_pin_forced_desc \
-                if pin else m.change_puk_forced_desc
+            label = m.change_pin_forced_desc
             layout.addWidget(QtGui.QLabel(label))
 
         layout.addWidget(QtGui.QLabel(m.current_pin_label
@@ -111,7 +110,7 @@ class SetPinDialog(QtGui.QDialog):
             if pin:
                 self._invalid_pin(m.pin_not_complex, m.pin_complexity_desc)
             else:
-                self._invalid_pin(m.puk_not_complex, m.puk_complexity_desc)
+                self._invalid_pin(m.puk_not_complex, m.pin_complexity_desc)
         else:
             fn = self._controller.change_pin \
                 if pin else self._controller.change_puk
