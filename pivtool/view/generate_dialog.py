@@ -84,12 +84,12 @@ class GenerateKeyDialog(QtGui.QDialog):
         layout.addWidget(self._out_csr)
         layout.addWidget(self._out_ssc)
 
+        self._out_ca = QtGui.QRadioButton(m.out_ca, self)
+        cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
+        self._cert_tmpl = QtGui.QLineEdit(cert_tmpl)
         if HAS_CA:
-            self._out_ca = QtGui.QRadioButton(m.out_ca, self)
             self._out_type.addButton(self._out_ca)
             layout.addWidget(self._out_ca)
-            cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
-            self._cert_tmpl = QtGui.QLineEdit(cert_tmpl)
             if not settings.is_locked(SETTINGS.CERTREQ_TEMPLATE):
                 self._cert_tmpl.setDisabled(True)
                 cert_box = QtGui.QHBoxLayout()
