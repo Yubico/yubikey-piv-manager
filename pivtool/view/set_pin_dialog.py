@@ -112,8 +112,12 @@ class SetPinDialog(QtGui.QDialog):
             else:
                 self._invalid_pin(m.puk_not_complex, m.pin_complexity_desc)
         else:
-            fn = self._controller.change_pin \
-                if pin else self._controller.change_puk
+            if pin:
+                fn = self._controller.change_pin
+                if self._controller.does_pin_expire():
+                    self._controller.ensure_authenticated(old_pin)
+            else:
+                fn = self._controller.change_puk
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(m.changing_pin if pin else m.changing_puk,
                         (fn, old_pin, new_pin),
