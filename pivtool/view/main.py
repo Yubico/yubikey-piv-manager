@@ -97,9 +97,11 @@ class MainWidget(QtGui.QWidget):
 
     def _refresh_controller(self, controller, release):
         self._pin_btn.setEnabled(True)
-        self._cert_btn.setEnabled(True)
+        self._cert_btn.setDisabled(controller.pin_blocked)
 
         messages = []
+        if controller.pin_blocked:
+            messages.append(m.pin_blocked)
         messages.append(m.key_with_applet_1 % controller.version)
         n_certs = len(controller.certs)
         messages.append(m.certs_loaded_1 % n_certs or m.no)
@@ -112,7 +114,7 @@ class MainWidget(QtGui.QWidget):
                 self.refresh()
             else:
                 QtCore.QCoreApplication.instance().quit()
-        elif controller.is_pin_expired():
+        elif controller.is_pin_expired() and not controller.pin_blocked:
             dialog = SetPinDialog(controller, self, True)
             if dialog.exec_():
                 QtGui.QMessageBox.information(self, m.pin_changed,

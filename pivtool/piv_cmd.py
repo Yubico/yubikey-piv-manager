@@ -36,6 +36,20 @@ def check(status, err):
         raise ValueError('Error: %s' % err)
 
 
+def set_arg(args, opt, value):
+    args = list(args)
+    if opt != '-a' and opt in args:
+        index = args.index(opt)
+        if value is None:
+            del args[index]
+            del args[index]
+        else:
+            args[index + 1] = value
+    elif value is not None:
+        args.extend([opt, value])
+    return args
+
+
 class YkPivCmd(object):
     def __init__(self, cmd=CMD, verbosity=0, reader=None, key=None):
         self._base_args = [cmd]
@@ -46,20 +60,8 @@ class YkPivCmd(object):
         if key:
             self._base_args.extend(['-k', key])
 
-    def args(self, *args):
-        self._base_args.extend(list(args))
-
     def set_arg(self, opt, value):
-        try:
-            index = self._base_args.index(opt)
-            if value is None:
-                del self._base_args[index]
-                del self._base_args[index]
-            else:
-                self._base_args[index + 1] = value
-        except ValueError:
-            if value is not None:
-                self._base_args.extend([opt, value])
+        self._base_args = set_arg(self._base_args, opt, value)
 
     def run(self, *args, **kwargs):
         if subprocess.mswindows:  # Avoid showing console window on Windows
@@ -68,9 +70,14 @@ class YkPivCmd(object):
         else:
             startupinfo = None
 
-        p = subprocess.Popen(self._base_args + list(args),
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, startupinfo=startupinfo)
+        full_args = list(self._base_args)
+        new_args = list(args)
+        while new_args:
+            full_args = set_arg(full_args, new_args.pop(0), new_args.pop(0))
+
+        p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             startupinfo=startupinfo)
         out, err = p.communicate(**kwargs)
         check(p.returncode, err)
 
@@ -79,11 +86,18 @@ class YkPivCmd(object):
     def status(self):
         return self.run('-a', 'status')
 
-    def change_pin(self, old_pin, new_pin):
-        self.run('-a', 'change-pin', '-P', old_pin, '-N', new_pin)
+    def change_pin(self, new_pin):
+        if '-P' not in self._base_args:
+            raise ValueError('PIN has not been verified')
+        self.run('-a', 'change-pin', '-N', new_pin)
+        self.set_arg('-P', new_pin)
 
     def change_puk(self, old_puk, new_puk):
         self.run('-a', 'change-puk', '-P', old_puk, '-N', new_puk)
+
+    def reset_pin(self, puk, new_pin):
+        self.run('-a', 'unblock-pin', '-P', puk, '-N', new_pin)
+        self.set_arg('-P', new_pin)
 
     def generate(self, slot, algorithm):
         return self.run('-s', slot, '-a', 'generate', '-A', algorithm)

@@ -33,38 +33,42 @@ from pivtool.view.utils import pin_field
 
 
 class SetPinDialog(QtGui.QDialog):
+    window_title = m.change_pin
+    label_current = m.current_pin_label
+    label_new = m.new_pin_label
+    label_new_complex = m.new_complex_pin_label
+    label_verify = m.verify_pin_label
+    warn_not_changed = m.pin_not_changed
+    desc_not_changed = m.pin_not_changed_desc
+    warn_not_complex = m.pin_not_complex
+    busy = m.changing_pin
+    info_changed = m.pin_changed
+    desc_changed = m.pin_changed_desc
 
-    def __init__(self, controller, parent=None, forced=False, puk=False):
+    def __init__(self, controller, parent=None, forced=False):
         super(SetPinDialog, self).__init__(parent)
 
-        self._puk = puk
         self._complex = settings.get(SETTINGS.COMPLEX_PINS, False)
         self._controller = controller
-        self._build_ui(forced, not puk)
+        self._build_ui(forced)
 
-    def _build_ui(self, forced, pin):
+    def _build_ui(self, forced):
         self.setWindowFlags(self.windowFlags()
                             ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setWindowTitle(m.change_pin if pin else m.change_puk)
+        self.setWindowTitle(self.window_title)
 
         layout = QtGui.QVBoxLayout(self)
         if forced:
-            label = m.change_pin_forced_desc
-            layout.addWidget(QtGui.QLabel(label))
+            layout.addWidget(QtGui.QLabel(m.change_pin_forced_desc))
 
-        layout.addWidget(QtGui.QLabel(m.current_pin_label
-                                      if pin else m.current_puk_label))
+        layout.addWidget(QtGui.QLabel(self.label_current))
         self._old_pin = pin_field()
         layout.addWidget(self._old_pin)
-        if self._complex:
-            label = m.new_complex_pin_label if pin else m.new_complex_puk_label
-        else:
-            label = m.new_pin_label if pin else m.new_puk_label
-        layout.addWidget(QtGui.QLabel(label))
+        layout.addWidget(QtGui.QLabel(self.label_new_complex
+                                      if self._complex else self.label_new))
         self._new_pin = pin_field()
         layout.addWidget(self._new_pin)
-        layout.addWidget(QtGui.QLabel(m.verify_pin_label
-                                      if pin else m.verify_puk_label))
+        layout.addWidget(QtGui.QLabel(self.label_verify))
         self._confirm_pin = pin_field()
         layout.addWidget(self._confirm_pin)
 
@@ -95,33 +99,27 @@ class SetPinDialog(QtGui.QDialog):
         self._confirm_pin.setText('')
         self._new_pin.setFocus()
 
+    def _prepare_fn(self, old_pin, new_pin):
+        self._controller.verify_pin(old_pin)
+        if self._controller.does_pin_expire():
+            self._controller.ensure_authenticated(old_pin)
+        return (self._controller.change_pin, old_pin, new_pin)
+
     def _set_pin(self):
         old_pin = self._old_pin.text()
         new_pin = self._new_pin.text()
 
-        pin = not self._puk
-
         if old_pin == new_pin:
-            if pin:
-                self._invalid_pin(m.pin_not_changed, m.pin_not_changed_desc)
-            else:
-                self._invalid_pin(m.puk_not_changed, m.puk_not_changed_desc)
+            self._invalid_pin(self.warn_not_changed, self.desc_not_changed)
         elif self._complex and not complexity_check(new_pin):
-            if pin:
-                self._invalid_pin(m.pin_not_complex, m.pin_complexity_desc)
-            else:
-                self._invalid_pin(m.puk_not_complex, m.pin_complexity_desc)
+            self._invalid_pin(self.warn_not_complex, m.pin_complexity_desc)
         else:
-            if pin:
-                fn = self._controller.change_pin
-                if self._controller.does_pin_expire():
-                    self._controller.ensure_authenticated(old_pin)
-            else:
-                fn = self._controller.change_puk
-            worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.changing_pin if pin else m.changing_puk,
-                        (fn, old_pin, new_pin),
-                        self._change_pin_callback, True)
+            try:
+                fn = self._prepare_fn(old_pin, new_pin)
+                worker = QtCore.QCoreApplication.instance().worker
+                worker.post(self.busy, fn, self._change_pin_callback, True)
+            except Exception as e:
+                self._change_pin_callback(e)
 
     def _change_pin_callback(self, result):
         if isinstance(result, Exception):
@@ -130,8 +128,44 @@ class SetPinDialog(QtGui.QDialog):
                 self._old_pin.setText('')
                 self._old_pin.setFocus()
                 if result.blocked:
-                    self.reject()
+                    self.accept()
             else:
                 self.reject()
         else:
             self.accept()
+            QtGui.QMessageBox.information(self, self.info_changed,
+                                          self.desc_changed)
+
+
+class SetPukDialog(SetPinDialog):
+    window_title = m.change_puk
+    label_current = m.current_puk_label
+    label_new = m.new_puk_label
+    label_new_complex = m.new_complex_puk_label
+    label_verify = m.verify_puk_label
+    warn_not_changed = m.puk_not_changed
+    desc_not_changed = m.puk_not_changed_desc
+    warn_not_complex = m.puk_not_complex
+    busy = m.changing_puk
+    info_changed = m.pin_changed
+    desc_changed = m.pin_changed_desc
+
+    def _prepare_fn(self, old_puk, new_puk):
+        return (self._controller.change_puk, old_puk, new_puk)
+
+
+class ResetPinDialog(SetPinDialog):
+    window_title = m.reset_pin
+    label_current = m.puk_label
+    label_new = m.new_pin_label
+    label_new_complex = m.new_complex_pin_label
+    label_verify = m.verify_pin_label
+    warn_not_changed = m.pin_puk_same
+    desc_not_changed = m.pin_puk_same_desc
+    warn_not_complex = m.pin_not_complex
+    busy = m.changing_pin
+    info_changed = m.pin_changed
+    desc_changed = m.pin_changed_desc
+
+    def _prepare_fn(self, puk, new_pin):
+        return (self._controller.reset_pin, puk, new_pin)

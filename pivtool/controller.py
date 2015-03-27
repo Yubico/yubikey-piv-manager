@@ -151,6 +151,10 @@ class Controller(object):
         return TAG_SALT in self._data
 
     @property
+    def pin_blocked(self):
+        return self._key.pin_blocked
+
+    @property
     def puk_blocked(self):
         return has_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
 
@@ -280,10 +284,9 @@ class Controller(object):
         if len(new_pin) < 4:
             raise ValueError('PIN must be at least 4 characters')
         self.verify_pin(old_pin)
-        if not self.authenticated and self.pin_is_key:
-            self.authenticate(old_pin)
+        if self.pin_is_key or self.does_pin_expire():
+            self.ensure_authenticated(old_pin)
         self._key.set_pin(new_pin)
-
         # Update management key if needed:
         if self.pin_is_key:
             self.set_authentication(new_pin, True)
@@ -291,6 +294,11 @@ class Controller(object):
         if self.does_pin_expire():
             self._data[TAG_PIN_TIMESTAMP] = struct.pack('i', int(time.time()))
         self._save_data()
+
+    def reset_pin(self, puk, new_pin):
+        if len(new_pin) < 4:
+            raise ValueError('PIN must be at least 4 characters')
+        self._key.reset_pin(puk, new_pin)
 
     def change_puk(self, old_puk, new_puk):
         if self.puk_blocked:

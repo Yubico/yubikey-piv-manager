@@ -132,11 +132,16 @@ class GenerateKeyDialog(QtGui.QDialog):
         else:
             out_fn = None
 
-        if out_fmt is not self._out_pk:
-            pin = self._controller.ensure_pin()
-        else:
-            pin = None
-        self._controller.ensure_authenticated(pin)
+        try:
+            if out_fmt is not self._out_pk:
+                pin = self._controller.ensure_pin()
+            else:
+                pin = None
+            self._controller.ensure_authenticated(pin)
+        except Exception as e:
+            QtGui.QMessageBox.warning(self, m.error, str(e))
+            self.accept()
+            return
 
         worker = QtCore.QCoreApplication.instance().worker
         worker.post(m.generating_key, (self._do_generate, out_fmt, pin, out_fn),

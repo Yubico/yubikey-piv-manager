@@ -26,7 +26,8 @@
 
 from PySide import QtCore, QtGui
 from pivtool import messages as m
-from pivtool.view.set_pin_dialog import SetPinDialog
+from pivtool.view.set_pin_dialog import (SetPinDialog, SetPukDialog,
+                                         ResetPinDialog)
 from pivtool.view.set_key_dialog import SetKeyDialog
 from pivtool.storage import settings, SETTINGS
 
@@ -51,6 +52,8 @@ class ManageDialog(QtGui.QDialog):
         event.accept()
 
     def _build_ui(self):
+        # TODO: If PIN is blocked but not PUK blocked, show Reset PIN.
+        # TODO: If PIN and PUK are blocked, show RESET DEVICE.
         layout = QtGui.QVBoxLayout(self)
 
         btns = QtGui.QHBoxLayout()
@@ -58,10 +61,12 @@ class ManageDialog(QtGui.QDialog):
         self._pin_btn.clicked.connect(self._controller.wrap(self._change_pin,
                                                             True))
         btns.addWidget(self._pin_btn)
+
         self._puk_btn = QtGui.QPushButton(m.change_puk)
         self._puk_btn.clicked.connect(self._controller.wrap(self._change_puk,
                                                             True))
         btns.addWidget(self._puk_btn)
+
         self._key_btn = QtGui.QPushButton(m.change_key)
         self._key_btn.clicked.connect(self._controller.wrap(self._change_key,
                                                             True))
@@ -75,25 +80,41 @@ class ManageDialog(QtGui.QDialog):
 
     def refresh(self, controller):
         messages = []
-        if controller.does_pin_expire():
+        if controller.pin_blocked:
+            messages.append(m.pin_blocked)
+        elif controller.does_pin_expire():
             messages.append(m.pin_days_left_1 %
                             controller.get_pin_days_left())
         if controller.pin_is_key:
             messages.append(m.pin_is_key)
         if controller.puk_blocked:
             messages.append(m.puk_blocked)
+
+        if controller.pin_blocked:
+            if controller.puk_blocked:
+                self._pin_btn.setText(m.reset_device)
+            else:
+                self._pin_btn.setText(m.reset_pin)
+        else:
+            self._pin_btn.setText(m.change_pin)
+
         self._puk_btn.setDisabled(controller.puk_blocked)
         self._messages.setHtml('<br>'.join(messages))
 
     def _change_pin(self, controller, release):
-        dialog = SetPinDialog(controller, self)
+        if controller.pin_blocked:
+            if controller.puk_blocked:
+                pass  # TODO: Reset device
+                # TODO: Confirm
+            else:
+                dialog = ResetPinDialog(controller, self)
+        else:
+            dialog = SetPinDialog(controller, self)
         if dialog.exec_():
-            QtGui.QMessageBox.information(self, m.pin_changed,
-                                          m.pin_changed_desc)
             self.refresh(controller)
 
     def _change_puk(self, controller, release):
-        dialog = SetPinDialog(controller, self, puk=True)
+        dialog = SetPukDialog(controller, self)
         if dialog.exec_():
             QtGui.QMessageBox.information(self, m.puk_changed,
                                           m.puk_changed_desc)

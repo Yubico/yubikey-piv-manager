@@ -90,6 +90,7 @@ class YkPiv(object):
             reader = chr(0)
 
         self._chuid = None
+        self._pin_blocked = False
         self._verbosity = verbosity
         self._reader = reader
         self._certs = {}
@@ -115,6 +116,8 @@ class YkPiv(object):
                     self._parse_status(chunk)
                     chunk = []
                 chunk.append(line)
+            if chunk:
+                self._parse_status(chunk)
             self._status = data
         finally:
             self._reset()
@@ -123,6 +126,8 @@ class YkPiv(object):
         parts, rest = chunk[0].split(), chunk[1:]
         if parts[0] == 'Slot' and rest:
             self._parse_slot(parts[1][:-1], rest)
+        elif parts[0] == 'PIN':
+            self._pin_blocked = parts[-1] == '0'
 
     def _parse_slot(self, slot, lines):
         self._certs[slot] = dict(l.strip().split(':\t', 1) for l in lines)
@@ -164,14 +169,16 @@ class YkPiv(object):
         return self._chuid
 
     @property
+    def pin_blocked(self):
+        return self._pin_blocked
+
+    @property
     def certs(self):
         return dict(self._certs)
 
     def set_chuid(self):
-        try:
-            self._cmd.run('-a', 'set-chuid')
-        finally:
-            self._reset()
+        self._cmd.run('-a', 'set-chuid')
+        self._reset()
         self._read_chuid()
 
     def authenticate(self, key=None):
@@ -198,6 +205,9 @@ class YkPiv(object):
         rc = ykpiv_verify(self._state, buf, byref(tries))
 
         if rc == YKPIV_WRONG_PIN:
+            if tries.value == 0:
+                self._pin_blocked = True
+                self._cmd.set_arg('-P', None)
             raise WrongPinError(tries.value)
         check(rc)
         self._cmd.set_arg('-P', pin)
@@ -208,10 +218,22 @@ class YkPiv(object):
         if len(pin) > 8:
             raise ValueError(m.pin_too_long)
         try:
-            self._cmd.run('-a', 'change-pin', '-N', pin)
-            self._cmd.set_arg('-P', pin)
+            self._cmd.change_pin(pin)
         finally:
             self._reset()
+
+    def reset_pin(self, puk, new_pin):
+        if isinstance(new_pin, unicode):
+            new_pin = new_pin.encode('utf8')
+        if len(new_pin) > 8:
+            raise ValueError(m.pin_too_long)
+        if isinstance(puk, unicode):
+            puk = puk.encode('utf8')
+        try:
+            self._cmd.reset_pin(puk, new_pin)
+        finally:
+            self._reset()
+            self._read_status()
 
     def set_puk(self, puk, new_puk):
         if isinstance(puk, unicode):
@@ -221,14 +243,14 @@ class YkPiv(object):
         if len(new_puk) > 8:
             raise ValueError(m.puk_too_long)
 
-        pin = None
-        args = self._cmd._base_args
-        if '-P' in args:
-            pin = args[args.index('-P') + 1]
-
         try:
-            self._cmd.set_arg('-P', puk)
-            self._cmd.run('-a', 'change-puk', '-N', new_puk)
+            self._cmd.change_puk(puk, new_puk)
+        finally:
+            self._reset()
+
+    def reset_device(self):
+        try:
+            self._cmd.run('-a', 'reset')
         finally:
             self._cmd.set_arg('-P', pin)
             self._reset()
