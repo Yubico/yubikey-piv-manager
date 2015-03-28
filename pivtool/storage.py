@@ -26,6 +26,7 @@
 
 import os
 from pivtool import messages as m
+from pivtool.piv import CERT_SLOTS
 from PySide import QtCore
 from collections import MutableMapping
 
@@ -121,7 +122,8 @@ class PySettings(MutableMapping):
     def __getattr__(self, method_name):
         return getattr(self._settings, method_name)
 
-    def get(self, key, default=None):
+    def get(self, key):
+        default = DEFAULTS.get(key)
         val = self._settings.value(key, default)
         if not isinstance(val, type(default)):
             val = convert_to(val, type(default))
@@ -166,6 +168,16 @@ class SETTINGS:
     PIN_EXPIRATION = "pin_expiration"
     CARD_READER = "card_reader"
     CERTREQ_TEMPLATE = "certreq_template"
+    SHOWN_SLOTS = "shown_slots"
+
+DEFAULTS = {
+    SETTINGS.CARD_READER: None,
+    SETTINGS.CERTREQ_TEMPLATE: None,
+    SETTINGS.COMPLEX_PINS: False,
+    SETTINGS.FORCE_PIN_AS_KEY: False,
+    SETTINGS.PIN_EXPIRATION: 0,
+    SETTINGS.SHOWN_SLOTS: sorted(CERT_SLOTS.keys())
+}
 
 settings = PySettings(SettingsOverlay(
     QtCore.QSettings(m.organization, m.app_name),

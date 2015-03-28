@@ -289,7 +289,7 @@ class CertDialog(QtGui.QDialog):
                             ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setFixedSize(540, 180)
 
-        self._complex = settings.get(SETTINGS.COMPLEX_PINS, False)
+        self._complex = settings.get(SETTINGS.COMPLEX_PINS)
         self._controller = controller
         controller.use(self._build_ui)
         controller.on_lost(self.accept)
@@ -302,8 +302,14 @@ class CertDialog(QtGui.QDialog):
         layout = QtGui.QVBoxLayout()
 
         self._cert_tabs = QtGui.QTabWidget()
+        shown_slots = settings.get(SETTINGS.SHOWN_SLOTS)
         for (slot, label) in sorted(SLOTS.items()):
-            self._cert_tabs.addTab(CertWidget(self._controller, slot), label)
+            if slot in shown_slots:
+                self._cert_tabs.addTab(CertWidget(self._controller, slot),
+                                       label)
+            elif not settings.is_locked(SETTINGS.SHOWN_SLOTS):
+                index = self._cert_tabs.addTab(QtGui.QLabel(), label)
+                self._cert_tabs.setTabEnabled(index, False)
         layout.addWidget(self._cert_tabs)
 
         self.setLayout(layout)

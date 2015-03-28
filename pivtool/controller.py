@@ -343,7 +343,7 @@ class Controller(object):
         return data
 
     def get_pin_days_left(self):
-        validity = settings.get(SETTINGS.PIN_EXPIRATION, 0)
+        validity = settings.get(SETTINGS.PIN_EXPIRATION)
         if not validity:
             return -1
         last_changed = self.get_pin_last_changed()

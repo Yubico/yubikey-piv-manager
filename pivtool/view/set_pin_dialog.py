@@ -48,7 +48,7 @@ class SetPinDialog(QtGui.QDialog):
     def __init__(self, controller, parent=None, forced=False):
         super(SetPinDialog, self).__init__(parent)
 
-        self._complex = settings.get(SETTINGS.COMPLEX_PINS, False)
+        self._complex = settings.get(SETTINGS.COMPLEX_PINS)
         self._controller = controller
         self._build_ui(forced)
 
