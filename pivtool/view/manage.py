@@ -52,8 +52,6 @@ class ManageDialog(QtGui.QDialog):
         event.accept()
 
     def _build_ui(self):
-        # TODO: If PIN is blocked but not PUK blocked, show Reset PIN.
-        # TODO: If PIN and PUK are blocked, show RESET DEVICE.
         layout = QtGui.QVBoxLayout(self)
 
         btns = QtGui.QHBoxLayout()

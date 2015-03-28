@@ -57,34 +57,35 @@ class GenerateKeyDialog(QtGui.QDialog):
         warning.setWordWrap(True)
         layout.addWidget(warning)
 
-        layout.addWidget(QtGui.QLabel(TOP_SECTION % m.algorithm))
         self._alg_type = QtGui.QButtonGroup(self)
-        self._alg_rsa_1024 = QtGui.QRadioButton(m.alg_rsa_1024, self)
-        self._alg_rsa_2048 = QtGui.QRadioButton(m.alg_rsa_2048, self)
+        self._alg_rsa_1024 = QtGui.QRadioButton(m.alg_rsa_1024)
+        self._alg_rsa_2048 = QtGui.QRadioButton(m.alg_rsa_2048)
         self._alg_rsa_2048.setChecked(True)
         self._alg_rsa_2048.setFocus()
-        self._alg_ecc_p256 = QtGui.QRadioButton(m.alg_ecc_p256, self)
+        self._alg_ecc_p256 = QtGui.QRadioButton(m.alg_ecc_p256)
         self._alg_type.addButton(self._alg_rsa_1024)
         self._alg_type.addButton(self._alg_rsa_2048)
         self._alg_type.addButton(self._alg_ecc_p256)
-        layout.addWidget(self._alg_rsa_1024)
-        layout.addWidget(self._alg_rsa_2048)
-        layout.addWidget(self._alg_ecc_p256)
+        if settings[SETTINGS.FORCE_ALGORITHM] is None:
+            layout.addWidget(QtGui.QLabel(SECTION % m.algorithm))
+            layout.addWidget(self._alg_rsa_1024)
+            layout.addWidget(self._alg_rsa_2048)
+            layout.addWidget(self._alg_ecc_p256)
 
         layout.addWidget(QtGui.QLabel(SECTION % m.output))
         self._out_type = QtGui.QButtonGroup(self)
-        self._out_pk = QtGui.QRadioButton(m.out_pk, self)
-        self._out_csr = QtGui.QRadioButton(m.out_csr, self)
-        self._out_ssc = QtGui.QRadioButton(m.out_ssc, self)
+        self._out_pk = QtGui.QRadioButton(m.out_pk)
+        self._out_csr = QtGui.QRadioButton(m.out_csr)
+        self._out_ssc = QtGui.QRadioButton(m.out_ssc)
         self._out_ssc.setChecked(True)
         self._out_type.addButton(self._out_pk)
-        self._out_type.addButton(self._out_csr)
         self._out_type.addButton(self._out_ssc)
+        self._out_type.addButton(self._out_csr)
         # layout.addWidget(self._out_pk)  # Disables PK form.
-        layout.addWidget(self._out_csr)
         layout.addWidget(self._out_ssc)
+        layout.addWidget(self._out_csr)
 
-        self._out_ca = QtGui.QRadioButton(m.out_ca, self)
+        self._out_ca = QtGui.QRadioButton(m.out_ca)
         cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
         self._cert_tmpl = QtGui.QLineEdit(cert_tmpl)
         if HAS_CA:
@@ -110,6 +111,9 @@ class GenerateKeyDialog(QtGui.QDialog):
 
     @property
     def algorithm(self):
+        algo = settings[SETTINGS.FORCE_ALGORITHM]
+        if algo is not None:
+            return algo
         btn = self._alg_type.checkedButton()
         if btn is self._alg_rsa_1024:
             return 'RSA1024'

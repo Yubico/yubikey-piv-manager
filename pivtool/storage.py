@@ -28,7 +28,7 @@ import os
 from pivtool import messages as m
 from pivtool.piv import CERT_SLOTS
 from PySide import QtCore
-from collections import MutableMapping
+from collections import MutableMapping, namedtuple
 
 __all__ = [
     'CONFIG_HOME',
@@ -41,6 +41,19 @@ CONFIG_HOME = os.path.join(os.path.expanduser('~'), '.pivtool')
 _settings = QtCore.QSettings(os.path.join(CONFIG_HOME, 'settings.ini'),
                              QtCore.QSettings.IniFormat)
 _mutex = QtCore.QMutex(QtCore.QMutex.Recursive)
+
+
+Setting = namedtuple('Setting', 'key default type')
+
+
+class SETTINGS:
+    CARD_READER = Setting("card_reader", None, str)
+    CERTREQ_TEMPLATE = Setting("certreq_template", None, str)
+    COMPLEX_PINS = Setting("complex_pins", False, bool)
+    FORCE_ALGORITHM = Setting("algorithm", None, str)
+    FORCE_PIN_AS_KEY = Setting("pin_as_key", False, bool)
+    PIN_EXPIRATION = Setting("pin_expiration", 0, int)
+    SHOWN_SLOTS = Setting("shown_slots", sorted(CERT_SLOTS.keys()), list)
 
 
 def get_store(group):
@@ -99,16 +112,23 @@ class SettingsOverlay(object):
     def rename(self, new_name):
         raise NotImplementedError()
 
-    def value(self, key, default=None):
+    def value(self, setting, default=None):
         """Give preference to master"""
-        return self._master.value(key, self._overlay.value(key, default))
+        key, default, d_type = setting
+        val = self._master.value(key, self._overlay.value(key, default))
+        if not isinstance(val, d_type):
+            val = convert_to(val, d_type)
+        return val
+
+    def setValue(self, setting, value):
+        self._overlay.setValue(setting.key, value)
 
     def childKeys(self):
         """Combine keys of master and overlay"""
         return list(set(self._master.childKeys() + self._overlay.childKeys()))
 
-    def is_locked(self, key):
-        return self._master.contains(key)
+    def is_locked(self, setting):
+        return self._master.contains(setting.key)
 
     def __repr__(self):
         return 'Overlay(%s, %s)' % (self._master, self._overlay)
@@ -122,8 +142,7 @@ class PySettings(MutableMapping):
     def __getattr__(self, method_name):
         return getattr(self._settings, method_name)
 
-    def get(self, key):
-        default = DEFAULTS.get(key)
+    def get(self, key, default=None):
         val = self._settings.value(key, default)
         if not isinstance(val, type(default)):
             val = convert_to(val, type(default))
@@ -161,23 +180,6 @@ class PySettings(MutableMapping):
     def __repr__(self):
         return 'Store(%s): %s' % (self._settings, dict(self))
 
-
-class SETTINGS:
-    FORCE_PIN_AS_KEY = "pin_as_key"
-    COMPLEX_PINS = "complex_pins"
-    PIN_EXPIRATION = "pin_expiration"
-    CARD_READER = "card_reader"
-    CERTREQ_TEMPLATE = "certreq_template"
-    SHOWN_SLOTS = "shown_slots"
-
-DEFAULTS = {
-    SETTINGS.CARD_READER: None,
-    SETTINGS.CERTREQ_TEMPLATE: None,
-    SETTINGS.COMPLEX_PINS: False,
-    SETTINGS.FORCE_PIN_AS_KEY: False,
-    SETTINGS.PIN_EXPIRATION: 0,
-    SETTINGS.SHOWN_SLOTS: sorted(CERT_SLOTS.keys())
-}
 
 settings = PySettings(SettingsOverlay(
     QtCore.QSettings(m.organization, m.app_name),
