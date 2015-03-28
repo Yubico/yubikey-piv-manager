@@ -298,14 +298,24 @@ class Controller(object):
     def reset_pin(self, puk, new_pin):
         if len(new_pin) < 4:
             raise ValueError('PIN must be at least 4 characters')
-        self._key.reset_pin(puk, new_pin)
+        try:
+            self._key.reset_pin(puk, new_pin)
+        except WrongPinError as e:
+            if e.blocked:
+                set_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
+            raise
 
     def change_puk(self, old_puk, new_puk):
         if self.puk_blocked:
             raise ValueError('PUK is disabled and cannot be changed')
         if len(new_puk) < 4:
             raise ValueError('PUK must be at least 4 characters')
-        self._key.set_puk(old_puk, new_puk)
+        try:
+            self._key.set_puk(old_puk, new_puk)
+        except WrongPinError as e:
+            if e.blocked:
+                set_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
+            raise
 
     def update_chuid(self):
         if not self.authenticated:

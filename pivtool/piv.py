@@ -30,6 +30,7 @@ from pivtool import messages as m
 from pivtool.utils import der_read
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
+import re
 
 libversion = ykpiv_check_version(None)
 
@@ -79,6 +80,8 @@ CERT_SLOTS = {
 }
 
 ATTR_NAME = "name"
+
+TRIES_PATTERN = re.compile(r'now (\d+) tries')
 
 
 class YkPiv(object):
@@ -231,6 +234,13 @@ class YkPiv(object):
             puk = puk.encode('utf8')
         try:
             self._cmd.reset_pin(puk, new_pin)
+        except ValueError as e:
+            if 'blocked' in e.message:
+                raise WrongPinError(0)
+            match = TRIES_PATTERN.search(e.message)
+            if match:
+                raise WrongPinError(int(match.group(1)))
+            raise
         finally:
             self._reset()
             self._read_status()
@@ -245,6 +255,13 @@ class YkPiv(object):
 
         try:
             self._cmd.change_puk(puk, new_puk)
+        except ValueError as e:
+            if 'blocked' in e.message:
+                raise WrongPinError(0)
+            match = TRIES_PATTERN.search(e.message)
+            if match:
+                raise WrongPinError(int(match.group(1)))
+            raise
         finally:
             self._reset()
 
