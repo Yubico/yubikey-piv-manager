@@ -74,13 +74,13 @@ class GenerateKeyDialog(QtGui.QDialog):
         layout.addWidget(QtGui.QLabel(SECTION % m.output))
         self._out_type = QtGui.QButtonGroup(self)
         self._out_pk = QtGui.QRadioButton(m.out_pk, self)
-        self._out_pk.setChecked(True)
         self._out_csr = QtGui.QRadioButton(m.out_csr, self)
         self._out_ssc = QtGui.QRadioButton(m.out_ssc, self)
+        self._out_ssc.setChecked(True)
         self._out_type.addButton(self._out_pk)
         self._out_type.addButton(self._out_csr)
         self._out_type.addButton(self._out_ssc)
-        layout.addWidget(self._out_pk)
+        # layout.addWidget(self._out_pk)  # Disables PK form.
         layout.addWidget(self._out_csr)
         layout.addWidget(self._out_ssc)
 
@@ -89,6 +89,7 @@ class GenerateKeyDialog(QtGui.QDialog):
         self._cert_tmpl = QtGui.QLineEdit(cert_tmpl)
         if HAS_CA:
             self._out_type.addButton(self._out_ca)
+            self._out_ca.setChecked(True)
             layout.addWidget(self._out_ca)
             if not settings.is_locked(SETTINGS.CERTREQ_TEMPLATE):
                 self._cert_tmpl.setDisabled(True)

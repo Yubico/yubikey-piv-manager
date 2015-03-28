@@ -226,7 +226,7 @@ output = "Output"
 out_pk = "Public key"
 out_csr = "Certificate Signing Request (CSR)"
 out_ssc = "Create a self-signed certificate"
-out_ca = "Get a certificate from a Windows CA"
+out_ca = "Request a certificate from a Windows CA"
 
 
 def _translate(qt):
