@@ -47,13 +47,13 @@ Setting = namedtuple('Setting', 'key default type')
 
 
 class SETTINGS:
-    CARD_READER = Setting("card_reader", None, str)
-    CERTREQ_TEMPLATE = Setting("certreq_template", None, str)
-    COMPLEX_PINS = Setting("complex_pins", False, bool)
-    FORCE_ALGORITHM = Setting("algorithm", None, str)
-    FORCE_PIN_AS_KEY = Setting("pin_as_key", False, bool)
-    PIN_EXPIRATION = Setting("pin_expiration", 0, int)
-    SHOWN_SLOTS = Setting("shown_slots", sorted(CERT_SLOTS.keys()), list)
+    CARD_READER = Setting('card_reader', None, str)
+    CERTREQ_TEMPLATE = Setting('certreq_template', None, str)
+    COMPLEX_PINS = Setting('complex_pins', False, bool)
+    FORCE_ALGORITHM = Setting('algorithm', None, str)
+    FORCE_PIN_AS_KEY = Setting('pin_as_key', False, bool)
+    PIN_EXPIRATION = Setting('pin_expiration', 0, int)
+    SHOWN_SLOTS = Setting('shown_slots', sorted(CERT_SLOTS.keys()), list)
 
 
 def get_store(group):
@@ -73,6 +73,7 @@ def convert_to(value, target_type):
 
 
 class SettingsGroup(object):
+
     def __init__(self, settings, mutex, group):
         self._settings = settings
         self._mutex = mutex
@@ -104,6 +105,7 @@ class SettingsGroup(object):
 
 
 class SettingsOverlay(object):
+
     def __init__(self, master, overlay):
         self._master = master
         self._overlay = overlay
@@ -115,7 +117,7 @@ class SettingsOverlay(object):
         raise NotImplementedError()
 
     def value(self, setting, default=None):
-        """Give preference to master"""
+        """Give preference to master."""
         key, default, d_type = setting
         val = self._master.value(key, self._overlay.value(key, default))
         if not isinstance(val, d_type):
@@ -126,7 +128,7 @@ class SettingsOverlay(object):
         self._overlay.setValue(setting.key, value)
 
     def childKeys(self):
-        """Combine keys of master and overlay"""
+        """Combine keys of master and overlay."""
         return list(set(self._master.childKeys() + self._overlay.childKeys()))
 
     def is_locked(self, setting):

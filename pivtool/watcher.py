@@ -33,6 +33,7 @@ from Queue import Queue
 
 
 class Release(object):
+
     def __init__(self, fn):
         self._fn = fn
 

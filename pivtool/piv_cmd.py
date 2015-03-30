@@ -28,7 +28,7 @@
 import subprocess
 
 
-CMD = "yubico-piv-tool"
+CMD = 'yubico-piv-tool'
 
 
 def check(status, err):
@@ -51,6 +51,7 @@ def set_arg(args, opt, value):
 
 
 class YkPivCmd(object):
+
     def __init__(self, cmd=CMD, verbosity=0, reader=None, key=None):
         self._base_args = [cmd]
         if verbosity > 0:

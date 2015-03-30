@@ -49,10 +49,10 @@ if sys.platform == 'darwin':
     from platform import mac_ver
     mac_version = tuple(mac_ver()[0].split('.'))
     if (10, 9) <= mac_version < (10, 10):  # Mavericks
-        QtGui.QFont.insertSubstitution(".Lucida Grande UI", "Lucida Grande")
+        QtGui.QFont.insertSubstitution('.Lucida Grande UI', 'Lucida Grande')
     if (10, 10) <= mac_version:  # Yosemite
-        QtGui.QFont.insertSubstitution(".Helvetica Neue DeskInterface",
-                                       "Helvetica Neue")
+        QtGui.QFont.insertSubstitution('.Helvetica Neue DeskInterface',
+                                       'Helvetica Neue')
 
 
 class PivtoolApplication(QtGui.QApplication):
@@ -88,17 +88,17 @@ class PivtoolApplication(QtGui.QApplication):
         try:
             controller = Controller(YkPiv())
             if controller.is_uninitialized():
-                print "Device not initialized"
+                print 'Device not initialized'
             elif controller.is_pin_expired():
                 dialog = SetPinDialog(controller, None, True)
                 if dialog.exec_():
                     QtGui.QMessageBox.information(None, m.pin_changed,
                                                   m.pin_changed_desc)
         except:
-            print "No YubiKey PIV applet detected"
+            print 'No YubiKey PIV applet detected'
 
     def _parse_args(self):
-        parser = argparse.ArgumentParser(description="Yubico PIV tool",
+        parser = argparse.ArgumentParser(description='Yubico PIV tool',
                                          add_help=True)
         parser.add_argument('-c', '--check-only', action='store_true')
         return parser.parse_args()

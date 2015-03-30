@@ -26,15 +26,16 @@
 
 from PySide import QtGui, QtCore
 
-TOP_SECTION = "<b>%s</b>"
-SECTION = "<br><b>%s</b>"
-IMPORTANT = "<strong>%s</strong>"
+TOP_SECTION = '<b>%s</b>'
+SECTION = '<br><b>%s</b>'
+IMPORTANT = '<strong>%s</strong>'
 
 PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'.{6,8}'))
 KEY_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'[0-9a-fA-F]{48}'))
 
 
 class Headers(object):
+
     def __init__(self):
         self._first = True
 

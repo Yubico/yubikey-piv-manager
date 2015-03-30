@@ -63,7 +63,8 @@ class SettingsDialog(QtGui.QDialog):
         self._pin_expires.setChecked(bool(pin_expires))
         self._pin_expires_days.setValue(pin_expires)
         self._pin_expires.setDisabled(pin_expiry_locked)
-        self._pin_expires_days.setDisabled(pin_expiry_locked or not pin_expires)
+        self._pin_expires_days.setDisabled(
+            pin_expiry_locked or not pin_expires)
         self._pin_expires.stateChanged.connect(
             self._pin_expires_days.setEnabled)
         layout.addRow(self._pin_expires)

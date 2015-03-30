@@ -46,8 +46,8 @@ USAGES = {
     '9e': m.usage_9e,
 }
 
-FILE_FILTER = "Certificate/key files " \
-    "(*.pfx *.p12 *.cer *.crt *.key *.pem *.der)"
+FILE_FILTER = 'Certificate/key files ' \
+    '(*.pfx *.p12 *.cer *.crt *.key *.pem *.der)'
 
 
 def detect_type(data, fn):
@@ -69,7 +69,8 @@ def detect_type(data, fn):
         elif suffix in ['key']:
             f_type = 2
         else:
-            certs = QtNetwork.QSslCertificate.fromData(data, QtNetwork.QSsl.Der)
+            certs = QtNetwork.QSslCertificate.fromData(
+                data, QtNetwork.QSsl.Der)
             f_type = 1 if certs else 2
     return f_type, f_format, needs_password
 
@@ -124,12 +125,12 @@ class CertPanel(QtGui.QWidget):
         valid_from = QtGui.QLabel(cert.effectiveDate().toString())
         now = datetime.now()
         if cert.effectiveDate().toPython() > now:
-            valid_from.setStyleSheet("QLabel { color: red; }")
+            valid_from.setStyleSheet('QLabel { color: red; }')
         status.addWidget(valid_from, 1, 1)
         status.addWidget(QtGui.QLabel(m.valid_to_label), 1, 2)
         valid_to = QtGui.QLabel(cert.expiryDate().toString())
         if cert.expiryDate().toPython() < now:
-            valid_to.setStyleSheet("QLabel { color: red; }")
+            valid_to.setStyleSheet('QLabel { color: red; }')
         status.addWidget(valid_to, 1, 3)
 
         layout.addLayout(status)
@@ -228,7 +229,7 @@ class CertWidget(QtGui.QWidget):
         if self._slot in controller.certs:
             self._status = CertPanel(self._controller, self._slot, self)
         else:
-            self._status = QtGui.QLabel("%s<br><br>%s" % (
+            self._status = QtGui.QLabel('%s<br><br>%s' % (
                 USAGES[self._slot], m.cert_not_loaded))
             self._status.setWordWrap(True)
         self.layout().insertWidget(0, self._status)

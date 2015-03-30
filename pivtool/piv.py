@@ -36,11 +36,13 @@ libversion = ykpiv_check_version(None)
 
 
 class DeviceGoneError(Exception):
+
     def __init__(self):
         super(DeviceGoneError, self).__init__(m.communication_error)
 
 
 class PivError(Exception):
+
     def __init__(self, code):
         message = ykpiv_strerror(code)
         super(PivError, self).__init__(code, message)
@@ -86,7 +88,6 @@ def wrap_puk_error(error):
     raise error
 
 
-
 KEY_LEN = 24
 DEFAULT_KEY = '010203040506070801020304050607080102030405060708'.decode('hex')
 
@@ -97,12 +98,13 @@ CERT_SLOTS = {
     '9e': YKPIV_OBJ_CARD_AUTH
 }
 
-ATTR_NAME = "name"
+ATTR_NAME = 'name'
 
 TRIES_PATTERN = re.compile(r'now (\d+) tries')
 
 
 class YkPiv(object):
+
     def __init__(self, verbosity=0, reader=None):
         self._cmd = YkPivCmd(verbosity=verbosity, reader=reader)
 
