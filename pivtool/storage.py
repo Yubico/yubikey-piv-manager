@@ -51,6 +51,7 @@ class SETTINGS:
     CARD_READER = Setting('card_reader', None, str)
     CERTREQ_TEMPLATE = Setting('certreq_template', None, str)
     COMPLEX_PINS = Setting('complex_pins', False, bool)
+    ENABLE_IMPORT = Setting('enable_import', True, bool)
     ENABLE_OUT_PK = Setting('enable_out_pk', False, bool)
     ENABLE_OUT_CSR = Setting('enable_out_csr', True, bool)
     ENABLE_OUT_SSC = Setting('enable_out_ssc', True, bool)

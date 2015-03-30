@@ -210,7 +210,8 @@ class CertWidget(QtGui.QWidget):
         from_file_btn = QtGui.QPushButton(m.import_from_file)
         from_file_btn.clicked.connect(
             self._controller.wrap(self._import_file, True))
-        buttons.addWidget(from_file_btn)
+        if settings[SETTINGS.ENABLE_IMPORT]:
+            buttons.addWidget(from_file_btn)
 
         generate_btn = QtGui.QPushButton(m.generate_key)
         generate_btn.clicked.connect(
