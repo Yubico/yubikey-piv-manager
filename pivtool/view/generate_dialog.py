@@ -81,18 +81,24 @@ class GenerateKeyDialog(QtGui.QDialog):
         self._out_pk = QtGui.QRadioButton(m.out_pk)
         self._out_csr = QtGui.QRadioButton(m.out_csr)
         self._out_ssc = QtGui.QRadioButton(m.out_ssc)
-        self._out_ssc.setChecked(True)
         self._out_type.addButton(self._out_pk)
         self._out_type.addButton(self._out_ssc)
         self._out_type.addButton(self._out_csr)
-        # layout.addWidget(self._out_pk)  # Disables PK form.
-        layout.addWidget(self._out_ssc)
-        layout.addWidget(self._out_csr)
+        if settings[SETTINGS.ENABLE_OUT_PK]:
+            layout.addWidget(self._out_pk)
+            self._out_pk.setChecked(True)
+        if settings[SETTINGS.ENABLE_OUT_SSC]:
+            layout.addWidget(self._out_ssc)
+            self._out_ssc.setChecked(True)
+        if settings[SETTINGS.ENABLE_OUT_CSR]:
+            layout.addWidget(self._out_csr)
+            if self._out_type.checkedButton() is None:
+                self._out_csr.setChecked(True)
 
         self._out_ca = QtGui.QRadioButton(m.out_ca)
         cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
         self._cert_tmpl = QtGui.QLineEdit(cert_tmpl)
-        if HAS_CA:
+        if settings[SETTINGS.ENABLE_OUT_CA]:
             self._out_type.addButton(self._out_ca)
             self._out_ca.setChecked(True)
             layout.addWidget(self._out_ca)
@@ -102,10 +108,15 @@ class GenerateKeyDialog(QtGui.QDialog):
                 cert_box.addWidget(QtGui.QLabel(m.cert_tmpl))
                 cert_box.addWidget(self._cert_tmpl)
                 layout.addLayout(cert_box)
-                self._out_type.buttonClicked.connect(self._output_changed)
+
+        self._out_type.buttonClicked.connect(self._output_changed)
 
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
                                          QtGui.QDialogButtonBox.Cancel)
+
+        if self._out_type.checkedButton() is None:
+            layout.addWidget(QtGui.QLabel(m.no_output))
+            buttons.button(QtGui.QDialogButtonBox.Ok).setDisabled(True)
         buttons.accepted.connect(self._generate)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -128,6 +139,11 @@ class GenerateKeyDialog(QtGui.QDialog):
 
     def _generate(self):
         out_fmt = self._out_type.checkedButton()
+
+        if not out_fmt:
+            QtGui.QMessageBox.warning(self, m.no_output, m.no_output_desc)
+            self.accept()
+            return
 
         if out_fmt is self._out_pk:
             out_fn = save_file_as(self, m.save_pk, 'Public Key (*.pem)')

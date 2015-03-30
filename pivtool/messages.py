@@ -236,6 +236,7 @@ out_pk = "Public key"
 out_csr = "Certificate Signing Request (CSR)"
 out_ssc = "Create a self-signed certificate"
 out_ca = "Request a certificate from a Windows CA"
+no_output = "Your configuration does not allow any valid output format."
 
 
 def _translate(qt):

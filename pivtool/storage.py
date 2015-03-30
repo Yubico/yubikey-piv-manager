@@ -27,6 +27,7 @@
 import os
 from pivtool import messages as m
 from pivtool.piv import CERT_SLOTS
+from pivtool.utils import HAS_CA
 from PySide import QtCore
 from collections import MutableMapping, namedtuple
 
@@ -50,6 +51,10 @@ class SETTINGS:
     CARD_READER = Setting('card_reader', None, str)
     CERTREQ_TEMPLATE = Setting('certreq_template', None, str)
     COMPLEX_PINS = Setting('complex_pins', False, bool)
+    ENABLE_OUT_PK = Setting('enable_out_pk', False, bool)
+    ENABLE_OUT_CSR = Setting('enable_out_csr', True, bool)
+    ENABLE_OUT_SSC = Setting('enable_out_ssc', True, bool)
+    ENABLE_OUT_CA = Setting('enable_out_ca', HAS_CA, bool)
     FORCE_ALGORITHM = Setting('algorithm', None, str)
     FORCE_PIN_AS_KEY = Setting('pin_as_key', False, bool)
     PIN_EXPIRATION = Setting('pin_expiration', 0, int)
