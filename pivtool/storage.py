@@ -66,7 +66,7 @@ def convert_to(value, target_type):
     if target_type is float:
         return float(value)
     if target_type is bool:
-        return target_type not in ['', 'false', 'False']
+        return value not in ['', 'false', 'False']
     return value
 
 
