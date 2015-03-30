@@ -26,10 +26,9 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
-from pivtool.utils import HAS_CA, request_cert_from_ca
+from pivtool.utils import request_cert_from_ca
 from pivtool.storage import settings, SETTINGS
 from pivtool.view.utils import Headers
-from getpass import getuser
 
 
 def save_file_as(parent, title, fn_filter):
@@ -96,8 +95,11 @@ class GenerateKeyDialog(QtGui.QDialog):
                 self._out_csr.setChecked(True)
 
         self._out_ca = QtGui.QRadioButton(m.out_ca)
-        cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
-        self._cert_tmpl = QtGui.QLineEdit(cert_tmpl)
+        self._subject = QtGui.QLineEdit(settings.get(SETTINGS.SUBJECT))
+        if not settings.is_locked(SETTINGS.SUBJECT):
+            layout.addWidget(self._subject)
+        self._cert_tmpl = QtGui.QLineEdit(
+            settings.get(SETTINGS.CERTREQ_TEMPLATE))
         if settings[SETTINGS.ENABLE_OUT_CA]:
             self._out_type.addButton(self._out_ca)
             self._out_ca.setChecked(True)
@@ -114,15 +116,19 @@ class GenerateKeyDialog(QtGui.QDialog):
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
                                          QtGui.QDialogButtonBox.Cancel)
 
-        if self._out_type.checkedButton() is None:
+        checked_btn = self._out_type.checkedButton()
+        if checked_btn is None:
             layout.addWidget(QtGui.QLabel(m.no_output))
             buttons.button(QtGui.QDialogButtonBox.Ok).setDisabled(True)
+        else:
+            self._output_changed(checked_btn)
         buttons.accepted.connect(self._generate)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
     def _output_changed(self, btn):
         self._cert_tmpl.setEnabled(btn is self._out_ca)
+        self._subject.setDisabled(btn is self._out_pk)
 
     @property
     def algorithm(self):
@@ -174,7 +180,7 @@ class GenerateKeyDialog(QtGui.QDialog):
 
     def _do_generate(self, out_fmt, pin=None, out_fn=None):
         data = self._controller.generate_key(self._slot, self.algorithm)
-        subject = '/CN=%s/' % getuser()
+        subject = self._subject.text()
         if out_fmt in [self._out_csr, self._out_ca]:
             data = self._controller.create_csr(self._slot, pin, data, subject)
 
