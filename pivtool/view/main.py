@@ -30,6 +30,7 @@ from pivtool import messages as m, __version__ as version
 from pivtool.piv import libversion as ykpiv_version
 from pivtool.storage import get_store
 from pivtool.watcher import ControllerWatcher
+from pivtool.view.utils import IMPORTANT
 from pivtool.view.init_dialog import InitDialog
 from pivtool.view.set_pin_dialog import SetPinDialog
 from pivtool.view.settings_dialog import SettingsDialog
@@ -105,7 +106,7 @@ class MainWidget(QtGui.QWidget):
 
         messages = []
         if controller.pin_blocked:
-            messages.append(m.pin_blocked)
+            messages.append(IMPORTANT % m.pin_blocked)
         messages.append(m.key_with_applet_1 % controller.version)
         n_certs = len(controller.certs)
         messages.append(m.certs_loaded_1 % n_certs or m.no)

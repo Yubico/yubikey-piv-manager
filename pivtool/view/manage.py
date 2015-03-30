@@ -30,6 +30,7 @@ from pivtool.piv import DeviceGoneError
 from pivtool.view.set_pin_dialog import (SetPinDialog, SetPukDialog,
                                          ResetPinDialog)
 from pivtool.view.set_key_dialog import SetKeyDialog
+from pivtool.view.utils import IMPORTANT
 from pivtool.storage import settings, SETTINGS
 from functools import partial
 
@@ -65,12 +66,12 @@ class ManageDialog(QtGui.QDialog):
         self._puk_btn = QtGui.QPushButton(m.change_puk)
         self._puk_btn.clicked.connect(self._controller.wrap(self._change_puk,
                                                             True))
-        btns.addWidget(self._puk_btn)
 
         self._key_btn = QtGui.QPushButton(m.change_key)
         self._key_btn.clicked.connect(self._controller.wrap(self._change_key,
                                                             True))
         if not settings.get(SETTINGS.FORCE_PIN_AS_KEY):
+            btns.addWidget(self._puk_btn)
             btns.addWidget(self._key_btn)
         layout.addLayout(btns)
 
@@ -81,10 +82,14 @@ class ManageDialog(QtGui.QDialog):
     def refresh(self, controller):
         messages = []
         if controller.pin_blocked:
-            messages.append(m.pin_blocked)
+            messages.append(IMPORTANT % m.pin_blocked)
         elif controller.does_pin_expire():
-            messages.append(m.pin_days_left_1 %
-                            controller.get_pin_days_left())
+            days_left = controller.get_pin_days_left()
+            message = m.pin_days_left_1 % days_left
+            if days_left < 7:
+                message = IMPORTANT % message
+
+            messages.append(message)
         if controller.pin_is_key:
             messages.append(m.pin_is_key)
         if controller.puk_blocked:

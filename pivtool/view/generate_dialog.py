@@ -28,7 +28,7 @@ from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.utils import HAS_CA, request_cert_from_ca
 from pivtool.storage import settings, SETTINGS
-from pivtool.view.utils import TOP_SECTION, SECTION
+from pivtool.view.utils import Headers
 from getpass import getuser
 
 
@@ -51,6 +51,7 @@ class GenerateKeyDialog(QtGui.QDialog):
         self.setWindowTitle(m.generate_key)
         self.setFixedWidth(400)
 
+        headers = Headers()
         layout = QtGui.QVBoxLayout(self)
 
         warning = QtGui.QLabel(m.generate_key_warning_1 % self._slot)
@@ -66,13 +67,16 @@ class GenerateKeyDialog(QtGui.QDialog):
         self._alg_type.addButton(self._alg_rsa_1024)
         self._alg_type.addButton(self._alg_rsa_2048)
         self._alg_type.addButton(self._alg_ecc_p256)
-        if settings[SETTINGS.FORCE_ALGORITHM] is None:
-            layout.addWidget(QtGui.QLabel(SECTION % m.algorithm))
+        force_algo = settings[SETTINGS.FORCE_ALGORITHM]
+        if force_algo is None:
+            layout.addWidget(headers.section(m.algorithm))
             layout.addWidget(self._alg_rsa_1024)
             layout.addWidget(self._alg_rsa_2048)
             layout.addWidget(self._alg_ecc_p256)
+        else:
+            layout.addWidget(QtGui.QLabel(m.algorithm_1 % force_algo))
 
-        layout.addWidget(QtGui.QLabel(SECTION % m.output))
+        layout.addWidget(headers.section(m.output))
         self._out_type = QtGui.QButtonGroup(self)
         self._out_pk = QtGui.QRadioButton(m.out_pk)
         self._out_csr = QtGui.QRadioButton(m.out_csr)

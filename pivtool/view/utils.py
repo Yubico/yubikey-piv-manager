@@ -28,9 +28,23 @@ from PySide import QtGui, QtCore
 
 TOP_SECTION = "<b>%s</b>"
 SECTION = "<br><b>%s</b>"
+IMPORTANT = "<strong>%s</strong>"
 
 PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'.{6,8}'))
 KEY_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'[0-9a-fA-F]{48}'))
+
+
+class Headers(object):
+    def __init__(self):
+        self._first = True
+
+    def section(self, title):
+        if self._first:
+            self._first = False
+            section = TOP_SECTION % title
+        else:
+            section = SECTION % title
+        return QtGui.QLabel(section)
 
 
 def pin_field():

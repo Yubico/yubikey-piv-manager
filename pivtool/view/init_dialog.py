@@ -27,7 +27,7 @@
 from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError, PivError, KEY_LEN
-from pivtool.view.utils import TOP_SECTION, SECTION, KEY_VALIDATOR, pin_field
+from pivtool.view.utils import Headers, KEY_VALIDATOR, pin_field
 from pivtool.utils import complexity_check
 from pivtool.storage import settings, SETTINGS
 import os
@@ -35,21 +35,20 @@ import os
 
 class PinPanel(QtGui.QWidget):
 
-    def __init__(self):
+    def __init__(self, headers):
         super(PinPanel, self).__init__()
 
         self._complex = settings.get(SETTINGS.COMPLEX_PINS)
 
-        layout = QtGui.QFormLayout()
+        layout = QtGui.QFormLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        layout.addRow(QtGui.QLabel(TOP_SECTION % m.pin))
+        layout.addRow(headers.section(m.pin))
         self._new_pin = pin_field()
         label = m.new_complex_pin_label if self._complex else m.new_pin_label
         layout.addRow(label, self._new_pin)
         self._confirm_pin = pin_field()
         layout.addRow(m.verify_pin_label, self._confirm_pin)
-        self.setLayout(layout)
 
     @property
     def pin(self):
@@ -74,13 +73,13 @@ class PinPanel(QtGui.QWidget):
 
 class KeyPanel(QtGui.QWidget):
 
-    def __init__(self):
+    def __init__(self, headers):
         super(KeyPanel, self).__init__()
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtGui.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        layout.addWidget(QtGui.QLabel(SECTION % m.management_key))
+        layout.addWidget(headers.section(m.management_key))
 
         self._key_type = QtGui.QButtonGroup(self)
         self._kt_pin = QtGui.QRadioButton(m.use_pin_as_key, self)
@@ -92,9 +91,7 @@ class KeyPanel(QtGui.QWidget):
         layout.addWidget(self._kt_pin)
         layout.addWidget(self._kt_key)
 
-        self.setLayout(layout)
-
-        self._adv_panel = AdvancedPanel()
+        self._adv_panel = AdvancedPanel(headers)
 
     def _change_key_type(self, btn):
         if btn == self._kt_pin:
@@ -124,12 +121,12 @@ class KeyPanel(QtGui.QWidget):
 
 class AdvancedPanel(QtGui.QWidget):
 
-    def __init__(self):
+    def __init__(self, headers):
         super(AdvancedPanel, self).__init__()
 
         self._complex = settings.get(SETTINGS.COMPLEX_PINS)
 
-        layout = QtGui.QFormLayout()
+        layout = QtGui.QFormLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
         layout.addRow(QtGui.QLabel(m.key_label))
@@ -148,14 +145,12 @@ class AdvancedPanel(QtGui.QWidget):
         buttons.addButton(self._copy_btn, QtGui.QDialogButtonBox.ActionRole)
         layout.addRow(buttons)
 
-        layout.addRow(QtGui.QLabel(SECTION % m.puk))
+        layout.addRow(headers.section(m.puk))
         self._puk = pin_field()
         label = m.new_complex_puk_label if self._complex else m.new_puk_label
         layout.addRow(label, self._puk)
         self._confirm_puk = pin_field()
         layout.addRow(m.verify_puk_label, self._confirm_puk)
-
-        self.setLayout(layout)
 
     def reset(self):
         self.randomize()
@@ -216,11 +211,12 @@ class InitDialog(QtGui.QDialog):
         self._build_ui()
 
     def _build_ui(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtGui.QVBoxLayout(self)
+        headers = Headers()
 
-        self._pin_panel = PinPanel()
+        self._pin_panel = PinPanel(headers)
         layout.addWidget(self._pin_panel)
-        self._key_panel = KeyPanel()
+        self._key_panel = KeyPanel(headers)
         if not settings.get(SETTINGS.FORCE_PIN_AS_KEY):
             layout.addWidget(self._key_panel)
         layout.addStretch()
@@ -229,7 +225,6 @@ class InitDialog(QtGui.QDialog):
         self._ok_btn = buttons.button(QtGui.QDialogButtonBox.Ok)
         buttons.accepted.connect(self._initialize)
         layout.addWidget(buttons)
-        self.setLayout(layout)
 
     def _initialize(self):
         try:

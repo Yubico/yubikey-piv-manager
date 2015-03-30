@@ -307,10 +307,14 @@ class CertDialog(QtGui.QDialog):
 
         self._cert_tabs = QtGui.QTabWidget()
         shown_slots = settings.get(SETTINGS.SHOWN_SLOTS)
+        selected = False
         for (slot, label) in sorted(SLOTS.items()):
             if slot in shown_slots:
-                self._cert_tabs.addTab(CertWidget(self._controller, slot),
-                                       label)
+                index = self._cert_tabs.addTab(
+                    CertWidget(self._controller, slot), label)
+                if not selected:
+                    self._cert_tabs.setCurrentIndex(index)
+                    selected = True
             elif not settings.is_locked(SETTINGS.SHOWN_SLOTS):
                 index = self._cert_tabs.addTab(QtGui.QLabel(), label)
                 self._cert_tabs.setTabEnabled(index, False)

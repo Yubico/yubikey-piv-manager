@@ -87,7 +87,9 @@ class PivtoolApplication(QtGui.QApplication):
     def check_pin(self):
         try:
             controller = Controller(YkPiv())
-            if controller.is_pin_expired():
+            if controller.is_uninitialized():
+                print "Device not initialized"
+            elif controller.is_pin_expired():
                 dialog = SetPinDialog(controller, None, True)
                 if dialog.exec_():
                     QtGui.QMessageBox.information(None, m.pin_changed,

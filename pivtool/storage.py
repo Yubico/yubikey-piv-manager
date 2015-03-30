@@ -61,6 +61,8 @@ def get_store(group):
 
 
 def convert_to(value, target_type):
+    if target_type is list:
+        return [] if value is None else [value]
     if target_type is int:
         return int(value)
     if target_type is float:
@@ -178,7 +180,7 @@ class PySettings(MutableMapping):
         self._settings.remove('')
 
     def __repr__(self):
-        return 'Store(%s): %s' % (self._settings, dict(self))
+        return 'PySettings(%s)' % self._settings
 
 
 settings = PySettings(SettingsOverlay(

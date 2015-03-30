@@ -26,7 +26,7 @@
 
 from PySide import QtCore, QtGui
 from pivtool import messages as m
-from pivtool.view.utils import TOP_SECTION, SECTION
+from pivtool.view.utils import Headers
 from pivtool.storage import settings, SETTINGS
 from pivtool.utils import HAS_CA
 
@@ -42,9 +42,10 @@ class SettingsDialog(QtGui.QDialog):
         self._build_ui()
 
     def _build_ui(self):
-        layout = QtGui.QFormLayout()
+        headers = Headers()
+        layout = QtGui.QFormLayout(self)
 
-        layout.addRow(QtGui.QLabel(TOP_SECTION % m.pin))
+        layout.addRow(headers.section(m.pin))
 
         self._complex_pins = QtGui.QCheckBox(m.use_complex_pins)
         self._complex_pins.setChecked(
@@ -73,12 +74,12 @@ class SettingsDialog(QtGui.QDialog):
         if settings.is_locked(SETTINGS.CERTREQ_TEMPLATE):
             self._certreq_tmpl.setDisabled(True)
         if HAS_CA:
-            layout.addRow(QtGui.QLabel(SECTION % m.active_directory))
+            layout.addRow(headers.section(m.active_directory))
             layout.addRow(QtGui.QLabel(m.active_directory_desc))
 
             layout.addRow(m.cert_tmpl, self._certreq_tmpl)
 
-        layout.addRow(QtGui.QLabel(SECTION % m.misc))
+        layout.addRow(headers.section(m.misc))
         reader_pattern = settings.get(SETTINGS.CARD_READER)
         self._reader_pattern = QtGui.QLineEdit(reader_pattern)
         layout.addRow(m.reader_name, self._reader_pattern)
@@ -88,7 +89,6 @@ class SettingsDialog(QtGui.QDialog):
         buttons.accepted.connect(self._save)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
-        self.setLayout(layout)
 
     def _pin_expires_changed(self, val):
         print val
