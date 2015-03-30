@@ -219,6 +219,10 @@ class CertWidget(QtGui.QWidget):
         layout.addLayout(buttons)
 
     def refresh(self, controller):
+        if controller.pin_blocked:
+            self.window().accept()
+            return
+
         self.layout().removeWidget(self._status)
         self._status.hide()
         if self._slot in controller.certs:

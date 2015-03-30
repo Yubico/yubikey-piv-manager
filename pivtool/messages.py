@@ -101,6 +101,13 @@ copy_clipboard = "Copy to clipboard"
 change_pin = "Change PIN"
 reset_pin = "Reset PIN"
 reset_device = "Reset device"
+reset_device_warning = "This will erase all data including keys and " \
+    "certificates from the device. Your PIN, PUK and Management Key will be " \
+    "reset to the factory defaults."
+resetting_device = "Resetting device..."
+device_resetted = "Device reset complete"
+device_resetted_desc = "Your device has now been reset, and will require " \
+    "initialization."
 change_puk = "Change PUK"
 change_key = "Change Management Key"
 change_pin_desc = "Change your PIN"
@@ -191,6 +198,7 @@ wrong_key = "Incorrect management key"
 communication_error = "Communication error with the device"
 ykpiv_error_2 = "YkPiv error %d: %s"
 wrong_pin_tries_1 = "PIN verification failed. %d tries remaining"
+wrong_puk_tries_1 = "PUK verification failed. %d tries remaining"
 pin_blocked = "Your PIN has been blocked due to too many incorrect attempts."
 pin_too_long = "PIN must be no more than 8 characters long.\n" \
     "NOTE: Special characters may be counted more than once."

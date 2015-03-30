@@ -218,6 +218,9 @@ class Controller(object):
             raise ValueError('Key entry aborted!')
         self._do_ensure_auth(key, window)
 
+    def reset_device(self):
+        self._key.reset_device()
+
     def authenticate(self, key=None):
         salt = self._data.get(TAG_SALT)
 

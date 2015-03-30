@@ -26,10 +26,12 @@
 
 from PySide import QtCore, QtGui
 from pivtool import messages as m
+from pivtool.piv import DeviceGoneError
 from pivtool.view.set_pin_dialog import (SetPinDialog, SetPukDialog,
                                          ResetPinDialog)
 from pivtool.view.set_key_dialog import SetKeyDialog
 from pivtool.storage import settings, SETTINGS
+from functools import partial
 
 
 class ManageDialog(QtGui.QDialog):
@@ -102,8 +104,14 @@ class ManageDialog(QtGui.QDialog):
     def _change_pin(self, controller, release):
         if controller.pin_blocked:
             if controller.puk_blocked:
-                pass  # TODO: Reset device
-                # TODO: Confirm
+                res = QtGui.QMessageBox.warning(
+                    self, m.reset_device, m.reset_device_warning,
+                    QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
+                if res == QtGui.QMessageBox.Ok:
+                    worker = QtCore.QCoreApplication.instance().worker
+                    worker.post(m.resetting_device, controller.reset_device,
+                                partial(self._reset_callback, release), True)
+                return
             else:
                 dialog = ResetPinDialog(controller, self)
         else:
@@ -124,3 +132,8 @@ class ManageDialog(QtGui.QDialog):
             QtGui.QMessageBox.information(self, m.key_changed,
                                           m.key_changed_desc)
             self.refresh(controller)
+
+    def _reset_callback(self, release, result):
+        self.accept()
+        QtGui.QMessageBox.information(self, m.device_resetted,
+                                      m.device_resetted_desc)

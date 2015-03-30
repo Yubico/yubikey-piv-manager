@@ -96,6 +96,10 @@ class MainWidget(QtGui.QWidget):
         self._messages.setHtml(m.no_key)
 
     def _refresh_controller(self, controller, release):
+        if not controller.poll():
+            self._no_controller()
+            return
+
         self._pin_btn.setEnabled(True)
         self._cert_btn.setDisabled(controller.pin_blocked)
 

@@ -52,9 +52,12 @@ class PivError(Exception):
 
 
 class WrongPinError(ValueError):
+    m_tries_1 = m.wrong_pin_tries_1
+    m_blocked = m.pin_blocked
+
     def __init__(self, tries):
-        super(WrongPinError, self).__init__(m.wrong_pin_tries_1 % tries
-                                            if tries > 0 else m.pin_blocked)
+        super(WrongPinError, self).__init__(self.m_tries_1 % tries
+                                            if tries > 0 else self.m_blocked)
         self.tries = tries
 
     @property
@@ -62,11 +65,26 @@ class WrongPinError(ValueError):
         return self.tries == 0
 
 
+class WrongPukError(WrongPinError):
+    m_tries_1 = m.wrong_puk_tries_1
+    m_blocked = m.puk_blocked
+
+
 def check(rc):
     if rc == YKPIV_PCSC_ERROR:
         raise DeviceGoneError()
     elif rc != YKPIV_OK:
         raise PivError(rc)
+
+
+def wrap_puk_error(error):
+    if 'blocked' in error.message:
+        raise WrongPukError(0)
+    match = TRIES_PATTERN.search(error.message)
+    if match:
+        raise WrongPukError(int(match.group(1)))
+    raise error
+
 
 
 KEY_LEN = 24
@@ -235,12 +253,7 @@ class YkPiv(object):
         try:
             self._cmd.reset_pin(puk, new_pin)
         except ValueError as e:
-            if 'blocked' in e.message:
-                raise WrongPinError(0)
-            match = TRIES_PATTERN.search(e.message)
-            if match:
-                raise WrongPinError(int(match.group(1)))
-            raise
+            wrap_puk_error(e)
         finally:
             self._reset()
             self._read_status()
@@ -256,12 +269,7 @@ class YkPiv(object):
         try:
             self._cmd.change_puk(puk, new_puk)
         except ValueError as e:
-            if 'blocked' in e.message:
-                raise WrongPinError(0)
-            match = TRIES_PATTERN.search(e.message)
-            if match:
-                raise WrongPinError(int(match.group(1)))
-            raise
+            wrap_puk_error(e)
         finally:
             self._reset()
 
@@ -269,8 +277,7 @@ class YkPiv(object):
         try:
             self._cmd.run('-a', 'reset')
         finally:
-            self._cmd.set_arg('-P', pin)
-            self._reset()
+            del self._cmd
 
     def fetch_object(self, object_id):
         buf = (c_ubyte * 4096)()

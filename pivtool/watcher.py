@@ -77,19 +77,16 @@ class ControllerWatcher(QtCore.QObject):
     def _poll(self):
         reader = settings.get(SETTINGS.CARD_READER)
         if self._controller:
-            if not self._controller.poll():
-                self._controller = None
-                try:
-                    self._controller = Controller(YkPiv(reader=reader))
-                except (PivError, DeviceGoneError) as e:
-                    print e
-                    self._device_lost.emit()
-        else:
-            try:
-                self._controller = Controller(YkPiv(reader=reader))
-                self._device_found.emit()
-            except (PivError, DeviceGoneError) as e:
-                print e
+            if self._controller.poll():
+                return
+            self._controller = None
+            self._device_lost.emit()
+
+        try:
+            self._controller = Controller(YkPiv(reader=reader))
+            self._device_found.emit()
+        except (PivError, DeviceGoneError) as e:
+            print e
 
     def on_found(self, fn, hold_lock=False):
         self._device_found.connect(self.wrap(fn, hold_lock))
