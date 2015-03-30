@@ -26,7 +26,7 @@
 
 from PySide import QtGui, QtCore
 from pivtool import messages as m
-from pivtool.utils import request_cert_from_ca
+from pivtool.utils import has_ca, request_cert_from_ca
 from pivtool.storage import settings, SETTINGS
 from pivtool.view.utils import Headers
 
@@ -100,7 +100,7 @@ class GenerateKeyDialog(QtGui.QDialog):
             layout.addWidget(self._subject)
         self._cert_tmpl = QtGui.QLineEdit(
             settings.get(SETTINGS.CERTREQ_TEMPLATE))
-        if settings[SETTINGS.ENABLE_OUT_CA]:
+        if settings[SETTINGS.ENABLE_OUT_CA] and has_ca():
             self._out_type.addButton(self._out_ca)
             self._out_ca.setChecked(True)
             layout.addWidget(self._out_ca)

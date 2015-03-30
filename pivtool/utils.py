@@ -46,8 +46,6 @@ def has_ca():
         pass
     return False
 
-HAS_CA = has_ca()
-
 
 def request_cert_from_ca(csr, cert_tmpl):
     try:
