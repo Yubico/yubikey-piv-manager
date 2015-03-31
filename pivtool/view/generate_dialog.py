@@ -154,6 +154,8 @@ class GenerateKeyDialog(QtGui.QDialog):
 
     @property
     def algorithm(self):
+        if settings.is_locked(SETTINGS.ALGORITHM):
+            return settings[SETTINGS.ALGORITHM]
         return self._alg_type.checkedButton().property('value')
 
     @property
