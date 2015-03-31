@@ -47,6 +47,15 @@ _mutex = QtCore.QMutex(QtCore.QMutex.Recursive)
 
 Setting = namedtuple('Setting', 'key default type')
 
+win = platform == 'win32'
+
+
+def default_outs():
+    if win:
+        return ['ssc', 'csr', 'ca']
+    else:
+        return ['ssc', 'csr']
+
 
 class SETTINGS:
     ALGORITHM = Setting('algorithm', 'RSA2048', str)
@@ -54,12 +63,14 @@ class SETTINGS:
     CERTREQ_TEMPLATE = Setting('certreq_template', None, str)
     COMPLEX_PINS = Setting('complex_pins', False, bool)
     ENABLE_IMPORT = Setting('enable_import', True, bool)
-    ENABLE_OUT_CA = Setting('enable_out_ca', platform == 'win32', bool)
+    ENABLE_OUT_CA = Setting('enable_out_ca', win, bool)
     ENABLE_OUT_CSR = Setting('enable_out_csr', True, bool)
     ENABLE_OUT_PK = Setting('enable_out_pk', False, bool)
     ENABLE_OUT_SSC = Setting('enable_out_ssc', True, bool)
+    OUT_TYPE = Setting('out_type', 'ca' if win else 'ssc', str)
     PIN_AS_KEY = Setting('pin_as_key', True, bool)
     PIN_EXPIRATION = Setting('pin_expiration', 0, int)
+    SHOWN_OUT_FORMS = Setting('shown_outs', default_outs(), list)
     SHOWN_SLOTS = Setting('shown_slots', sorted(CERT_SLOTS.keys()), list)
     SUBJECT = Setting('subject', '/CN=%s' % getuser(), str)
 

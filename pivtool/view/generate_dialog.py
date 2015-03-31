@@ -81,36 +81,41 @@ class GenerateKeyDialog(QtGui.QDialog):
                 if button.property('value') == algo:
                     button.setChecked(True)
                     button.setFocus()
+            if not self._alg_type.checkedButton():
+                button = self._alg_type.buttons()[0]
+                button.setChecked(True)
 
     def _build_output(self, layout, headers):
         layout.addWidget(headers.section(m.output))
         self._out_type = QtGui.QButtonGroup(self)
         self._out_pk = QtGui.QRadioButton(m.out_pk)
-        self._out_csr = QtGui.QRadioButton(m.out_csr)
+        self._out_pk.setProperty('value', 'pk')
         self._out_ssc = QtGui.QRadioButton(m.out_ssc)
+        self._out_ssc.setProperty('value', 'ssc')
+        self._out_csr = QtGui.QRadioButton(m.out_csr)
+        self._out_csr.setProperty('value', 'csr')
+        self._out_ca = QtGui.QRadioButton(m.out_ca)
+        self._out_ca.setProperty('value', 'ca')
         self._out_type.addButton(self._out_pk)
         self._out_type.addButton(self._out_ssc)
         self._out_type.addButton(self._out_csr)
-        if settings[SETTINGS.ENABLE_OUT_PK]:
-            layout.addWidget(self._out_pk)
-            self._out_pk.setChecked(True)
-        if settings[SETTINGS.ENABLE_OUT_SSC]:
-            layout.addWidget(self._out_ssc)
-            self._out_ssc.setChecked(True)
-        if settings[SETTINGS.ENABLE_OUT_CSR]:
-            layout.addWidget(self._out_csr)
-            if self._out_type.checkedButton() is None:
-                self._out_csr.setChecked(True)
+        out_btns = []
+        for button in self._out_type.buttons():
+            value = button.property('value')
+            if value in settings[SETTINGS.SHOWN_OUT_FORMS]:
+                layout.addWidget(button)
+                out_btns.append(button)
+                if value == settings[SETTINGS.OUT_TYPE]:
+                    button.setChecked(True)
 
-        self._out_ca = QtGui.QRadioButton(m.out_ca)
         self._cert_tmpl = QtGui.QLineEdit(settings[SETTINGS.CERTREQ_TEMPLATE])
-        if settings[SETTINGS.ENABLE_OUT_CA]:
+        if 'ca' in settings[SETTINGS.SHOWN_OUT_FORMS]:
             if has_ca():
+                out_btns.append(self._out_ca)
                 self._out_type.addButton(self._out_ca)
                 self._out_ca.setChecked(True)
                 layout.addWidget(self._out_ca)
                 if not settings.is_locked(SETTINGS.CERTREQ_TEMPLATE):
-                    self._cert_tmpl.setDisabled(True)
                     cert_box = QtGui.QHBoxLayout()
                     cert_box.addWidget(QtGui.QLabel(m.cert_tmpl))
                     cert_box.addWidget(self._cert_tmpl)
@@ -125,8 +130,7 @@ class GenerateKeyDialog(QtGui.QDialog):
 
         self._subject = QtGui.QLineEdit(settings[SETTINGS.SUBJECT])
         self._subject.setValidator(SUBJECT_VALIDATOR)
-        checked_btn = self._out_type.checkedButton()
-        if checked_btn is None:
+        if not out_btns:
             layout.addWidget(QtGui.QLabel(m.no_output))
             buttons.button(QtGui.QDialogButtonBox.Ok).setDisabled(True)
         else:
@@ -135,7 +139,11 @@ class GenerateKeyDialog(QtGui.QDialog):
                 subject_box.addWidget(QtGui.QLabel(m.subject))
                 subject_box.addWidget(self._subject)
                 layout.addLayout(subject_box)
-            self._output_changed(checked_btn)
+            out_btn = self._out_type.checkedButton()
+            if out_btn is None:
+                out_btn = out_btns[0]
+                out_btn.setChecked(True)
+            self._output_changed(out_btn)
         buttons.accepted.connect(self._generate)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -148,10 +156,12 @@ class GenerateKeyDialog(QtGui.QDialog):
     def algorithm(self):
         return self._alg_type.checkedButton().property('value')
 
-    def _generate(self):
-        out_fmt = self._out_type.checkedButton()
+    @property
+    def out_format(self):
+        return self._out_type.checkedButton().property('value')
 
-        if out_fmt is not self._out_pk and not \
+    def _generate(self):
+        if self.out_format != 'pk' and not \
                 self._subject.hasAcceptableInput():
             QtGui.QMessageBox.warning(self, m.invalid_subject,
                                       m.invalid_subject_desc)
@@ -159,11 +169,11 @@ class GenerateKeyDialog(QtGui.QDialog):
             self._subject.selectAll()
             return
 
-        if out_fmt is self._out_pk:
+        if self.out_format == 'pk':
             out_fn = save_file_as(self, m.save_pk, 'Public Key (*.pem)')
             if not out_fn:
                 return
-        elif out_fmt is self._out_csr:
+        elif self.out_format == 'csr':
             out_fn = save_file_as(self, m.save_csr,
                                   'Certificate Signing Reqest (*.csr)')
             if not out_fn:
@@ -172,7 +182,7 @@ class GenerateKeyDialog(QtGui.QDialog):
             out_fn = None
 
         try:
-            if out_fmt is not self._out_pk:
+            if self.out_format != 'pk':
                 pin = self._controller.ensure_pin()
             else:
                 pin = None
@@ -183,24 +193,24 @@ class GenerateKeyDialog(QtGui.QDialog):
             return
 
         worker = QtCore.QCoreApplication.instance().worker
-        worker.post(m.generating_key, (self._do_generate, out_fmt, pin, out_fn),
+        worker.post(m.generating_key, (self._do_generate, pin, out_fn),
                     self._generate_callback, True)
 
-    def _do_generate(self, out_fmt, pin=None, out_fn=None):
+    def _do_generate(self, pin=None, out_fn=None):
         data = self._controller.generate_key(self._slot, self.algorithm)
         subject = self._subject.text()
-        if out_fmt in [self._out_csr, self._out_ca]:
+        if self.out_format in ['csr', 'ca']:
             data = self._controller.create_csr(self._slot, pin, data, subject)
 
-        if out_fmt in [self._out_pk, self._out_csr]:
+        if self.out_format in ['pk', 'csr']:
             with open(out_fn, 'w') as f:
                 f.write(data)
             return out_fn
         else:
-            if out_fmt is self._out_ssc:
+            if self.out_format == 'ssc':
                 cert = self._controller.selfsign_certificate(
                     self._slot, pin, data, subject)
-            elif out_fmt is self._out_ca:
+            elif self.out_format == 'ca':
                 cert = request_cert_from_ca(data, self._cert_tmpl.text())
             self._controller.import_certificate(cert, self._slot)
 
@@ -209,25 +219,25 @@ class GenerateKeyDialog(QtGui.QDialog):
         if isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
-            out_fmt = self._out_type.checkedButton()
             settings[SETTINGS.ALGORITHM] = self.algorithm
-            if out_fmt is not self._out_pk and not \
+            settings[SETTINGS.OUT_TYPE] = self.out_format
+            if self.out_format != 'pk' and not \
                     settings.is_locked(SETTINGS.SUBJECT):
                 subject = self._subject.text()
                 # Only save if different:
                 if subject != settings[SETTINGS.SUBJECT]:
                     settings[SETTINGS.SUBJECT] = subject
-            if out_fmt is self._out_ca:
+            if self.out_format == 'ca':
                 settings[SETTINGS.CERTREQ_TEMPLATE] = self._cert_tmpl.text()
 
             message = m.generated_key_desc_1 % self._slot
-            if out_fmt is self._out_pk:
+            if self.out_format == 'pk':
                 message += '\n' + m.gen_out_pk_1 % result
-            elif out_fmt is self._out_csr:
+            elif self.out_format == 'csr':
                 message += '\n' + m.gen_out_csr_1 % result
-            elif out_fmt is self._out_ssc:
+            elif self.out_format == 'ssc':
                 message += '\n' + m.gen_out_ssc
-            elif out_fmt is self._out_ca:
+            elif self.out_format == 'ca':
                 message += '\n' + m.gen_out_ca
 
             QtGui.QMessageBox.information(self, m.generated_key, message)
