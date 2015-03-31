@@ -76,7 +76,7 @@ def detect_type(data, fn):
 
 
 def import_file(controller, slot, fn):
-    with open(fn, 'r') as f:
+    with open(fn, 'rb') as f:
         data = f.read()
 
     f_type, f_format, needs_password = detect_type(data, fn)
