@@ -206,6 +206,8 @@ puk_too_long = "PUK must be no more than 8 characters long.\n" \
     "NOTE: Special characters may be counted more than once."
 certreq_error = "There was an error requesting a certificate."
 certreq_error_1 = "Error running certreq: %s"
+ca_not_connected = "You currently do not have a connection to a " \
+    "Certification Authority"
 authentication_error = "Unable to authenticate to device"
 use_complex_pins = "Enforce complex PIN/PUKs"
 pin_expires = "Force periodic PIN change"
