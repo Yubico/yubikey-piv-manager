@@ -83,7 +83,6 @@ class KeyPanel(QtGui.QWidget):
 
         self._key_type = QtGui.QButtonGroup(self)
         self._kt_pin = QtGui.QRadioButton(m.use_pin_as_key, self)
-        self._kt_pin.setChecked(True)
         self._kt_key = QtGui.QRadioButton(m.use_separate_key, self)
         self._key_type.addButton(self._kt_pin)
         self._key_type.addButton(self._kt_key)
@@ -93,14 +92,18 @@ class KeyPanel(QtGui.QWidget):
 
         self._adv_panel = AdvancedPanel(headers)
 
+        if settings[SETTINGS.PIN_AS_KEY]:
+            self._kt_pin.setChecked(True)
+        else:
+            self._kt_key.setChecked(True)
+            self.layout().addWidget(self._adv_panel)
+
     def _change_key_type(self, btn):
         if btn == self._kt_pin:
             self.layout().removeWidget(self._adv_panel)
             self._adv_panel.hide()
-            widget = self
-            while widget:
-                widget.adjustSize()
-                widget = widget.parentWidget()
+            self.adjustSize()
+            self.parentWidget().adjustSize()
         else:
             self._adv_panel.reset()
             self.layout().addWidget(self._adv_panel)
@@ -217,7 +220,8 @@ class InitDialog(QtGui.QDialog):
         self._pin_panel = PinPanel(headers)
         layout.addWidget(self._pin_panel)
         self._key_panel = KeyPanel(headers)
-        if not settings.get(SETTINGS.FORCE_PIN_AS_KEY):
+        if not settings.is_locked(SETTINGS.PIN_AS_KEY) or \
+                not settings.get(SETTINGS.PIN_AS_KEY):
             layout.addWidget(self._key_panel)
         layout.addStretch()
 
@@ -258,4 +262,6 @@ class InitDialog(QtGui.QDialog):
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
+            if not settings.is_locked(SETTINGS.PIN_AS_KEY):
+                settings[SETTINGS.PIN_AS_KEY] = self._key_panel.use_pin
             self.accept()

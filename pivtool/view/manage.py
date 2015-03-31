@@ -69,7 +69,8 @@ class ManageDialog(QtGui.QDialog):
         self._key_btn = QtGui.QPushButton(m.change_key)
         self._key_btn.clicked.connect(self._controller.wrap(self._change_key,
                                                             True))
-        if not settings.get(SETTINGS.FORCE_PIN_AS_KEY):
+        if not settings.is_locked(SETTINGS.PIN_AS_KEY) or \
+                not settings[SETTINGS.PIN_AS_KEY]:
             btns.addWidget(self._puk_btn)
             btns.addWidget(self._key_btn)
         layout.addLayout(btns)
