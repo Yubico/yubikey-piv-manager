@@ -193,6 +193,7 @@ cert_installed = "Certificate installed"
 cert_installed_desc = "A new certificate has been installed. You will need " \
     "to unplug, and re-insert your NEO before it can be used."
 cert_tmpl = "Certificate Template"
+subject = "Subject"
 error = "Error"
 wrong_key = "Incorrect management key"
 communication_error = "Communication error with the device"
@@ -207,7 +208,7 @@ puk_too_long = "PUK must be no more than 8 characters long.\n" \
 certreq_error = "There was an error requesting a certificate."
 certreq_error_1 = "Error running certreq: %s"
 ca_not_connected = "You currently do not have a connection to a " \
-    "Certification Authority"
+    "Certification Authority."
 authentication_error = "Unable to authenticate to device"
 use_complex_pins = "Enforce complex PIN/PUKs"
 pin_expires = "Force periodic PIN change"
@@ -239,6 +240,9 @@ out_csr = "Certificate Signing Request (CSR)"
 out_ssc = "Create a self-signed certificate"
 out_ca = "Request a certificate from a Windows CA"
 no_output = "Your configuration does not allow any valid output format."
+invalid_subject = "Invalid subject"
+invalid_subject_desc = """The subject must be written as:
+/CN=host.example.com/OU=test/O=example.com"""
 
 
 def _translate(qt):

@@ -123,7 +123,7 @@ class CertPanel(QtGui.QWidget):
         status.addWidget(QtGui.QLabel(issued_by), 0, 3)
         status.addWidget(QtGui.QLabel(m.valid_from_label), 1, 0)
         valid_from = QtGui.QLabel(cert.effectiveDate().toString())
-        now = datetime.now()
+        now = datetime.utcnow()
         if cert.effectiveDate().toPython() > now:
             valid_from.setStyleSheet('QLabel { color: red; }')
         status.addWidget(valid_from, 1, 1)

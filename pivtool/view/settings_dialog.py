@@ -28,7 +28,6 @@ from PySide import QtCore, QtGui
 from pivtool import messages as m
 from pivtool.view.utils import Headers
 from pivtool.storage import settings, SETTINGS
-from pivtool.utils import has_ca
 
 
 class SettingsDialog(QtGui.QDialog):
@@ -70,16 +69,6 @@ class SettingsDialog(QtGui.QDialog):
         layout.addRow(self._pin_expires)
         layout.addRow(m.pin_expires_days, self._pin_expires_days)
 
-        cert_tmpl = settings.get(SETTINGS.CERTREQ_TEMPLATE)
-        self._certreq_tmpl = QtGui.QLineEdit(cert_tmpl)
-        if settings.is_locked(SETTINGS.CERTREQ_TEMPLATE):
-            self._certreq_tmpl.setDisabled(True)
-        if has_ca():
-            layout.addRow(headers.section(m.active_directory))
-            layout.addRow(QtGui.QLabel(m.active_directory_desc))
-
-            layout.addRow(m.cert_tmpl, self._certreq_tmpl)
-
         layout.addRow(headers.section(m.misc))
         reader_pattern = settings.get(SETTINGS.CARD_READER)
         self._reader_pattern = QtGui.QLineEdit(reader_pattern)
@@ -98,7 +87,6 @@ class SettingsDialog(QtGui.QDialog):
     def _save(self):
         settings[SETTINGS.COMPLEX_PINS] = self._complex_pins.isChecked()
         settings[SETTINGS.CARD_READER] = self._reader_pattern.text()
-        settings[SETTINGS.CERTREQ_TEMPLATE] = self._certreq_tmpl.text()
         if self._pin_expires.isChecked():
             settings[SETTINGS.PIN_EXPIRATION] = self._pin_expires_days.value()
         else:

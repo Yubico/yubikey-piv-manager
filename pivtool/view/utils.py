@@ -32,6 +32,8 @@ IMPORTANT = '<strong>%s</strong>'
 
 PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'.{6,8}'))
 KEY_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'[0-9a-fA-F]{48}'))
+SUBJECT_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(
+    r'^(/[a-zA-Z]+=[^/]+)+/?$'))
 
 
 class Headers(object):

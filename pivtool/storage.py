@@ -49,6 +49,7 @@ Setting = namedtuple('Setting', 'key default type')
 
 
 class SETTINGS:
+    ALGORITHM = Setting('algorithm', 'RSA2048', str)
     CARD_READER = Setting('card_reader', None, str)
     CERTREQ_TEMPLATE = Setting('certreq_template', None, str)
     COMPLEX_PINS = Setting('complex_pins', False, bool)
@@ -57,11 +58,10 @@ class SETTINGS:
     ENABLE_OUT_CSR = Setting('enable_out_csr', True, bool)
     ENABLE_OUT_PK = Setting('enable_out_pk', False, bool)
     ENABLE_OUT_SSC = Setting('enable_out_ssc', True, bool)
-    FORCE_ALGORITHM = Setting('algorithm', None, str)
     FORCE_PIN_AS_KEY = Setting('pin_as_key', False, bool)
     PIN_EXPIRATION = Setting('pin_expiration', 0, int)
     SHOWN_SLOTS = Setting('shown_slots', sorted(CERT_SLOTS.keys()), list)
-    SUBJECT = Setting('subject', '/CN=%s/' % getuser(), str)
+    SUBJECT = Setting('subject', '/CN=%s' % getuser(), str)
 
 
 def get_store(group):

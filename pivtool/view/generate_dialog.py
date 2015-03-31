@@ -28,7 +28,7 @@ from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.utils import has_ca, request_cert_from_ca
 from pivtool.storage import settings, SETTINGS
-from pivtool.view.utils import Headers
+from pivtool.view.utils import Headers, SUBJECT_VALIDATOR
 
 
 def save_file_as(parent, title, fn_filter):
@@ -57,24 +57,32 @@ class GenerateKeyDialog(QtGui.QDialog):
         warning.setWordWrap(True)
         layout.addWidget(warning)
 
+        self._build_algorithms(layout, headers)
+        self._build_output(layout, headers)
+
+    def _build_algorithms(self, layout, headers):
         self._alg_type = QtGui.QButtonGroup(self)
         self._alg_rsa_1024 = QtGui.QRadioButton(m.alg_rsa_1024)
+        self._alg_rsa_1024.setProperty('value', 'RSA1024')
         self._alg_rsa_2048 = QtGui.QRadioButton(m.alg_rsa_2048)
-        self._alg_rsa_2048.setChecked(True)
-        self._alg_rsa_2048.setFocus()
+        self._alg_rsa_2048.setProperty('value', 'RSA2048')
         self._alg_ecc_p256 = QtGui.QRadioButton(m.alg_ecc_p256)
+        self._alg_ecc_p256.setProperty('value', 'ECCP256')
         self._alg_type.addButton(self._alg_rsa_1024)
         self._alg_type.addButton(self._alg_rsa_2048)
         self._alg_type.addButton(self._alg_ecc_p256)
-        force_algo = settings[SETTINGS.FORCE_ALGORITHM]
-        if force_algo is None:
-            layout.addWidget(headers.section(m.algorithm))
-            layout.addWidget(self._alg_rsa_1024)
-            layout.addWidget(self._alg_rsa_2048)
-            layout.addWidget(self._alg_ecc_p256)
+        algo = settings[SETTINGS.ALGORITHM]
+        if settings.is_locked(SETTINGS.ALGORITHM):
+            layout.addWidget(QtGui.QLabel(m.algorithm_1 % algo))
         else:
-            layout.addWidget(QtGui.QLabel(m.algorithm_1 % force_algo))
+            layout.addWidget(headers.section(m.algorithm))
+            for button in self._alg_type.buttons():
+                layout.addWidget(button)
+                if button.property('value') == algo:
+                    button.setChecked(True)
+                    button.setFocus()
 
+    def _build_output(self, layout, headers):
         layout.addWidget(headers.section(m.output))
         self._out_type = QtGui.QButtonGroup(self)
         self._out_pk = QtGui.QRadioButton(m.out_pk)
@@ -95,9 +103,6 @@ class GenerateKeyDialog(QtGui.QDialog):
                 self._out_csr.setChecked(True)
 
         self._out_ca = QtGui.QRadioButton(m.out_ca)
-        self._subject = QtGui.QLineEdit(settings.get(SETTINGS.SUBJECT))
-        if not settings.is_locked(SETTINGS.SUBJECT):
-            layout.addWidget(self._subject)
         self._cert_tmpl = QtGui.QLineEdit(
             settings.get(SETTINGS.CERTREQ_TEMPLATE))
         if settings[SETTINGS.ENABLE_OUT_CA]:
@@ -112,18 +117,25 @@ class GenerateKeyDialog(QtGui.QDialog):
                     cert_box.addWidget(self._cert_tmpl)
                     layout.addLayout(cert_box)
             else:
-                layout.addWidget(m.ca_not_connected)
+                layout.addWidget(QtGui.QLabel(m.ca_not_connected))
 
         self._out_type.buttonClicked.connect(self._output_changed)
 
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
                                          QtGui.QDialogButtonBox.Cancel)
 
+        self._subject = QtGui.QLineEdit(settings.get(SETTINGS.SUBJECT))
+        self._subject.setValidator(SUBJECT_VALIDATOR)
         checked_btn = self._out_type.checkedButton()
         if checked_btn is None:
             layout.addWidget(QtGui.QLabel(m.no_output))
             buttons.button(QtGui.QDialogButtonBox.Ok).setDisabled(True)
         else:
+            if not settings.is_locked(SETTINGS.SUBJECT):
+                subject_box = QtGui.QHBoxLayout()
+                subject_box.addWidget(QtGui.QLabel(m.subject))
+                subject_box.addWidget(self._subject)
+                layout.addLayout(subject_box)
             self._output_changed(checked_btn)
         buttons.accepted.connect(self._generate)
         buttons.rejected.connect(self.reject)
@@ -135,23 +147,17 @@ class GenerateKeyDialog(QtGui.QDialog):
 
     @property
     def algorithm(self):
-        algo = settings[SETTINGS.FORCE_ALGORITHM]
-        if algo is not None:
-            return algo
-        btn = self._alg_type.checkedButton()
-        if btn is self._alg_rsa_1024:
-            return 'RSA1024'
-        if btn is self._alg_rsa_2048:
-            return 'RSA2048'
-        if btn is self._alg_ecc_p256:
-            return 'ECCP256'
+        return self._alg_type.checkedButton().property('value')
 
     def _generate(self):
         out_fmt = self._out_type.checkedButton()
 
-        if not out_fmt:
-            QtGui.QMessageBox.warning(self, m.no_output, m.no_output_desc)
-            self.accept()
+        if out_fmt is not self._out_pk and not \
+                self._subject.hasAcceptableInput():
+            QtGui.QMessageBox.warning(self, m.invalid_subject,
+                                      m.invalid_subject_desc)
+            self._subject.setFocus()
+            self._subject.selectAll()
             return
 
         if out_fmt is self._out_pk:
@@ -205,6 +211,16 @@ class GenerateKeyDialog(QtGui.QDialog):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
             out_fmt = self._out_type.checkedButton()
+            settings[SETTINGS.ALGORITHM] = self.algorithm
+            if out_fmt is not self._out_pk and not \
+                    settings.is_locked(SETTINGS.SUBJECT):
+                subject = self._subject.text()
+                # Only save if different:
+                if subject != settings[SETTINGS.SUBJECT]:
+                    settings[SETTINGS.SUBJECT] = subject
+            if out_fmt is self._out_ca:
+                settings[SETTINGS.CERTREQ_TEMPLATE] = self._cert_tmpl.text()
+
             message = m.generated_key_desc_1 % self._slot
             if out_fmt is self._out_pk:
                 message += '\n' + m.gen_out_pk_1 % result
