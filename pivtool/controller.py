@@ -347,7 +347,7 @@ class Controller(object):
         return self._key.create_selfsigned_cert(subject, pubkey, slot)
 
     def does_pin_expire(self):
-        return bool(settings.get(SETTINGS.PIN_EXPIRATION))
+        return bool(settings[SETTINGS.PIN_EXPIRATION])
 
     def get_pin_last_changed(self):
         data = self._data.get(TAG_PIN_TIMESTAMP)
@@ -356,7 +356,7 @@ class Controller(object):
         return data
 
     def get_pin_days_left(self):
-        validity = settings.get(SETTINGS.PIN_EXPIRATION)
+        validity = settings[SETTINGS.PIN_EXPIRATION]
         if not validity:
             return -1
         last_changed = self.get_pin_last_changed()

@@ -103,8 +103,7 @@ class GenerateKeyDialog(QtGui.QDialog):
                 self._out_csr.setChecked(True)
 
         self._out_ca = QtGui.QRadioButton(m.out_ca)
-        self._cert_tmpl = QtGui.QLineEdit(
-            settings.get(SETTINGS.CERTREQ_TEMPLATE))
+        self._cert_tmpl = QtGui.QLineEdit(settings[SETTINGS.CERTREQ_TEMPLATE])
         if settings[SETTINGS.ENABLE_OUT_CA]:
             if has_ca():
                 self._out_type.addButton(self._out_ca)
@@ -124,7 +123,7 @@ class GenerateKeyDialog(QtGui.QDialog):
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
                                          QtGui.QDialogButtonBox.Cancel)
 
-        self._subject = QtGui.QLineEdit(settings.get(SETTINGS.SUBJECT))
+        self._subject = QtGui.QLineEdit(settings[SETTINGS.SUBJECT])
         self._subject.setValidator(SUBJECT_VALIDATOR)
         checked_btn = self._out_type.checkedButton()
         if checked_btn is None:

@@ -47,8 +47,7 @@ class SettingsDialog(QtGui.QDialog):
         layout.addRow(headers.section(m.pin))
 
         self._complex_pins = QtGui.QCheckBox(m.use_complex_pins)
-        self._complex_pins.setChecked(
-            settings.get(SETTINGS.COMPLEX_PINS))
+        self._complex_pins.setChecked(settings[SETTINGS.COMPLEX_PINS])
         self._complex_pins.setDisabled(
             settings.is_locked(SETTINGS.COMPLEX_PINS))
         layout.addRow(self._complex_pins)
@@ -57,7 +56,7 @@ class SettingsDialog(QtGui.QDialog):
         self._pin_expires_days = QtGui.QSpinBox()
         self._pin_expires_days.setMinimum(30)
 
-        pin_expires = settings.get(SETTINGS.PIN_EXPIRATION)
+        pin_expires = settings[SETTINGS.PIN_EXPIRATION]
         pin_expiry_locked = settings.is_locked(SETTINGS.PIN_EXPIRATION)
         self._pin_expires.setChecked(bool(pin_expires))
         self._pin_expires_days.setValue(pin_expires)
@@ -70,7 +69,7 @@ class SettingsDialog(QtGui.QDialog):
         layout.addRow(m.pin_expires_days, self._pin_expires_days)
 
         layout.addRow(headers.section(m.misc))
-        reader_pattern = settings.get(SETTINGS.CARD_READER)
+        reader_pattern = settings[SETTINGS.CARD_READER]
         self._reader_pattern = QtGui.QLineEdit(reader_pattern)
         layout.addRow(m.reader_name, self._reader_pattern)
 

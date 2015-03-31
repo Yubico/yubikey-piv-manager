@@ -76,7 +76,7 @@ class ControllerWatcher(QtCore.QObject):
             self._lock.unlock()
 
     def _poll(self):
-        reader = settings.get(SETTINGS.CARD_READER)
+        reader = settings[SETTINGS.CARD_READER]
         if self._controller:
             if self._controller.poll():
                 return

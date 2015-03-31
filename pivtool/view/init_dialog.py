@@ -38,7 +38,7 @@ class PinPanel(QtGui.QWidget):
     def __init__(self, headers):
         super(PinPanel, self).__init__()
 
-        self._complex = settings.get(SETTINGS.COMPLEX_PINS)
+        self._complex = settings[SETTINGS.COMPLEX_PINS]
 
         layout = QtGui.QFormLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -127,7 +127,7 @@ class AdvancedPanel(QtGui.QWidget):
     def __init__(self, headers):
         super(AdvancedPanel, self).__init__()
 
-        self._complex = settings.get(SETTINGS.COMPLEX_PINS)
+        self._complex = settings[SETTINGS.COMPLEX_PINS]
 
         layout = QtGui.QFormLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -221,7 +221,7 @@ class InitDialog(QtGui.QDialog):
         layout.addWidget(self._pin_panel)
         self._key_panel = KeyPanel(headers)
         if not settings.is_locked(SETTINGS.PIN_AS_KEY) or \
-                not settings.get(SETTINGS.PIN_AS_KEY):
+                not settings[SETTINGS.PIN_AS_KEY]:
             layout.addWidget(self._key_panel)
         layout.addStretch()
 
