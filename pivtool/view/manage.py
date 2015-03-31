@@ -26,7 +26,6 @@
 
 from PySide import QtCore, QtGui
 from pivtool import messages as m
-from pivtool.piv import DeviceGoneError
 from pivtool.view.set_pin_dialog import (SetPinDialog, SetPukDialog,
                                          ResetPinDialog)
 from pivtool.view.set_key_dialog import SetKeyDialog
@@ -104,6 +103,8 @@ class ManageDialog(QtGui.QDialog):
             self._pin_btn.setText(m.change_pin)
 
         self._puk_btn.setDisabled(controller.puk_blocked)
+        self._key_btn.setDisabled(controller.pin_is_key and
+                                  controller.pin_blocked)
         self._messages.setHtml('<br>'.join(messages))
 
     def _change_pin(self, controller, release):
