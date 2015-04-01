@@ -29,18 +29,16 @@ from pivtool import messages as m
 from pivtool.view.set_pin_dialog import (SetPinDialog, SetPukDialog,
                                          ResetPinDialog)
 from pivtool.view.set_key_dialog import SetKeyDialog
-from pivtool.view.utils import IMPORTANT
+from pivtool.view.utils import IMPORTANT, Dialog
 from pivtool.storage import settings, SETTINGS
 from functools import partial
 
 
-class ManageDialog(QtGui.QDialog):
+class ManageDialog(Dialog):
 
     def __init__(self, controller, parent=None):
         super(ManageDialog, self).__init__(parent)
         self.setWindowTitle(m.manage_pin)
-        self.setWindowFlags(self.windowFlags()
-                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setFixedSize(480, 180)
 
         self._controller = controller

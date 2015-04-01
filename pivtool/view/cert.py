@@ -28,6 +28,7 @@ from PySide import QtGui, QtCore, QtNetwork
 from pivtool import messages as m
 from pivtool.piv import PivError, DeviceGoneError
 from pivtool.storage import settings, SETTINGS
+from pivtool.view.utils import Dialog
 from pivtool.view.generate_dialog import GenerateKeyDialog
 from datetime import datetime
 from functools import partial
@@ -286,13 +287,11 @@ class CertWidget(QtGui.QWidget):
             self.refresh(controller)
 
 
-class CertDialog(QtGui.QDialog):
+class CertDialog(Dialog):
 
     def __init__(self, controller, parent=None):
         super(CertDialog, self).__init__(parent)
         self.setWindowTitle(m.certificates)
-        self.setWindowFlags(self.windowFlags()
-                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setFixedSize(540, 180)
 
         self._complex = settings[SETTINGS.COMPLEX_PINS]

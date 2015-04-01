@@ -29,10 +29,10 @@ from pivtool import messages as m
 from pivtool.piv import WrongPinError
 from pivtool.storage import settings, SETTINGS
 from pivtool.utils import complexity_check
-from pivtool.view.utils import pin_field
+from pivtool.view.utils import Dialog, pin_field
 
 
-class SetPinDialog(QtGui.QDialog):
+class SetPinDialog(Dialog):
     window_title = m.change_pin
     label_current = m.current_pin_label
     label_new = m.new_pin_label
@@ -53,8 +53,6 @@ class SetPinDialog(QtGui.QDialog):
         self._build_ui(forced)
 
     def _build_ui(self, forced):
-        self.setWindowFlags(self.windowFlags()
-                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle(self.window_title)
 
         layout = QtGui.QVBoxLayout(self)

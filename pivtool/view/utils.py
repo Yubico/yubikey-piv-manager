@@ -36,6 +36,22 @@ SUBJECT_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(
     r'^(/[a-zA-Z]+=[^/]+)+/?$'))
 
 
+class Dialog(QtGui.QDialog):
+
+    def __init__(self, *args, **kwargs):
+        super(Dialog, self).__init__(*args, **kwargs)
+        self.setWindowFlags(self.windowFlags()
+                            ^ QtCore.Qt.WindowContextHelpButtonHint)
+        self._headers = Headers()
+
+    @property
+    def headers(self):
+        return self._headers
+
+    def section(self, title):
+        return self._headers.section(title)
+
+
 class Headers(object):
 
     def __init__(self):
@@ -63,7 +79,7 @@ def get_active_window():
     if active_win is not None:
         return active_win
 
-    wins = filter(lambda w: isinstance(w, QtGui.QDialog) and w.isVisible(),
+    wins = filter(lambda w: isinstance(w, Dialog) and w.isVisible(),
                   QtGui.QApplication.topLevelWidgets())
 
     if not wins:

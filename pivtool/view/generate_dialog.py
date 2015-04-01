@@ -28,14 +28,18 @@ from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.utils import has_ca, request_cert_from_ca
 from pivtool.storage import settings, SETTINGS
-from pivtool.view.utils import Headers, SUBJECT_VALIDATOR
+from pivtool.view.utils import Dialog, SUBJECT_VALIDATOR
 
 
 def save_file_as(parent, title, fn_filter):
     return QtGui.QFileDialog.getSaveFileName(parent, title, filter=fn_filter)[0]
 
 
-class GenerateKeyDialog(QtGui.QDialog):
+def needs_subject(forms):
+    return bool({'csr', 'ssc', 'ca'}.intersection(forms))
+
+
+class GenerateKeyDialog(Dialog):
 
     def __init__(self, controller, slot, parent=None):
         super(GenerateKeyDialog, self).__init__(parent)
@@ -45,22 +49,19 @@ class GenerateKeyDialog(QtGui.QDialog):
         self._build_ui()
 
     def _build_ui(self):
-        self.setWindowFlags(self.windowFlags()
-                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle(m.generate_key)
         self.setFixedWidth(400)
 
-        headers = Headers()
         layout = QtGui.QVBoxLayout(self)
 
         warning = QtGui.QLabel(m.generate_key_warning_1 % self._slot)
         warning.setWordWrap(True)
         layout.addWidget(warning)
 
-        self._build_algorithms(layout, headers)
-        self._build_output(layout, headers)
+        self._build_algorithms(layout)
+        self._build_output(layout)
 
-    def _build_algorithms(self, layout, headers):
+    def _build_algorithms(self, layout):
         self._alg_type = QtGui.QButtonGroup(self)
         self._alg_rsa_1024 = QtGui.QRadioButton(m.alg_rsa_1024)
         self._alg_rsa_1024.setProperty('value', 'RSA1024')
@@ -75,7 +76,7 @@ class GenerateKeyDialog(QtGui.QDialog):
         if settings.is_locked(SETTINGS.ALGORITHM):
             layout.addWidget(QtGui.QLabel(m.algorithm_1 % algo))
         else:
-            layout.addWidget(headers.section(m.algorithm))
+            layout.addWidget(self.section(m.algorithm))
             for button in self._alg_type.buttons():
                 layout.addWidget(button)
                 if button.property('value') == algo:
@@ -85,8 +86,8 @@ class GenerateKeyDialog(QtGui.QDialog):
                 button = self._alg_type.buttons()[0]
                 button.setChecked(True)
 
-    def _build_output(self, layout, headers):
-        layout.addWidget(headers.section(m.output))
+    def _build_output(self, layout):
+        layout.addWidget(self.section(m.output))
         self._out_type = QtGui.QButtonGroup(self)
         self._out_pk = QtGui.QRadioButton(m.out_pk)
         self._out_pk.setProperty('value', 'pk')
@@ -134,7 +135,8 @@ class GenerateKeyDialog(QtGui.QDialog):
             layout.addWidget(QtGui.QLabel(m.no_output))
             buttons.button(QtGui.QDialogButtonBox.Ok).setDisabled(True)
         else:
-            if not settings.is_locked(SETTINGS.SUBJECT):
+            if not settings.is_locked(SETTINGS.SUBJECT) and \
+                    needs_subject([b.property('value') for b in out_btns]):
                 subject_box = QtGui.QHBoxLayout()
                 subject_box.addWidget(QtGui.QLabel(m.subject))
                 subject_box.addWidget(self._subject)

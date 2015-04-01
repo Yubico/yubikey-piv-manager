@@ -27,7 +27,7 @@
 from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError, PivError, KEY_LEN
-from pivtool.view.utils import Headers, KEY_VALIDATOR, pin_field
+from pivtool.view.utils import Dialog, KEY_VALIDATOR, pin_field
 from pivtool.utils import complexity_check
 from pivtool.storage import settings, SETTINGS
 import os
@@ -201,25 +201,21 @@ class AdvancedPanel(QtGui.QWidget):
         return puk
 
 
-class InitDialog(QtGui.QDialog):
+class InitDialog(Dialog):
 
     def __init__(self, controller, parent=None):
         super(InitDialog, self).__init__(parent)
         self.setWindowTitle(m.initialize)
-
-        self.setWindowFlags(self.windowFlags()
-                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setMinimumWidth(400)
         self._controller = controller
         self._build_ui()
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
-        headers = Headers()
 
-        self._pin_panel = PinPanel(headers)
+        self._pin_panel = PinPanel(self.headers)
         layout.addWidget(self._pin_panel)
-        self._key_panel = KeyPanel(headers)
+        self._key_panel = KeyPanel(self.headers)
         if not settings.is_locked(SETTINGS.PIN_AS_KEY) or \
                 not settings[SETTINGS.PIN_AS_KEY]:
             layout.addWidget(self._key_panel)

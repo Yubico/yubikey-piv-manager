@@ -24,27 +24,24 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from PySide import QtCore, QtGui
+from PySide import QtGui
 from pivtool import messages as m
-from pivtool.view.utils import Headers
+from pivtool.view.utils import Dialog
 from pivtool.storage import settings, SETTINGS
 
 
-class SettingsDialog(QtGui.QDialog):
+class SettingsDialog(Dialog):
 
     def __init__(self, parent=None):
         super(SettingsDialog, self).__init__(parent)
         self.setWindowTitle(m.settings)
-        self.setWindowFlags(self.windowFlags()
-                            ^ QtCore.Qt.WindowContextHelpButtonHint)
 
         self._build_ui()
 
     def _build_ui(self):
-        headers = Headers()
         layout = QtGui.QFormLayout(self)
 
-        layout.addRow(headers.section(m.pin))
+        layout.addRow(self.section(m.pin))
 
         self._complex_pins = QtGui.QCheckBox(m.use_complex_pins)
         self._complex_pins.setChecked(settings[SETTINGS.COMPLEX_PINS])
@@ -68,7 +65,7 @@ class SettingsDialog(QtGui.QDialog):
         layout.addRow(self._pin_expires)
         layout.addRow(m.pin_expires_days, self._pin_expires_days)
 
-        layout.addRow(headers.section(m.misc))
+        layout.addRow(self.section(m.misc))
         reader_pattern = settings[SETTINGS.CARD_READER]
         self._reader_pattern = QtGui.QLineEdit(reader_pattern)
         layout.addRow(m.reader_name, self._reader_pattern)

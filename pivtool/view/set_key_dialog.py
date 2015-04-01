@@ -27,11 +27,11 @@
 from PySide import QtGui, QtCore
 from pivtool import messages as m
 from pivtool.piv import DeviceGoneError, PivError, KEY_LEN
-from pivtool.view.utils import KEY_VALIDATOR
+from pivtool.view.utils import Dialog, KEY_VALIDATOR
 import os
 
 
-class SetKeyDialog(QtGui.QDialog):
+class SetKeyDialog(Dialog):
 
     def __init__(self, controller, parent=None):
         super(SetKeyDialog, self).__init__(parent)
@@ -45,8 +45,6 @@ class SetKeyDialog(QtGui.QDialog):
 
     def _build_ui(self):
         self.setWindowTitle(m.change_key)
-        self.setWindowFlags(self.windowFlags()
-                            ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setMinimumWidth(400)
 
         layout = QtGui.QVBoxLayout(self)
