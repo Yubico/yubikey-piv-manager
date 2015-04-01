@@ -28,7 +28,7 @@ from PySide import QtGui, QtCore, QtNetwork
 from pivtool import messages as m
 from pivtool.piv import PivError, DeviceGoneError
 from pivtool.storage import settings, SETTINGS
-from pivtool.view.utils import Dialog
+from pivtool.view.utils import Dialog, get_text
 from pivtool.view.generate_dialog import GenerateKeyDialog
 from datetime import datetime
 from functools import partial
@@ -255,7 +255,7 @@ class CertWidget(QtGui.QWidget):
             QtGui.QMessageBox.warning(self, m.error, m.unsupported_file)
             return
         if needs_password:
-            password, status = QtGui.QInputDialog.getText(
+            password, status = get_text(
                 self, m.enter_file_password, m.password_label,
                 QtGui.QLineEdit.Password)
             if not status:

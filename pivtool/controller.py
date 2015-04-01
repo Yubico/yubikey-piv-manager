@@ -27,7 +27,7 @@
 from pivtool.utils import test, der_read
 from pivtool.piv import PivError, WrongPinError
 from pivtool.storage import get_store, settings, SETTINGS
-from pivtool.view.utils import get_active_window
+from pivtool.view.utils import get_active_window, get_text
 from pivtool import messages as m
 from PySide import QtCore, QtGui, QtNetwork
 from Crypto.Protocol.KDF import PBKDF2
@@ -178,7 +178,7 @@ class Controller(object):
             except ValueError as e:
                 QtGui.QMessageBox.warning(window, m.error, str(e))
 
-        pin, status = QtGui.QInputDialog.getText(
+        pin, status = get_text(
             window, m.enter_pin, m.pin_label, QtGui.QLineEdit.Password)
         if not status:
             raise ValueError('PIN entry aborted!')
@@ -212,8 +212,7 @@ class Controller(object):
             except ValueError as e:
                 QtGui.QMessageBox.warning(window, m.error, str(e))
 
-        key, status = QtGui.QInputDialog.getText(
-            window, m.enter_key, m.key_label)
+        key, status = get_text(window, m.enter_key, m.key_label)
         if not status:
             raise ValueError('Key entry aborted!')
         self._do_ensure_auth(key, window)

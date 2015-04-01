@@ -66,6 +66,15 @@ class Headers(object):
         return QtGui.QLabel(section)
 
 
+def get_text(*args, **kwargs):
+    flags = (
+        QtCore.Qt.WindowTitleHint |
+        QtCore.Qt.WindowSystemMenuHint
+    )
+    kwargs['flags'] = flags
+    return QtGui.QInputDialog.getText(*args, **kwargs)
+
+
 def pin_field():
     field = QtGui.QLineEdit()
     field.setEchoMode(QtGui.QLineEdit.Password)
