@@ -125,7 +125,7 @@ class Controller(object):
             self._data = {}
 
     def poll(self):
-        return test(self._key._read_chuid, False)
+        return test(self._key._read_version)
 
     @property
     def attributes(self):

@@ -80,12 +80,10 @@ def check(rc):
 
 
 def wrap_puk_error(error):
-    if 'blocked' in error.message:
-        raise WrongPukError(0)
     match = TRIES_PATTERN.search(error.message)
     if match:
         raise WrongPukError(int(match.group(1)))
-    raise error
+    raise WrongPukError(0)
 
 
 KEY_LEN = 24
@@ -160,16 +158,15 @@ class YkPiv(object):
         check(ykpiv_get_version(self._state, v, sizeof(v)))
         self._version = v.value
 
-    def _read_chuid(self, first_attempt=True):
+    def _read_chuid(self):
         try:
             chuid_data = self.fetch_object(YKPIV_OBJ_CHUID)[29:29 + 16]
             self._chuid = chuid_data.encode('hex')
-        except PivError as e:  # No chuid set?
-            if first_attempt:
+        except PivError:  # No chuid set?
+            try:
                 self.set_chuid()
-                self._read_chuid(False)
-            else:
-                raise e
+            except ValueError:
+                self._chuid = None
 
     def __del__(self):
         check(ykpiv_done(self._state))
@@ -202,7 +199,6 @@ class YkPiv(object):
     def set_chuid(self):
         self._cmd.run('-a', 'set-chuid')
         self._reset()
-        self._read_chuid()
 
     def authenticate(self, key=None):
         if key is None:
