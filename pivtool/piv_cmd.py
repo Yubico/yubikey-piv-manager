@@ -26,9 +26,33 @@
 
 
 import subprocess
+import sys
+import os
 
 
 CMD = 'yubico-piv-tool'
+
+if getattr(sys, 'frozen', False):
+    # we are running in a PyInstaller bundle
+    basedir = sys._MEIPASS
+else:
+    # we are running in a normal Python environment
+    basedir = os.path.dirname(__file__)
+
+
+
+def find_cmd():
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    cmd = CMD + '.exe' if subprocess.mswindows else CMD
+    paths = [basedir] + os.environ.get('PATH', '').split(os.pathsep)
+    for path in paths:
+        path = path.strip('"')
+        fpath = os.path.join(path, cmd)
+        if is_exe(fpath):
+            return fpath
+    return None
 
 
 def check(status, err):
@@ -52,7 +76,7 @@ def set_arg(args, opt, value):
 
 class YkPivCmd(object):
 
-    def __init__(self, cmd=CMD, verbosity=0, reader=None, key=None):
+    def __init__(self, cmd=find_cmd(), verbosity=0, reader=None, key=None):
         self._base_args = [cmd]
         if verbosity > 0:
             self._base_args.extend(['-v', verbosity])

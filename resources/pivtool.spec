@@ -29,7 +29,7 @@ a = Analysis(['scripts/pivtool'],
              runtime_hooks=None)
 
 # DLLs, dylibs and executables should go here.
-libs = glob('lib/*.dll') + glob('lib/*.dylib') + glob('lib/*.so') + glob('lib/*.exe')
+libs = glob('lib/*')
 for filename in libs:
     a.datas.append((filename[4:], filename, 'BINARY'))
 
