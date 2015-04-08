@@ -145,6 +145,7 @@ class CertPanel(QtGui.QWidget):
         delete_btn.clicked.connect(
             self._controller.wrap(self._delete_cert, True))
         buttons.addWidget(delete_btn)
+        layout.addStretch()
         layout.addLayout(buttons)
 
     def _export_cert(self, cert):
@@ -204,7 +205,6 @@ class CertWidget(QtGui.QWidget):
 
         self._status = QtGui.QLabel(m.cert_not_loaded)
         layout.addWidget(self._status)
-        layout.addStretch()
 
         buttons = QtGui.QHBoxLayout()
 
@@ -292,7 +292,6 @@ class CertDialog(Dialog):
     def __init__(self, controller, parent=None):
         super(CertDialog, self).__init__(parent)
         self.setWindowTitle(m.certificates)
-        self.setFixedSize(540, 180)
 
         self._complex = settings[SETTINGS.COMPLEX_PINS]
         self._controller = controller
@@ -304,9 +303,12 @@ class CertDialog(Dialog):
         event.accept()
 
     def _build_ui(self, controller):
-        layout = QtGui.QVBoxLayout()
+        layout = QtGui.QVBoxLayout(self)
+        # This unfortunately causes the window to resize when switching tabs.
+        # layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
         self._cert_tabs = QtGui.QTabWidget()
+        self._cert_tabs.setMinimumSize(540, 160)
         shown_slots = settings[SETTINGS.SHOWN_SLOTS]
         selected = False
         for (slot, label) in sorted(SLOTS.items()):
@@ -320,5 +322,3 @@ class CertDialog(Dialog):
                 index = self._cert_tabs.addTab(QtGui.QLabel(), label)
                 self._cert_tabs.setTabEnabled(index, False)
         layout.addWidget(self._cert_tabs)
-
-        self.setLayout(layout)

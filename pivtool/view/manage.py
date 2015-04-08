@@ -39,7 +39,7 @@ class ManageDialog(Dialog):
     def __init__(self, controller, parent=None):
         super(ManageDialog, self).__init__(parent)
         self.setWindowTitle(m.manage_pin)
-        self.setFixedSize(480, 180)
+        #self.setFixedSize(480, 180)
 
         self._controller = controller
         self._build_ui()
@@ -53,6 +53,7 @@ class ManageDialog(Dialog):
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
+        layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
         btns = QtGui.QHBoxLayout()
         self._pin_btn = QtGui.QPushButton(m.change_pin)
@@ -74,6 +75,7 @@ class ManageDialog(Dialog):
         layout.addLayout(btns)
 
         self._messages = QtGui.QTextEdit()
+        self._messages.setFixedSize(480, 100)
         self._messages.setReadOnly(True)
         layout.addWidget(self._messages)
 

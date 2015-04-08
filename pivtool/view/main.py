@@ -77,6 +77,7 @@ class MainWidget(QtGui.QWidget):
         layout.addLayout(btns)
 
         self._messages = QtGui.QTextEdit()
+        self._messages.setFixedSize(480, 100)
         self._messages.setReadOnly(True)
         layout.addWidget(self._messages)
 
@@ -134,7 +135,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self._settings = get_store('window')
 
-        self.setFixedSize(480, 180)
+        self.layout().setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
         pos = self._settings.get('pos')
         if pos:
@@ -154,7 +155,8 @@ class MainWindow(QtGui.QMainWindow):
         help_menu.addAction(about_action)
 
     def showEvent(self, event):
-        self.setCentralWidget(MainWidget())
+        if not self.centralWidget():
+            self.setCentralWidget(MainWidget())
         event.accept()
 
     def closeEvent(self, event):
