@@ -25,7 +25,7 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from getpass import getuser
-from pivtool import messages as m
+from pivman import messages as m
 import re
 import subprocess
 import os

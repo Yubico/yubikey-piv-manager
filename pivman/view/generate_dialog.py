@@ -25,10 +25,10 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from PySide import QtGui, QtCore
-from pivtool import messages as m
-from pivtool.utils import has_ca, request_cert_from_ca
-from pivtool.storage import settings, SETTINGS
-from pivtool.view.utils import Dialog, SUBJECT_VALIDATOR
+from pivman import messages as m
+from pivman.utils import has_ca, request_cert_from_ca
+from pivman.storage import settings, SETTINGS
+from pivman.view.utils import Dialog, SUBJECT_VALIDATOR
 
 
 def save_file_as(parent, title, fn_filter):

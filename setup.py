@@ -33,24 +33,24 @@ VERSION_PATTERN = re.compile(r"(?m)^__version__\s*=\s*['\"](.+)['\"]$")
 
 
 def get_version():
-    """Return the current version as defined by pivtool/__init__.py."""
+    """Return the current version as defined by pivman/__init__.py."""
 
-    with open('pivtool/__init__.py', 'r') as f:
+    with open('pivman/__init__.py', 'r') as f:
         match = VERSION_PATTERN.search(f.read())
         return match.group(1)
 
 setup(
-    name='yubico-pivtool-gui',
+    name='yubikey-piv-manager',
     version=get_version(),
     author='Dain Nilsson',
     author_email='dain@yubico.com',
     maintainer='Yubico Open Source Maintainers',
     maintainer_email='ossmaint@yubico.com',
-    url='https://github.com/Yubico/yubico-pivtool-gui',
+    url='https://github.com/Yubico/yubikey-piv-manager',
     description='Tool for configuring your PIV-enabled YubiKey.',
     license='GPLv3+',
-    packages=['pivtool', 'pivtool.view'],
-    scripts=['scripts/pivtool'],
+    packages=['pivman', 'pivman.view'],
+    scripts=['scripts/pivman'],
     setup_requires=['nose>=1.0'],
     install_requires=['PySide', 'pycrypto'],
     test_suite='nose.collector',

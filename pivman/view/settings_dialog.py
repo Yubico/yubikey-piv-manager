@@ -25,9 +25,9 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from PySide import QtGui
-from pivtool import messages as m
-from pivtool.view.utils import Dialog
-from pivtool.storage import settings, SETTINGS
+from pivman import messages as m
+from pivman.view.utils import Dialog
+from pivman.storage import settings, SETTINGS
 
 
 class SettingsDialog(Dialog):

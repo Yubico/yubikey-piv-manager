@@ -25,8 +25,8 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 import os
-from pivtool import messages as m
-from pivtool.piv import CERT_SLOTS
+from pivman import messages as m
+from pivman.piv import CERT_SLOTS
 from PySide import QtCore
 from collections import MutableMapping, namedtuple
 from getpass import getuser
@@ -39,7 +39,7 @@ __all__ = [
     'settings'
 ]
 
-CONFIG_HOME = os.path.join(os.path.expanduser('~'), '.pivtool')
+CONFIG_HOME = os.path.join(os.path.expanduser('~'), '.pivman')
 _settings = QtCore.QSettings(os.path.join(CONFIG_HOME, 'settings.ini'),
                              QtCore.QSettings.IniFormat)
 _mutex = QtCore.QMutex(QtCore.QMutex.Recursive)

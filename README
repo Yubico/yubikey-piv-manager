@@ -1,16 +1,16 @@
-== YubiKey PIV Tool
+== YubiKey PIV Manager
 Tool for configuring your PIV-enabled YubiKey.
 
 === Installation
 The recommended way to install this software including dependencies is by using
 the provided precompiled binaries for your platform. For Windows and OS X,
 there are installers available for download
-https://developers.yubico.com/yubikey-pivtool-gui/Releases/[here].
+https://developers.yubico.com/yubikey-piv-manager/Releases/[here].
 For Ubuntu we have a custom PPA with a package for it
 https://launchpad.net/~yubico/+archive/ubuntu/stable[here].
 
 === Dependencies
-YubiKey PIV Tool requires PySide, pycrypto and yubico-piv-tool.
+YubiKey PIV Manager requires PySide, pycrypto and yubico-piv-tool.
 
 === Running tests
 Tests can be run using the "nosetests" command, from the python-nose package.
@@ -20,7 +20,7 @@ to be compiled from source, requiring the python-dev package.
 === Building binaries
 Binaries for Windows and OSX are built using PyInstaller.
 
-Get the source release file, yubikey-pivtool-gui-<version>.tar.gz, and extract
+Get the source release file, yubikey-piv-manager-<version>.tar.gz, and extract
 it. It should contain a single directory, henceforth refered to as the release
 directory.
 
@@ -37,11 +37,11 @@ For Windows you will need python, PySide, PyCrypto, PyInstaller and Pywin32
 installed (32 or 64-bit versions depending on the architecture of the binary
 your are building).
 
-To sign the executable, copy the pfx file to pivtool.pfx and place it in the
+To sign the executable, copy the pfx file to pivman.pfx and place it in the
 root of the release directory. You will need signtool.exe (from the Windows
 SDK) either copied into the root as well or in a location in your PATH.
 
-Run "pyinstaller.exe resources/pivtool.spec" from the main release directory.
+Run "pyinstaller.exe resources/pivman.spec" from the main release directory.
 
 With NSIS installed, a Windows installer will be built as well.
 
@@ -57,7 +57,7 @@ to install these dependencies is by using Homebrew:
 NOTE: Homebrew will build backwards-incompatible binaries, so the resulting
 build will not run on an older version of OSX.
 
-Run "pyinstaller resources/pivtool.spec" from the main release directory. This
+Run "pyinstaller resources/pivman.spec" from the main release directory. This
 will create an .app in the dist directory.
 
 Sign the code using codesign:
@@ -66,10 +66,10 @@ Sign the code using codesign:
 
 There is also a project file for use with 
 http://s.sudre.free.fr/Packaging.html[Packages]
-located at `resources/pivtool.pkgproj`.
+located at `resources/pivman.pkgproj`.
 This can be used to create an installer for distribution, which you should sign
 prior to distribution:
 
-  packagesbuild resources/pivtool.pkgproj
-  productsign --sign 'Developer ID Installer' dist/YubiKey\ PIV\ Tool.pkg dist/yubico-pivtool-gui-mac.pkg
+  packagesbuild resources/pivman.pkgproj
+  productsign --sign 'Developer ID Installer' dist/YubiKey\ PIV\ Tool.pkg dist/yubikey-piv-manager-mac.pkg
 

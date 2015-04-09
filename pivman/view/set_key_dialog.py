@@ -25,9 +25,9 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from PySide import QtGui, QtCore
-from pivtool import messages as m
-from pivtool.piv import DeviceGoneError, PivError, KEY_LEN
-from pivtool.view.utils import Dialog, KEY_VALIDATOR
+from pivman import messages as m
+from pivman.piv import DeviceGoneError, PivError, KEY_LEN
+from pivman.view.utils import Dialog, KEY_VALIDATOR
 import os
 
 

@@ -25,9 +25,9 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from PySide import QtGui, QtCore
-from pivtool.controller import Controller
-from pivtool.piv import YkPiv, PivError, DeviceGoneError
-from pivtool.storage import settings, SETTINGS
+from pivman.controller import Controller
+from pivman.piv import YkPiv, PivError, DeviceGoneError
+from pivman.storage import settings, SETTINGS
 from functools import partial
 from Queue import Queue
 

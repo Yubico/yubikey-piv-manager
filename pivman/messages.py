@@ -25,7 +25,7 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 """
-Strings for Yubico pivtool GUI.
+Strings for YubiKey PIV Manager.
 
 Note: String names must not start with underscore (_).
 
@@ -33,8 +33,8 @@ Note: String names must not start with underscore (_).
 
 organization = "Yubico"
 domain = "yubico.com"
-app_name = "Yubico PIV tool"
-win_title_1 = "Yubico PIV tool (%s)"
+app_name = "YubiKey PIV Manager"
+win_title_1 = "YubiKey PIV Manager (%s)"
 about_1 = "About: %s"
 copyright = "Copyright &copy; Yubico"
 libraries = "Library versions"

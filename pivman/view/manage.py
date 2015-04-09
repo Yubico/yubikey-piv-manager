@@ -25,12 +25,12 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from PySide import QtCore, QtGui
-from pivtool import messages as m
-from pivtool.view.set_pin_dialog import (SetPinDialog, SetPukDialog,
+from pivman import messages as m
+from pivman.view.set_pin_dialog import (SetPinDialog, SetPukDialog,
                                          ResetPinDialog)
-from pivtool.view.set_key_dialog import SetKeyDialog
-from pivtool.view.utils import IMPORTANT, Dialog
-from pivtool.storage import settings, SETTINGS
+from pivman.view.set_key_dialog import SetKeyDialog
+from pivman.view.utils import IMPORTANT, Dialog
+from pivman.storage import settings, SETTINGS
 from functools import partial
 
 

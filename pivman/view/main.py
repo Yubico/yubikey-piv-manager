@@ -26,16 +26,16 @@
 
 from PySide import QtGui
 from PySide import QtCore
-from pivtool import messages as m, __version__ as version
-from pivtool.piv import libversion as ykpiv_version
-from pivtool.storage import get_store
-from pivtool.watcher import ControllerWatcher
-from pivtool.view.utils import IMPORTANT
-from pivtool.view.init_dialog import InitDialog
-from pivtool.view.set_pin_dialog import SetPinDialog
-from pivtool.view.settings_dialog import SettingsDialog
-from pivtool.view.manage import ManageDialog
-from pivtool.view.cert import CertDialog
+from pivman import messages as m, __version__ as version
+from pivman.piv import libversion as ykpiv_version
+from pivman.storage import get_store
+from pivman.watcher import ControllerWatcher
+from pivman.view.utils import IMPORTANT
+from pivman.view.init_dialog import InitDialog
+from pivman.view.set_pin_dialog import SetPinDialog
+from pivman.view.settings_dialog import SettingsDialog
+from pivman.view.manage import ManageDialog
+from pivman.view.cert import CertDialog
 
 
 ABOUT_TEXT = """

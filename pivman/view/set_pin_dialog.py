@@ -25,11 +25,11 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from PySide import QtGui, QtCore
-from pivtool import messages as m
-from pivtool.piv import WrongPinError
-from pivtool.storage import settings, SETTINGS
-from pivtool.utils import complexity_check
-from pivtool.view.utils import Dialog, pin_field
+from pivman import messages as m
+from pivman.piv import WrongPinError
+from pivman.storage import settings, SETTINGS
+from pivman.utils import complexity_check
+from pivman.view.utils import Dialog, pin_field
 
 
 class SetPinDialog(Dialog):

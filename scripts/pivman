@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from pivtool import main
+from pivman import main
 import signal
 
 if __name__ == '__main__':

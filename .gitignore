@@ -6,5 +6,5 @@ dist/
 .ropeproject/
 ChangeLog
 MANIFEST
-pivtool/qt_resources.py
+pivman/qt_resources.py
 .DS_Store

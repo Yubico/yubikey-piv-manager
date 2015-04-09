@@ -49,7 +49,7 @@ class qt_resources(Command):
     def finalize_options(self):
         self.cwd = os.getcwd()
         self.source = os.path.join(self.cwd, 'qt_resources')
-        self.target = os.path.join(self.cwd, 'pivtool', 'qt_resources.py')
+        self.target = os.path.join(self.cwd, 'pivman', 'qt_resources.py')
 
     def _create_qrc(self):
         qrc = os.path.join(self.source, 'qt_resources.qrc')

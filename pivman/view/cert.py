@@ -25,11 +25,11 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from PySide import QtGui, QtCore, QtNetwork
-from pivtool import messages as m
-from pivtool.piv import PivError, DeviceGoneError
-from pivtool.storage import settings, SETTINGS
-from pivtool.view.utils import Dialog, get_text
-from pivtool.view.generate_dialog import GenerateKeyDialog
+from pivman import messages as m
+from pivman.piv import PivError, DeviceGoneError
+from pivman.storage import settings, SETTINGS
+from pivman.view.utils import Dialog, get_text
+from pivman.view.generate_dialog import GenerateKeyDialog
 from datetime import datetime
 from functools import partial
 

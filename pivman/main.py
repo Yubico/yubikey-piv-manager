@@ -28,14 +28,14 @@ import os
 import sys
 import time
 import argparse
-import pivtool.qt_resources
+import pivman.qt_resources
 from PySide import QtGui, QtCore
-from pivtool.view.main import MainWindow
-from pivtool.worker import Worker
-from pivtool import __version__ as version, messages as m
-from pivtool.piv import YkPiv
-from pivtool.controller import Controller
-from pivtool.view.set_pin_dialog import SetPinDialog
+from pivman.view.main import MainWindow
+from pivman.worker import Worker
+from pivman import __version__ as version, messages as m
+from pivman.piv import YkPiv
+from pivman.controller import Controller
+from pivman.view.set_pin_dialog import SetPinDialog
 
 if getattr(sys, 'frozen', False):
     # we are running in a PyInstaller bundle
@@ -98,7 +98,7 @@ class PivtoolApplication(QtGui.QApplication):
             print 'No YubiKey PIV applet detected'
 
     def _parse_args(self):
-        parser = argparse.ArgumentParser(description='Yubico PIV tool',
+        parser = argparse.ArgumentParser(description='YubiKey PIV Manager',
                                          add_help=True)
         parser.add_argument('-c', '--check-only', action='store_true')
         return parser.parse_args()
@@ -114,7 +114,7 @@ class PivtoolApplication(QtGui.QApplication):
     def _create_window(self):
         window = MainWindow()
         window.setWindowTitle(m.win_title_1 % version)
-        window.setWindowIcon(QtGui.QIcon(':/pivtool.png'))
+        window.setWindowIcon(QtGui.QIcon(':/pivman.png'))
         return window
 
 

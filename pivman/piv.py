@@ -24,10 +24,10 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from pivtool.libykpiv import *
-from pivtool.piv_cmd import YkPivCmd
-from pivtool import messages as m
-from pivtool.utils import der_read
+from pivman.libykpiv import *
+from pivman.piv_cmd import YkPivCmd
+from pivman import messages as m
+from pivman.utils import der_read
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
 import re

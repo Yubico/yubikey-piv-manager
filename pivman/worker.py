@@ -26,8 +26,8 @@
 
 from PySide import QtGui, QtCore
 from functools import partial
-from pivtool import messages as m
-from pivtool.view.utils import get_active_window
+from pivman import messages as m
+from pivman.view.utils import get_active_window
 import traceback
 
 

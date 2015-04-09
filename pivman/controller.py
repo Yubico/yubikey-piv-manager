@@ -24,11 +24,11 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from pivtool.utils import test, der_read
-from pivtool.piv import PivError, WrongPinError
-from pivtool.storage import get_store, settings, SETTINGS
-from pivtool.view.utils import get_active_window, get_text
-from pivtool import messages as m
+from pivman.utils import test, der_read
+from pivman.piv import PivError, WrongPinError
+from pivman.storage import get_store, settings, SETTINGS
+from pivman.view.utils import get_active_window, get_text
+from pivman import messages as m
 from PySide import QtCore, QtGui, QtNetwork
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
@@ -40,7 +40,7 @@ import struct
 
 YKPIV_OBJ_PIVTOOL_DATA = 0x5fff00
 
-TAG_PIVTOOL_DATA = 0x80  # Wrapper for PIV tool data
+TAG_PIVMAN_DATA = 0x80  # Wrapper for pivman data
 TAG_FLAGS_1 = 0x81  # Flags 1
 TAG_SALT = 0x82  # Salt used for management key derivation
 TAG_PIN_TIMESTAMP = 0x83  # When the PIN was last changed
@@ -49,7 +49,7 @@ FLAG1_PUK_BLOCKED = 0x01  # PUK is blocked
 
 
 def parse_pivtool_data(raw_data):
-    rest, _ = der_read(raw_data, TAG_PIVTOOL_DATA)
+    rest, _ = der_read(raw_data, TAG_PIVMAN_DATA)
     data = {}
     while rest:
         t, v, rest = der_read(rest)
@@ -59,7 +59,7 @@ def parse_pivtool_data(raw_data):
 
 def serialize_pivtool_data(data):  # NOTE: Doesn't support values > 0x80 bytes.
     buf = ''.join([chr(k) + chr(len(v)) + v for k, v in sorted(data.items())])
-    return chr(TAG_PIVTOOL_DATA) + chr(len(buf)) + buf
+    return chr(TAG_PIVMAN_DATA) + chr(len(buf)) + buf
 
 
 def has_flag(data, flagkey, flagmask):
@@ -112,7 +112,7 @@ class Controller(object):
         try:
             self._raw_data = self._key.fetch_object(YKPIV_OBJ_PIVTOOL_DATA)
             # TODO: Remove in a few versions...
-            if self._raw_data[0] != chr(TAG_PIVTOOL_DATA):
+            if self._raw_data[0] != chr(TAG_PIVMAN_DATA):
                 self._data = {}
                 self._data[TAG_PIN_TIMESTAMP] = self._raw_data
                 self._data[TAG_SALT] = self._key.fetch_object(

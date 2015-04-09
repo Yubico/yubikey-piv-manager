@@ -1,7 +1,7 @@
 # -*- mode: python -*-
 # -*- encoding: utf-8 -*-
 
-# This file needs to be invoked with "pyinstaller resources/pivtool.spec" from
+# This file needs to be invoked with "pyinstaller resources/pivman.spec" from
 # the parent directory!
 
 import os
@@ -10,19 +10,19 @@ import re
 from glob import glob
 from getpass import getpass
 
-NAME = "Yubico PIV tool"
+NAME = "YubiKey PIV Manager"
 
 WIN = sys.platform in ['win32', 'cygwin']
 OSX = sys.platform in ['darwin']
 
-ICON = os.path.join('resources', 'pivtool-large.png')
+ICON = os.path.join('resources', 'pivman-large.png')
 if WIN:
-    ICON = os.path.join('resources', 'pivtool.ico')
+    ICON = os.path.join('resources', 'pivman.ico')
 
 elif OSX:
-    ICON = os.path.join('resources', 'pivtool.icns')
+    ICON = os.path.join('resources', 'pivman.icns')
 
-a = Analysis(['scripts/pivtool'],
+a = Analysis(['scripts/pivman'],
              pathex=[''],
              hiddenimports=[],
              hookspath=None,
@@ -34,7 +34,7 @@ for filename in libs:
     a.datas.append((filename[4:], filename, 'BINARY'))
 
 # Read version string
-with open('pivtool/__init__.py', 'r') as f:
+with open('pivman/__init__.py', 'r') as f:
     match = re.search(r"(?m)^__version__\s*=\s*['\"](.+)['\"]$", f.read())
     ver_str = match.group(1)
 
@@ -80,12 +80,12 @@ VSVersionInfo(
       [
       StringTable(
         u'040904E4',
-        [StringStruct(u'FileDescription', u'Yubico PIV tool'),
+        [StringStruct(u'FileDescription', u'YubiKey PIV Manager'),
         StringStruct(u'FileVersion', u'%(ver_str)s'),
-        StringStruct(u'InternalName', u'pivtool'),
+        StringStruct(u'InternalName', u'pivman'),
         StringStruct(u'LegalCopyright', u'Copyright © 2015 Yubico'),
         StringStruct(u'OriginalFilename', u'%(exe_name)s'),
-        StringStruct(u'ProductName', u'Yubico PIV tool'),
+        StringStruct(u'ProductName', u'YubiKey PIV Manager'),
         StringStruct(u'ProductVersion', u'%(ver_str)s')])
       ]),
     VarFileInfo([VarStruct(u'Translation', [1033, 1252])])
@@ -139,8 +139,8 @@ if OSX:
 
 # Create Windows installer
 if WIN:
-    os.system('makensis.exe -D"PIVTOOL_VERSION=%s" resources/pivtool.nsi' % ver_str)
-    installer = "dist/pivtool-gui-%s-win.exe" % ver_str
+    os.system('makensis.exe -D"PIVMAN_VERSION=%s" resources/pivman.nsi' % ver_str)
+    installer = "dist/yubikey-piv-manager-%s-win.exe" % ver_str
     os.system("signtool.exe sign /f yubico.pfx /p %s /t http://timestamp.verisign.com/scripts/timstamp.dll \"%s\"" %
              (pfx_pass, installer))
     print "Installer created: %s" % installer
