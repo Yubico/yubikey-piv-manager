@@ -62,7 +62,7 @@ will create an .app in the dist directory.
 
 Sign the code using codesign:
 
-  codesign -s 'Developer ID Application' dist/YubiKey\ PIV\ Tool.app --deep
+  codesign -s 'Developer ID Application' dist/YubiKey\ PIV\ Manager.app --deep
 
 There is also a project file for use with 
 http://s.sudre.free.fr/Packaging.html[Packages]
@@ -71,5 +71,5 @@ This can be used to create an installer for distribution, which you should sign
 prior to distribution:
 
   packagesbuild resources/pivman.pkgproj
-  productsign --sign 'Developer ID Installer' dist/YubiKey\ PIV\ Tool.pkg dist/yubikey-piv-manager-mac.pkg
+  productsign --sign 'Developer ID Installer' dist/YubiKey\ PIV\ Manager.pkg dist/yubikey-piv-manager-mac.pkg
 
