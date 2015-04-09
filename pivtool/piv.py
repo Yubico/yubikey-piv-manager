@@ -119,6 +119,12 @@ class YkPiv(object):
         self._connect()
         self._read_status()
 
+        if not self.chuid:
+            try:
+                self.set_chuid()
+            except ValueError:
+                pass  # Not autheniticated, perhaps?
+
     def _connect(self):
         check(ykpiv_init(byref(self._state), self._verbosity))
         check(ykpiv_connect(self._state, self._reader))
@@ -163,10 +169,7 @@ class YkPiv(object):
             chuid_data = self.fetch_object(YKPIV_OBJ_CHUID)[29:29 + 16]
             self._chuid = chuid_data.encode('hex')
         except PivError:  # No chuid set?
-            try:
-                self.set_chuid()
-            except ValueError:
-                self._chuid = None
+            self._chuid = None
 
     def __del__(self):
         check(ykpiv_done(self._state))
@@ -197,8 +200,10 @@ class YkPiv(object):
         return dict(self._certs)
 
     def set_chuid(self):
-        self._cmd.run('-a', 'set-chuid')
-        self._reset()
+        try:
+            self._cmd.run('-a', 'set-chuid')
+        finally:
+            self._reset()
 
     def authenticate(self, key=None):
         if key is None:
@@ -208,6 +213,8 @@ class YkPiv(object):
         c_key = (c_ubyte * KEY_LEN).from_buffer_copy(key)
         check(ykpiv_authenticate(self._state, c_key))
         self._cmd.set_arg('-k', key.encode('hex'))
+        if not self.chuid:
+            self.set_chuid()
 
     def set_authentication(self, key):
         if len(key) != KEY_LEN:

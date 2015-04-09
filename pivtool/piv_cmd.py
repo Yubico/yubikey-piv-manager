@@ -79,7 +79,7 @@ class YkPivCmd(object):
     def __init__(self, cmd=find_cmd(), verbosity=0, reader=None, key=None):
         self._base_args = [cmd]
         if verbosity > 0:
-            self._base_args.extend(['-v', verbosity])
+            self._base_args.extend(['-v', str(verbosity)])
         if reader:
             self._base_args.extend(['-r', reader])
         if key:
