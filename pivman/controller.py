@@ -121,7 +121,7 @@ class Controller(object):
                 # END legacy stuff
                 self._data = parse_pivtool_data(self._raw_data)
         except PivError:
-            self._raw_data = ''
+            self._raw_data = serialize_pivtool_data({})
             self._data = {}
 
     def poll(self):

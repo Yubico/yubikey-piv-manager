@@ -27,7 +27,7 @@
 from PySide import QtCore, QtGui
 from pivman import messages as m
 from pivman.view.set_pin_dialog import (SetPinDialog, SetPukDialog,
-                                         ResetPinDialog)
+                                        ResetPinDialog)
 from pivman.view.set_key_dialog import SetKeyDialog
 from pivman.view.utils import IMPORTANT, Dialog
 from pivman.storage import settings, SETTINGS
@@ -39,7 +39,7 @@ class ManageDialog(Dialog):
     def __init__(self, controller, parent=None):
         super(ManageDialog, self).__init__(parent)
         self.setWindowTitle(m.manage_pin)
-        #self.setFixedSize(480, 180)
+        # self.setFixedSize(480, 180)
 
         self._controller = controller
         self._build_ui()
@@ -129,8 +129,6 @@ class ManageDialog(Dialog):
     def _change_puk(self, controller, release):
         dialog = SetPukDialog(controller, self)
         if dialog.exec_():
-            QtGui.QMessageBox.information(self, m.puk_changed,
-                                          m.puk_changed_desc)
             self.refresh(controller)
 
     def _change_key(self, controller, release):

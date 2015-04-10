@@ -145,8 +145,8 @@ class SetPukDialog(SetPinDialog):
     desc_not_changed = m.puk_not_changed_desc
     warn_not_complex = m.puk_not_complex
     busy = m.changing_puk
-    info_changed = m.pin_changed
-    desc_changed = m.pin_changed_desc
+    info_changed = m.puk_changed
+    desc_changed = m.puk_changed_desc
 
     def _prepare_fn(self, old_puk, new_puk):
         return (self._controller.change_puk, old_puk, new_puk)
