@@ -133,6 +133,7 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
+        self._widget = None
         self._settings = get_store('window')
 
         self.layout().setSizeConstraint(QtGui.QLayout.SetFixedSize)
@@ -155,8 +156,9 @@ class MainWindow(QtGui.QMainWindow):
         help_menu.addAction(about_action)
 
     def showEvent(self, event):
-        if not self.centralWidget():
-            self.setCentralWidget(MainWidget())
+        if not self._widget:
+            self._widget = MainWidget()
+            self.setCentralWidget(self._widget)
         event.accept()
 
     def closeEvent(self, event):
@@ -176,4 +178,5 @@ class MainWindow(QtGui.QMainWindow):
 
     def _show_settings(self):
         dialog = SettingsDialog(self)
-        dialog.exec_()
+        if dialog.exec_():
+            self._widget.refresh()
