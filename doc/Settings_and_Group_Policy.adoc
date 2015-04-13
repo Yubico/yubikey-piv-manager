@@ -39,7 +39,7 @@ Computer\HKEY_LOCAL_MACHINE\Software\Yubico\YubiKey PIV Manager
 
 === Available settings
 
-====Algorithm
+==== Algorithm
 Which algorithm to use for key pair generation.
 
 key:: algorithm
@@ -48,7 +48,7 @@ registry key type:: REG_SZ
 valid options:: "RSA1024", "RSA2048", "ECC256"
 default value:: "RSA2048"
 
-====Card Reader
+==== Card Reader
 String to match against when looking for compatible YubiKey devices.
 
 key:: card_reader
@@ -56,8 +56,7 @@ type:: string
 registry key type:: REG_SZ
 default value:: None
 
-
-====Certreq Template
+==== Certreq Template
 Value to use in CertificateTemplate parameter when calling certreq.exe.
 
 key:: certreq_template
@@ -65,7 +64,7 @@ type:: string
 registry key type:: REG_SZ
 default value:: None
 
-====Complex PIN/PUKs
+==== Complex PIN/PUKs
 True to require complex PINs and PUKs.
 
 key:: complex_pins
@@ -73,7 +72,7 @@ type:: string
 registry key type:: REG_SZ
 default value:: "false"
 
-====Enable Import
+==== Enable Import
 When False, hide the "import from file..." button for certificates.
 
 key:: enable_import
@@ -81,7 +80,7 @@ type:: string
 registry key type:: REG_SZ
 default value:: "true"
 
-====PIN as Management Key
+==== PIN as Management Key
 When true, the Management Key is based off of the PIN.
 
 key:: pin_as_key
@@ -89,7 +88,7 @@ type:: bool
 registry key type:: REG_SZ
 default value:: "false"
 
-====PIN Expiration
+==== PIN Expiration
 When non-zero causes a timestamp to be written when the PIN is changed, and to force a PIN change after the specified number of days.
 
 key:: pin_expiration
@@ -97,7 +96,7 @@ type:: int
 registry key type:: REG_DWORD
 default value:: 0
 
-====Displayed Output Formats
+==== Displayed Output Formats
 Output formats available when generating a key.
 
 key:: shown_outs
@@ -106,7 +105,7 @@ registry key type:: REG_MULTI_SZ
 valid options:: "pk", "ssc", "csr", "ca"
 default value:: ["ssc", "csr", "ca"]
 
-====Displayed Certificate Slots
+==== Displayed Certificate Slots
 A list of which certificate slots to show in the UI.
 
 key:: shown_slots
@@ -115,7 +114,7 @@ registry key type:: REG_MULTI_SZ
 valid options:: "9a", "9c", "9d", "9e"
 default value:: ["9a", "9c", "9d", "9e"]
  
-====Subject DN
+==== Subject DN
 Subject to use when generating a CSR or self-signed certificate.
 
 key:: subject
