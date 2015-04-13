@@ -150,7 +150,7 @@ class CertPanel(QtGui.QWidget):
 
     def _export_cert(self, cert):
         fn, fn_filter = QtGui.QFileDialog.getSaveFileName(
-            self, m.export_cert, filter='Certificate (*.pem, *.crt)')
+            self, m.export_cert, filter='Certificate (*.pem *.crt)')
         if not fn:
             return
 
