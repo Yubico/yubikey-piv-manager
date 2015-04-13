@@ -1,0 +1,60 @@
+== Certificates
+The PIV functionality of the YubiKey provides 4 standard slots for storing
+private keys with accompanying X509 certificates. You can view and manage these
+slots from the *Certificates* dialog. For more information on the different
+slots and their use, see the
+link:http://csrc.nist.gov/groups/SNS/piv/standards.html[PIV standards documents].
+
+=== Generating a new key pair
+The first step is to generate a new cryptographic key pair. The *Certificates*
+dialog provides a *Generate new key...* button to start this process. Each slot
+is represented as a tab in the dialog, and each tab has its own button to
+generate a key. You will need to specify the algorithm for the key, and the
+output format. The private key will be generated on the YubiKey, and will never
+leave the device. What happens to the public key is determined by the output
+type.
+
+==== Output: Public key
+The most basic output type is to just write the public key to the disk, in
+either PEM or DER format.
+
+NOTE: This output form is hidden by default, as it is of no use for most users.
+
+==== Output: Self-signed certificate
+The public key is wrapped in an X509 certificate, which is then self-signed by
+the private key, and stored in the same slot as the private key of the YubiKey.
+You will need to provide a Subject DN for the certificate to use, in the
+following format:
+
+....
+/CN=host.example.com/OU=test/O=example.com
+....
+
+==== Output: Certificate signing request (CSR)
+The public key is wrapped in a CSR, which can be signed by a Certificate
+Authority (CA), resulting in a CA-signed certificate. As with the previous
+output option, you will need to provide a Subject DN. The CSR is sent to the CA
+out-of-band, and the signed certificate should be imported into the YubiKey
+using the *Import from file...* button of the *Certificate* window, for the
+same slot that already holds the key.
+
+NOTE: If a private key but no certificate is loaded in a slot in the YubiKey,
+it will be indistinguishable from an empty slot.
+
+==== Output: Request a certificate If the client is connected to a CA, the
+process of having the CA create and sign a certificate can be automated by
+YubiKey PIV Manager. This option will create a CSR, have the CA sign it, and
+import it back into the YubiKey. As with the previous output option, you will
+need to provide a Subject DN.
+
+NOTE: This feature is only available on Windows, and uses the *certreq*
+executable.
+
+=== Importing a private key/certificate
+Instead of generating a key pair on the YubiKey itself, you can import an
+existing private key and/or certificate. To do so simply use the *Import from
+file...* button in the *Certificates* dialog. The YubiKey PIV Manager supports
+importing private keys in PEM and PFX format and certificates in DER, PEM and
+PFX format.
+
+NOTE: There is no way to see that a private key has been imported into a slot.

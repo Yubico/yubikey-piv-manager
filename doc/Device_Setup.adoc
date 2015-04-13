@@ -1,0 +1,22 @@
+== Device Setup
+The YubiKey PIV Manager provides a wizard for initializing an un-initialized
+YubiKey. This wizard assumes the default values for the PIN, PUK and Management
+Key are set, and may not work correctly if they have been modified. Some
+features of the YubiKey PIV Manager require that all management of the device
+be done using the YubiKey PIV Manager, so it is recommended that you not use
+other tools in combination with the YubiKey PIV Manager to manage your YuiKeys
+PIV configuration.
+
+=== Prerequisites
+You will need to have the YubiKey PIV Manager and its dependencies installed,
+as well as a PIV-enabled YubiKey, with the default PIN, PUK and Management Key
+values set.
+
+=== Device Initialization
+A PIV-enabled YubiKey comes pre-programmed with the default values for the PIN,
+the PUK, and the Management Key. As these default values are known it is
+crucial that these be changed before any real use. The YubiKey PIV Manager will
+automatically show a _Device Initializaion_ dialog if it detects a YubiKey that
+uses the default Management Key. It will ask you to provide a PIN, Management
+Key, and optionally a PUK. For more details on the various options provided by
+this wizard, see link:PIN_and_Management_Key.adoc[PIN and Management Key].

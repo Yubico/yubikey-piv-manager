@@ -1,0 +1,91 @@
+== PIN and Management Key
+A PIV-enabled YubiKey has a PIN, a PUK and a Management Key. These can be
+configured by using the *Manage Device PINs* window of the YubiKey PIV Manager.
+
+=== PIN
+The PIN is used during normal operation to authorize an action such as creating
+a digital signature for any of the loaded certificates. Entering an incorrect
+PIN three times consecutivly will cause the PIN to become blocked, rendering
+the PIV features unusable. The PIN must be at least 4 characters, and can
+contain any characters, thought it is recommended to only use those contained
+in the ASCII character set. There is a limit of 8 bytes for a PIN, which allows
+for up to 8 ASCII characters. There is a setting in the YubiKey PIV Manager,
+which enforces password complexity rules on your PIN (as well as your PUK). If
+this setting is active, your PIN will need to:
+
+* Be at least 6 characters in length.
+* Not contain all or part of the user's account name.
+* Contain characters from three of the following four categories:
+ ** English uppercase characters (A through Z)
+ ** English lowercase characters (a through z)
+ ** Base 10 digits (0 through 9)
+ ** Nonalphanumeric characters (e.g., !, $, #, %)
+
+==== PIN expiration
+There is an option in the YubiKey PIV Manager to enforce PINs to expire after a
+certain number of days, requiring you to change your PIN periodically. This is
+not enabled by default. When enabled, the YubiKey PIV Manager will prompt you
+to change the PIN after the set number of days has passed. Changing the PIN
+using an external tool will not affect the PIN expiration date. When this
+option is enabled you will need to provide your Management Key each time the
+PIN is changed, as that is required to store the updated expiration time.
+Because of this it is often desirable to use your PIN as the Management Key in
+combination with this setting to not be prompted for the Key.
+
+=== Management Key
+All PIV management operation of the YubiKey require a 24 byte 3DES key, known
+as the Management Key. You can either explicitly set a 24 byte key (the YubiKey
+PIV Manager can generate one for you), or you can choose to not set a
+Management Key, instead using the PIN for these operations. If so, you will be
+asked to provide your PIN instead of your Management Key whenever you perform a
+management operation, such as importing a new certificate, or generating a new
+key pair.
+
+NOTE: See the section Considerations when using a PIN for PIV management!
+
+=== PUK
+The PUK can be used to reset the PIN if it is ever lost or becomes blocked
+after the maximum number of incorrect attempts. Setting a PUK is optional. If
+you use your PIN as the Management Key, the PUK is disabled for technical
+reasons, explained in a later section. The requirements and restrictions of the
+PUK are the same as for the PIN (see above). If PIN complexity is enforced, the
+same rules are applied to the PUK. If the PUK ever becomes blocked, either by
+deliberately choosing to block it or by giving the wrong PUK value 3 times, it
+can only be unblocked by performing a complete reset (explained below).
+
+=== Resetting a device
+If an incorrect PIN is given 3 times consecutively, the PIN will become
+disabled. If you've set a PUK, then you can use that PUK to reset the PIN to a
+new value, and it will become enabled and usable again. If an incorrect PUK is
+given 3 times consecutively, it will become blocked as well. When both the PIN
+and the PUK are blocked, the device can be reset. This returns the PIV
+functionality of the YubiKey to a factory setting, setting the default PIN, PUK
+and Management Key values, as well as removing any stored keys and
+certificates. Once reset, the device is ready to be re-initialized.
+
+=== Considerations when using a PIN for PIV management
+There are certain security and usability considerations which should be taken
+into account when using the PIN for PIV management, instead of a Management
+Key. The way this feature works, is that a Management Key is still used, but it
+is cryptographically derived from your PIN by the YubiKey PIV Manager, behind
+the scenes. One implication of this is that the Management Key changes whenever
+you change your PIN, and it is therefor crucial that you ONLY change your PIN
+using the YubiKey PIN Manager. Changing it using an external tool will render
+the YubiKey PIV Manager unable to derive the Management Key. There is also a
+security aspect to be aware of, and that is that even though the PIN is blocked
+if entered incorrectly 3 times, the Management Key is not. An attacker could
+use the knowledge of this to effectively brute-force the PIN. This is mitigated
+by a computationally expensive (slow) key derivation, but it should only be
+used with a long, complex PIN.
+
+==== Technical description of Key derivation from PIN
+When choosing to use a Management Key derived from the PIN, the following takes
+place:
+
+1. A random 8-byte SALT value is generated and stored on the YubiKey.
+2. The derived Management Key is calculated as PBKDF2(PIN, SALT, 24, 10000).
+
+The PBKDF2 function (described in RFC2898) is run using the PIN (encoded using
+UTF-8) as the password, for 10000 rounds, to produce a 24 byte key, which is
+used as the management key. Whenever the user changes the PIN this process is
+repeated, using a new SALT and the new PIN.

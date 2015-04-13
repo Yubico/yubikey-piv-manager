@@ -1,0 +1,124 @@
+== Settings and Group Policy
+The YubiKey PIV Manager provides various settings which can be used to customize its behavior.
+Some of these can be changed in the *Settings* dialog from within the tool.
+Each of these can be enforced using a Group Policy on Windows, which prevents the user from changing them.
+To do so you will need to set certain registry keys.
+This can be used to simplify the tool by limiting it to a subset of its functionality, and to enforce company policy on usage.
+
+=== User settings
+User settings are stored in a file named pivman.ini, located in the .pivman subdirectory of the users come directory. For example:
+
+....
+/home/username/.pivman/pivman.ini
+....
+
+on Linux, or:
+
+....
+c:\Users\username\.pivman\pivman.ini
+....
+
+on Windows.
+
+Some of these values are changed by normal use of the YubiKey PIV Manager by performing actions in the tool.
+Others are only available by manually editing the configuration file.
+
+=== Group Policy settings
+All user settings are available on Group Policy level, and take precedence over those on user level.
+On Windows these settings are stored as registry keys, under either:
+
+....
+Computer\HKEY_CURRENT_USER\Software\Yubico\YubiKey PIV Manager
+....
+
+or:
+
+....
+Computer\HKEY_LOCAL_MACHINE\Software\Yubico\YubiKey PIV Manager
+....
+
+=== Available settings
+
+====Algorithm
+Which algorithm to use for key pair generation.
+
+key:: algorithm
+type:: string
+registry key type:: REG_SZ
+valid options:: "RSA1024", "RSA2048", "ECC256"
+default value:: "RSA2048"
+
+====Card Reader
+String to match against when looking for compatible YubiKey devices.
+
+key:: card_reader
+type:: string
+registry key type:: REG_SZ
+default value:: None
+
+
+====Certreq Template
+Value to use in CertificateTemplate parameter when calling certreq.exe.
+
+key:: certreq_template
+type:: string
+registry key type:: REG_SZ
+default value:: None
+
+====Complex PIN/PUKs
+True to require complex PINs and PUKs.
+
+key:: complex_pins
+type:: string
+registry key type:: REG_SZ
+default value:: "false"
+
+====Enable Import
+When False, hide the "import from file..." button for certificates.
+
+key:: enable_import
+type:: string
+registry key type:: REG_SZ
+default value:: "true"
+
+====PIN as Management Key
+When true, the Management Key is based off of the PIN.
+
+key:: pin_as_key
+type:: bool
+registry key type:: REG_SZ
+default value:: "false"
+
+====PIN Expiration
+When non-zero causes a timestamp to be written when the PIN is changed, and to force a PIN change after the specified number of days.
+
+key:: pin_expiration
+type:: int
+registry key type:: REG_DWORD
+default value:: 0
+
+====Displayed Output Formats
+Output formats available when generating a key.
+
+key:: shown_outs
+type:: list of strings
+registry key type:: REG_MULTI_SZ
+valid options:: "pk", "ssc", "csr", "ca"
+default value:: ["ssc", "csr", "ca"]
+
+====Displayed Certificate Slots
+A list of which certificate slots to show in the UI.
+
+key:: shown_slots
+type:: list of strings
+registry key type:: REG_MULTI_SZ
+valid options:: "9a", "9c", "9d", "9e"
+default value:: ["9a", "9c", "9d", "9e"]
+ 
+====Subject DN
+Subject to use when generating a CSR or self-signed certificate.
+
+key:: subject
+type:: string
+registry key type:: REG_SZ
+default value:: "/CN=%USERNAME%"
