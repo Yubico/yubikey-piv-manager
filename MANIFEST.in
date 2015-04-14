@@ -6,3 +6,4 @@ include ChangeLog
 include scripts/*.1
 include resources/*
 include qt_resources/*
+include doc/*.adoc
