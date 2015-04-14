@@ -29,7 +29,7 @@ When building binaries for Windows or OS X, you will need to include
 yubico-piv-tool executable. Create a subdirectory called "lib" in the release
 directory.
 Download the correct binary release for your architecture from
-http://developers.yubico.com/yubico-piv-tool/Releases/ and extract the 
+https://developers.yubico.com/yubico-piv-tool/Releases/ and extract the 
 .dll/.dylib files and executable to the "lib" directory you created previously.
 
 ==== Windows
