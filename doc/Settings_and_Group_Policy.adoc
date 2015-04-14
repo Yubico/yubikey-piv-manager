@@ -42,6 +42,7 @@ Computer\HKEY_LOCAL_MACHINE\Software\Yubico\YubiKey PIV Manager
 ==== Algorithm
 Which algorithm to use for key pair generation.
 
+[horizontal]
 key:: algorithm
 type:: string
 registry key type:: REG_SZ
@@ -51,6 +52,7 @@ default value:: "RSA2048"
 ==== Card Reader
 String to match against when looking for compatible YubiKey devices.
 
+[horizontal]
 key:: card_reader
 type:: string
 registry key type:: REG_SZ
@@ -59,6 +61,7 @@ default value:: None
 ==== Certreq Template
 Value to use in CertificateTemplate parameter when calling certreq.exe.
 
+[horizontal]
 key:: certreq_template
 type:: string
 registry key type:: REG_SZ
@@ -67,6 +70,7 @@ default value:: None
 ==== Complex PIN/PUKs
 True to require complex PINs and PUKs.
 
+[horizontal]
 key:: complex_pins
 type:: string
 registry key type:: REG_SZ
@@ -75,6 +79,7 @@ default value:: "false"
 ==== Enable Import
 When False, hide the "import from file..." button for certificates.
 
+[horizontal]
 key:: enable_import
 type:: string
 registry key type:: REG_SZ
@@ -83,6 +88,7 @@ default value:: "true"
 ==== PIN as Management Key
 When true, the Management Key is based off of the PIN.
 
+[horizontal]
 key:: pin_as_key
 type:: bool
 registry key type:: REG_SZ
@@ -91,6 +97,7 @@ default value:: "false"
 ==== PIN Expiration
 When non-zero causes a timestamp to be written when the PIN is changed, and to force a PIN change after the specified number of days.
 
+[horizontal]
 key:: pin_expiration
 type:: int
 registry key type:: REG_DWORD
@@ -99,6 +106,7 @@ default value:: 0
 ==== Displayed Output Formats
 Output formats available when generating a key.
 
+[horizontal]
 key:: shown_outs
 type:: list of strings
 registry key type:: REG_MULTI_SZ
@@ -108,6 +116,7 @@ default value:: ["ssc", "csr", "ca"]
 ==== Displayed Certificate Slots
 A list of which certificate slots to show in the UI.
 
+[horizontal]
 key:: shown_slots
 type:: list of strings
 registry key type:: REG_MULTI_SZ
@@ -117,6 +126,7 @@ default value:: ["9a", "9c", "9d", "9e"]
 ==== Subject DN
 Subject to use when generating a CSR or self-signed certificate.
 
+[horizontal]
 key:: subject
 type:: string
 registry key type:: REG_SZ
