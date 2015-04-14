@@ -5,10 +5,10 @@ configured by using the *Manage Device PINs* window of the YubiKey PIV Manager.
 === PIN
 The PIN is used during normal operation to authorize an action such as creating
 a digital signature for any of the loaded certificates. Entering an incorrect
-PIN three times consecutivly will cause the PIN to become blocked, rendering
+PIN three times consecutively will cause the PIN to become blocked, rendering
 the PIV features unusable. The PIN must be at least 4 characters, and can
-contain any characters, thought it is recommended to only use those contained
-in the ASCII character set. There is a limit of 8 bytes for a PIN, which allows
+contain any characters, though it is recommended to only use those contained in
+the ASCII character set. There is a limit of 8 bytes for a PIN, which allows
 for up to 8 ASCII characters. There is a setting in the YubiKey PIV Manager,
 which enforces password complexity rules on your PIN (as well as your PUK). If
 this setting is active, your PIN will need to:
@@ -69,7 +69,7 @@ into account when using the PIN for PIV management, instead of a Management
 Key. The way this feature works, is that a Management Key is still used, but it
 is cryptographically derived from your PIN by the YubiKey PIV Manager, behind
 the scenes. One implication of this is that the Management Key changes whenever
-you change your PIN, and it is therefor crucial that you ONLY change your PIN
+you change your PIN, and it is therefore crucial that you ONLY change your PIN
 using the YubiKey PIN Manager. Changing it using an external tool will render
 the YubiKey PIV Manager unable to derive the Management Key. There is also a
 security aspect to be aware of, and that is that even though the PIN is blocked
@@ -85,7 +85,7 @@ place:
 1. A random 8-byte SALT value is generated and stored on the YubiKey.
 2. The derived Management Key is calculated as PBKDF2(PIN, SALT, 24, 10000).
 
-The PBKDF2 function (described in RFC2898) is run using the PIN (encoded using
+The PBKDF2 function (described in RFC 2898) is run using the PIN (encoded using
 UTF-8) as the password, for 10000 rounds, to produce a 24 byte key, which is
 used as the management key. Whenever the user changes the PIN this process is
 repeated, using a new SALT and the new PIN.
