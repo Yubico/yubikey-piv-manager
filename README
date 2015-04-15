@@ -9,6 +9,8 @@ https://developers.yubico.com/yubikey-piv-manager/Releases/[here].
 For Ubuntu we have a custom PPA with a package for it
 https://launchpad.net/~yubico/+archive/ubuntu/stable[here].
 
+image::screenshot.png[]
+
 === Dependencies
 YubiKey PIV Manager requires PySide, pycrypto and yubico-piv-tool.
 
