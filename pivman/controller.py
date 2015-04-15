@@ -29,7 +29,7 @@ from pivman.piv import PivError, WrongPinError
 from pivman.storage import get_store, settings, SETTINGS
 from pivman.view.utils import get_active_window, get_text
 from pivman import messages as m
-from PySide import QtCore, QtGui, QtNetwork
+from PySide import QtGui, QtNetwork
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from datetime import timedelta
@@ -87,20 +87,6 @@ def derive_key(pin, salt):
 def is_hex_key(string):
     return isinstance(string, basestring) and \
         bool(re.compile(r'[a-fA-F0-9]{48}').match(string))
-
-
-def cert_info_str(getInfo):
-    parts = []
-    dc = getInfo(QtCore.QByteArray.fromRawData('DC'))
-    if dc:
-        parts.append('DC=' + dc)
-    ou = getInfo(QtNetwork.QSslCertificate.OrganizationalUnitName)
-    if ou:
-        parts.append('OU=' + ou)
-    cn = getInfo(QtNetwork.QSslCertificate.CommonName)
-    if cn:
-        parts.append('CN=' + cn)
-    return ', '.join(parts)
 
 
 class Controller(object):
