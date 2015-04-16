@@ -47,10 +47,6 @@ class ManageDialog(Dialog):
         self._controller.on_lost(self.accept)
         self._controller.use(self.refresh)
 
-    def showEvent(self, event):
-        self.move(self.x() + 15, self.y() + 15)
-        event.accept()
-
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
         layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)

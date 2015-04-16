@@ -298,10 +298,6 @@ class CertDialog(Dialog):
         controller.use(self._build_ui)
         controller.on_lost(self.accept)
 
-    def showEvent(self, event):
-        self.move(self.x() + 15, self.y() + 15)
-        event.accept()
-
     def _build_ui(self, controller):
         layout = QtGui.QVBoxLayout(self)
         # This unfortunately causes the window to resize when switching tabs.
