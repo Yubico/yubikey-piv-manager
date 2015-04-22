@@ -38,7 +38,7 @@ import time
 import struct
 
 
-YKPIV_OBJ_PIVTOOL_DATA = 0x5fff00
+YKPIV_OBJ_PIVMAN_DATA = 0x5fff00
 
 TAG_PIVMAN_DATA = 0x80  # Wrapper for pivman data
 TAG_FLAGS_1 = 0x81  # Flags 1
@@ -96,13 +96,13 @@ class Controller(object):
         self._attributes = get_store(key.chuid)
         self._authenticated = False
         try:
-            self._raw_data = self._key.fetch_object(YKPIV_OBJ_PIVTOOL_DATA)
+            self._raw_data = self._key.fetch_object(YKPIV_OBJ_PIVMAN_DATA)
             # TODO: Remove in a few versions...
             if self._raw_data[0] != chr(TAG_PIVMAN_DATA):
                 self._data = {}
                 self._data[TAG_PIN_TIMESTAMP] = self._raw_data
                 self._data[TAG_SALT] = self._key.fetch_object(
-                    YKPIV_OBJ_PIVTOOL_DATA + 1)
+                    YKPIV_OBJ_PIVMAN_DATA + 1)
             else:
                 # END legacy stuff
                 self._data = parse_pivtool_data(self._raw_data)
@@ -121,7 +121,7 @@ class Controller(object):
         raw_data = serialize_pivtool_data(self._data)
         if raw_data != self._raw_data:
             self.ensure_authenticated()
-            self._key.save_object(YKPIV_OBJ_PIVTOOL_DATA, raw_data)
+            self._key.save_object(YKPIV_OBJ_PIVMAN_DATA, raw_data)
             self._raw_data = raw_data
 
     @property
