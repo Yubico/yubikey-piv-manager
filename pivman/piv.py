@@ -107,8 +107,8 @@ class YkPiv(object):
         self._cmd = YkPivCmd(verbosity=verbosity, reader=reader)
 
         self._state = POINTER(ykpiv_state)()
-        if reader is None:
-            reader = chr(0)
+        if not reader:
+            reader = 'Yubikey'
 
         self._chuid = None
         self._pin_blocked = False

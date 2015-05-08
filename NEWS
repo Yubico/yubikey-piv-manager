@@ -1,3 +1,6 @@
+* Verison 1.0.2 (unreleased)
+ ** Fix bug preventing device from being found with multiple card readers attached.
+
 * Version 1.0.1 (released 2015-04-16)
  ** Packaging improvements release, no new features.
 
