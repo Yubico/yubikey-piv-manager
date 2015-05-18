@@ -1,5 +1,6 @@
-* Verison 1.0.2 (unreleased)
+* Verison 1.0.2 (released 2015-05-18)
  ** Fix bug preventing device from being found with multiple card readers attached.
+ ** Don't save window position as it causes problems with multi-monitor setups.
 
 * Version 1.0.1 (released 2015-04-16)
  ** Packaging improvements release, no new features.

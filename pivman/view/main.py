@@ -138,10 +138,6 @@ class MainWindow(QtGui.QMainWindow):
 
         self.layout().setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
-        pos = self._settings.get('pos')
-        if pos:
-            self.move(pos)
-
         self._build_menu_bar()
 
     def _build_menu_bar(self):
@@ -162,7 +158,6 @@ class MainWindow(QtGui.QMainWindow):
         event.accept()
 
     def closeEvent(self, event):
-        self._settings['pos'] = self.pos()
         event.accept()
 
     def customEvent(self, event):
