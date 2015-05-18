@@ -6,7 +6,7 @@
 Name "YubiKey PIV Manager"
 
 ; The file to write
-OutFile "../dist/yubikey-piv-manager-${PIVMAN_VERSION}.exe"
+OutFile "../dist/yubikey-piv-manager-${PIVMAN_VERSION}-win.exe"
 
 ; The default installation directory
 InstallDir "$PROGRAMFILES\Yubico\YubiKey PIV Manager"

@@ -8,7 +8,6 @@ import os
 import sys
 import re
 from glob import glob
-from getpass import getpass
 
 NAME = "YubiKey PIV Manager"
 
@@ -112,12 +111,8 @@ exe = EXE(pyz,
 pfx_pass = ""
 
 if WIN:
-    if not os.path.isfile("yubico.pfx"):
-        print "yubico.pfx not found, not signing executable!"
-    else:
-        pfx_pass = getpass('Enter password for PFX file: ')
-        os.system("signtool.exe sign /f yubico.pfx /p %s /t http://timestamp.verisign.com/scripts/timstamp.dll \"%s\"" %
-                 (pfx_pass, exe.name))
+        os.system("signtool.exe sign /t http://timestamp.verisign.com/scripts/timstamp.dll \"%s\"" %
+                 (exe.name))
 
 coll = COLLECT(exe,
                a.binaries,
@@ -141,6 +136,6 @@ if OSX:
 if WIN:
     os.system('makensis.exe -D"PIVMAN_VERSION=%s" resources/pivman.nsi' % ver_str)
     installer = "dist/yubikey-piv-manager-%s-win.exe" % ver_str
-    os.system("signtool.exe sign /f yubico.pfx /p %s /t http://timestamp.verisign.com/scripts/timstamp.dll \"%s\"" %
-             (pfx_pass, installer))
+    os.system("signtool.exe sign /t http://timestamp.verisign.com/scripts/timstamp.dll \"%s\"" %
+             (installer))
     print "Installer created: %s" % installer
