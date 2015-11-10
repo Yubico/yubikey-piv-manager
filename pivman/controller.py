@@ -129,6 +129,10 @@ class Controller(object):
         return self._key.version
 
     @property
+    def version_tuple(self):
+        return tuple(map(int, self.version.split('.')))
+
+    @property
     def authenticated(self):
         return self._authenticated
 
@@ -311,13 +315,14 @@ class Controller(object):
         self._key.set_chuid()
         self._attributes.rename(self._key.chuid)
 
-    def generate_key(self, slot, algorithm='RSA2048'):
+    def generate_key(self, slot, algorithm='RSA2048', pin_policy=None,
+                     touch_policy=False):
         if not self.authenticated:
             raise ValueError('Not authenticated')
 
         if slot in self.certs:
             self.delete_certificate(slot)
-        return self._key.generate(slot, algorithm)
+        return self._key.generate(slot, algorithm, pin_policy, touch_policy)
 
     def create_csr(self, slot, pin, pubkey, subject):
         self.verify_pin(pin)
@@ -371,10 +376,12 @@ class Controller(object):
             return None
         return QtNetwork.QSslCertificate.fromData(data, QtNetwork.QSsl.Der)[0]
 
-    def import_key(self, data, slot, frmt='PEM', password=None):
+    def import_key(self, data, slot, frmt='PEM', password=None, pin_policy=None,
+                   touch_policy=False):
         if not self.authenticated:
             raise ValueError('Not authenticated')
-        self._key.import_key(data, slot, frmt, password)
+        self._key.import_key(data, slot, frmt, password, pin_policy,
+                             touch_policy)
 
     def import_certificate(self, cert, slot, frmt='PEM', password=None):
         if not self.authenticated:

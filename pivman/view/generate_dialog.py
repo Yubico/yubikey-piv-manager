@@ -28,7 +28,8 @@ from PySide import QtGui, QtCore
 from pivman import messages as m
 from pivman.utils import has_ca, request_cert_from_ca
 from pivman.storage import settings, SETTINGS
-from pivman.view.utils import Dialog, SUBJECT_VALIDATOR
+from pivman.view.usage_policy_dialog import UsagePolicyDialog
+from pivman.view.utils import SUBJECT_VALIDATOR
 
 
 def save_file_as(parent, title, fn_filter):
@@ -39,14 +40,11 @@ def needs_subject(forms):
     return bool({'csr', 'ssc', 'ca'}.intersection(forms))
 
 
-class GenerateKeyDialog(Dialog):
+class GenerateKeyDialog(UsagePolicyDialog):
 
     def __init__(self, controller, slot, parent=None):
-        super(GenerateKeyDialog, self).__init__(parent)
-
-        self._controller = controller
         self._slot = slot
-        self._build_ui()
+        super(GenerateKeyDialog, self).__init__(controller, parent)
 
     def _build_ui(self):
         self.setWindowTitle(m.generate_key)
@@ -59,6 +57,7 @@ class GenerateKeyDialog(Dialog):
         layout.addWidget(warning)
 
         self._build_algorithms(layout)
+        self._build_usage_policy(layout)
         self._build_output(layout)
 
     def _build_algorithms(self, layout):
@@ -69,9 +68,13 @@ class GenerateKeyDialog(Dialog):
         self._alg_rsa_2048.setProperty('value', 'RSA2048')
         self._alg_ecc_p256 = QtGui.QRadioButton(m.alg_ecc_p256)
         self._alg_ecc_p256.setProperty('value', 'ECCP256')
+        self._alg_ecc_p384 = QtGui.QRadioButton(m.alg_ecc_p384)
+        self._alg_ecc_p384.setProperty('value', 'ECCP384')
         self._alg_type.addButton(self._alg_rsa_1024)
         self._alg_type.addButton(self._alg_rsa_2048)
         self._alg_type.addButton(self._alg_ecc_p256)
+        if self._controller.version_tuple >= (4, 0, 0):
+            self._alg_type.addButton(self._alg_ecc_p384)
         algo = settings[SETTINGS.ALGORITHM]
         if settings.is_locked(SETTINGS.ALGORITHM):
             layout.addWidget(QtGui.QLabel(m.algorithm_1 % algo))
@@ -201,7 +204,23 @@ class GenerateKeyDialog(Dialog):
                     self._generate_callback, True)
 
     def _do_generate(self, pin=None, out_fn=None):
-        data = self._controller.generate_key(self._slot, self.algorithm)
+        data = self._controller.generate_key(self._slot, self.algorithm,
+                                             self.pin_policy, self.touch_policy)
+        return (self._do_generate2, data, pin, out_fn)
+
+    def _generate_callback(self, result):
+        if isinstance(result, Exception):
+            QtGui.QMessageBox.warning(self, m.error, str(result))
+        else:
+            busy_message = m.generating_key
+            if self.touch_policy and self.out_format in ['ssc', 'csr', 'ca']:
+                QtGui.QMessageBox.information(self, m.touch_needed,
+                                              m.touch_needed_desc)
+                busy_message = m.touch_prompt
+            worker = QtCore.QCoreApplication.instance().worker
+            worker.post(busy_message, result, self._generate_callback2, True)
+
+    def _do_generate2(self, data, pin, out_fn):
         subject = self._subject.text()
         if self.out_format in ['csr', 'ca']:
             data = self._controller.create_csr(self._slot, pin, data, subject)
@@ -218,12 +237,14 @@ class GenerateKeyDialog(Dialog):
                 cert = request_cert_from_ca(data, self._cert_tmpl.text())
             self._controller.import_certificate(cert, self._slot)
 
-    def _generate_callback(self, result):
+    def _generate_callback2(self, result):
         self.accept()
         if isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
             settings[SETTINGS.ALGORITHM] = self.algorithm
+            if self._controller.version_tuple >= (4, 0, 0):
+                settings[SETTINGS.TOUCH_POLICY] = self.touch_policy
             settings[SETTINGS.OUT_TYPE] = self.out_format
             if self.out_format != 'pk' and not \
                     settings.is_locked(SETTINGS.SUBJECT):

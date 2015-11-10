@@ -70,6 +70,7 @@ YKPIV_ALGO_3DES = 0x03
 YKPIV_ALGO_RSA1024 = 0x06
 YKPIV_ALGO_RSA2048 = 0x07
 YKPIV_ALGO_ECCP256 = 0x11
+YKPIV_ALGO_ECCP384 = 0x14
 
 ykpiv_state = type('ykpiv_state', (Structure,), {})
 ykpiv_rc = c_int

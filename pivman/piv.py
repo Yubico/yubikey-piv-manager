@@ -300,10 +300,10 @@ class YkPiv(object):
         c_data = (c_ubyte * len(data)).from_buffer_copy(data)
         check(ykpiv_save_object(self._state, object_id, c_data, len(data)))
 
-    def generate(self, slot, algorithm):
+    def generate(self, slot, algorithm, pin_policy, touch_policy):
         try:
             check(ykpiv_disconnect(self._state))
-            return self._cmd.generate(slot, algorithm)
+            return self._cmd.generate(slot, algorithm, pin_policy, touch_policy)
         finally:
             self._reset()
 
@@ -329,10 +329,12 @@ class YkPiv(object):
             self._reset()
             self._read_status()
 
-    def import_key(self, cert_pem, slot, frmt='PEM', password=None):
+    def import_key(self, cert_pem, slot, frmt, password, pin_policy,
+                   touch_policy):
         try:
             check(ykpiv_disconnect(self._state))
-            return self._cmd.import_key(cert_pem, slot, frmt, password)
+            return self._cmd.import_key(cert_pem, slot, frmt, password,
+                                        pin_policy, touch_policy)
         finally:
             self._reset()
 

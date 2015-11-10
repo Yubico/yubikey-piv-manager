@@ -30,6 +30,7 @@ from pivman.piv import PivError, DeviceGoneError
 from pivman.storage import settings, SETTINGS
 from pivman.view.utils import Dialog, get_text
 from pivman.view.generate_dialog import GenerateKeyDialog
+from pivman.view.usage_policy_dialog import UsagePolicyDialog
 from datetime import datetime
 from functools import partial
 
@@ -83,21 +84,23 @@ def import_file(controller, slot, fn):
     f_type, f_format, needs_password = detect_type(data, fn)
 
     if f_type == 2 and f_format == 'der':
-        return None, None  # We don't know what type of key this is.
+        return None, None, False  # We don't know what type of key this is.
 
-    def func(password=None):
+    def func(password=None, pin_policy=None, touch_policy=False):
         if f_format == 'pfx':
-            controller.import_key(data, slot, 'PKCS12', password)
+            controller.import_key(data, slot, 'PKCS12', password, pin_policy,
+                                  touch_policy)
             controller.import_certificate(data, slot, 'PKCS12', password)
         elif f_format == 'pem':
             if f_type == 1:
                 controller.import_certificate(data, slot, 'PEM', password)
             elif f_type == 2:
-                controller.import_key(data, slot, 'PEM', password)
+                controller.import_key(data, slot, 'PEM', password, pin_policy,
+                                      touch_policy)
         else:
             controller.import_certificate(data, slot, 'DER')
 
-    return func, needs_password
+    return func, needs_password, f_type != 1
 
 
 class CertPanel(QtGui.QWidget):
@@ -250,17 +253,24 @@ class CertWidget(QtGui.QWidget):
         if not fn:
             return
 
-        func, needs_password = import_file(controller, self._slot, fn)
+        func, needs_password, is_key = import_file(controller, self._slot, fn)
         if func is None:
             QtGui.QMessageBox.warning(self, m.error, m.unsupported_file)
             return
+        if is_key and controller.version_tuple >= (4, 0, 0):
+            dialog = UsagePolicyDialog(controller, self)
+            if dialog.exec_():
+                func = partial(func, pin_policy=dialog.pin_policy,
+                               touch_policy=dialog.touch_policy)
+                settings[SETTINGS.TOUCH_POLICY] = dialog.touch_policy
+
         if needs_password:
             password, status = get_text(
                 self, m.enter_file_password, m.password_label,
                 QtGui.QLineEdit.Password)
             if not status:
                 return
-            func = (func, password)
+            func = partial(func, password=password)
 
         try:
             controller.ensure_authenticated()

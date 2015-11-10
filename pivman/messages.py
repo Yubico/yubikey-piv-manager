@@ -233,6 +233,7 @@ algorithm = "Algorithm"
 alg_rsa_1024 = "RSA (1024 bits)"
 alg_rsa_2048 = "RSA (2048 bits)"
 alg_ecc_p256 = "ECC (P-256)"
+alg_ecc_p384 = "ECC (P-384)"
 algorithm_1 = "Algorithm: %s"
 output = "Output"
 out_pk = "Public key"
@@ -243,6 +244,20 @@ no_output = "Your configuration does not allow any valid output format."
 invalid_subject = "Invalid subject"
 invalid_subject_desc = """The subject must be written as:
 /CN=host.example.com/OU=test/O=example.com"""
+usage_policy = "Usage policy"
+pin_policy = "Require PIN"
+pin_policy_1 = "Require PIN: %s"
+pin_policy_default = "Slot default"
+pin_policy_never = "Never"
+pin_policy_once = "Once"
+pin_policy_always = "Always"
+touch_policy = "Require button touch"
+touch_needed = "User action needed"
+touch_needed_desc = "You have chosen to require user interaction to use this " \
+    "certificate. Once you close this dialog, the light on your YubiKey " \
+    "will start slowly blinking. At that point please touch the button on " \
+    "your YubiKey."
+touch_prompt = "Touch the button now..."
 
 
 def _translate(qt):

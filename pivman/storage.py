@@ -66,9 +66,11 @@ class SETTINGS:
     OUT_TYPE = Setting('out_type', 'ca' if win else 'ssc', str)
     PIN_AS_KEY = Setting('pin_as_key', True, bool)
     PIN_EXPIRATION = Setting('pin_expiration', 0, int)
+    PIN_POLICY = Setting('pin_policy', None, str)
     SHOWN_OUT_FORMS = Setting('shown_outs', default_outs(), list)
     SHOWN_SLOTS = Setting('shown_slots', sorted(CERT_SLOTS.keys()), list)
     SUBJECT = Setting('subject', '/CN=%s' % getuser(), str)
+    TOUCH_POLICY = Setting('touch_policy', False, bool)
 
 
 def get_store(group):
