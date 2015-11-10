@@ -26,26 +26,13 @@
 
 from PySide import QtGui
 from PySide import QtCore
-from pivman import messages as m, __version__ as version
-from pivman.piv import libversion as ykpiv_version
-from pivman.storage import get_store
+from pivman import messages as m
 from pivman.watcher import ControllerWatcher
 from pivman.view.utils import IMPORTANT
 from pivman.view.init_dialog import InitDialog
 from pivman.view.set_pin_dialog import SetPinDialog
-from pivman.view.settings_dialog import SettingsDialog
 from pivman.view.manage import ManageDialog
 from pivman.view.cert import CertDialog
-
-
-ABOUT_TEXT = """
-<h2>%s</h2>
-%s<br>
-%s
-<h4>%s</h4>
-%%s
-<br><br>
-""" % (m.app_name, m.copyright, m.version_1, m.libraries)
 
 
 class MainWidget(QtGui.QWidget):
@@ -126,52 +113,3 @@ class MainWidget(QtGui.QWidget):
                 self.refresh()
             else:
                 QtCore.QCoreApplication.instance().quit()
-
-
-class MainWindow(QtGui.QMainWindow):
-
-    def __init__(self):
-        super(MainWindow, self).__init__()
-
-        self._widget = None
-        self._settings = get_store('window')
-
-        self.layout().setSizeConstraint(QtGui.QLayout.SetFixedSize)
-
-        self._build_menu_bar()
-
-    def _build_menu_bar(self):
-        file_menu = self.menuBar().addMenu(m.menu_file)
-        settings_action = QtGui.QAction(m.action_settings, file_menu)
-        settings_action.triggered.connect(self._show_settings)
-        file_menu.addAction(settings_action)
-
-        help_menu = self.menuBar().addMenu(m.menu_help)
-        about_action = QtGui.QAction(m.action_about, help_menu)
-        about_action.triggered.connect(self._about)
-        help_menu.addAction(about_action)
-
-    def showEvent(self, event):
-        if not self._widget:
-            self._widget = MainWidget()
-            self.setCentralWidget(self._widget)
-        event.accept()
-
-    def closeEvent(self, event):
-        event.accept()
-
-    def customEvent(self, event):
-        event.callback()
-        event.accept()
-
-    def _libversions(self):
-        return 'ykpiv: %s' % ykpiv_version
-
-    def _about(self):
-        QtGui.QMessageBox.about(self, m.about_1 % m.app_name, ABOUT_TEXT %
-                                (version, self._libversions()))
-
-    def _show_settings(self):
-        dialog = SettingsDialog(self)
-        if dialog.exec_():
-            self._widget.refresh()

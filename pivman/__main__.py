@@ -24,56 +24,39 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-import os
 import sys
-import time
 import argparse
+import signal
 import pivman.qt_resources
 from PySide import QtGui, QtCore
-from pivman.view.main import MainWindow
-from pivman.worker import Worker
+from pivman.view.main import MainWidget
 from pivman import __version__ as version, messages as m
-from pivman.piv import YkPiv
+from pivman.piv import YkPiv, libversion as ykpiv_version
 from pivman.controller import Controller
 from pivman.view.set_pin_dialog import SetPinDialog
-
-if getattr(sys, 'frozen', False):
-    # we are running in a PyInstaller bundle
-    basedir = sys._MEIPASS
-else:
-    # we are running in a normal Python environment
-    basedir = os.path.dirname(__file__)
-
-# Font fixes for OSX
-if sys.platform == 'darwin':
-    from platform import mac_ver
-    mac_version = tuple(mac_ver()[0].split('.'))
-    if (10, 9) <= mac_version < (10, 10):  # Mavericks
-        QtGui.QFont.insertSubstitution('.Lucida Grande UI', 'Lucida Grande')
-    if (10, 10) <= mac_version:  # Yosemite
-        QtGui.QFont.insertSubstitution('.Helvetica Neue DeskInterface',
-                                       'Helvetica Neue')
+from pivman.view.settings_dialog import SettingsDialog
+from pivman.yubicommon import qt
 
 
-class PivtoolApplication(QtGui.QApplication):
+ABOUT_TEXT = """
+<h2>%s</h2>
+%s<br>
+%s
+<h4>%s</h4>
+%%s
+<br><br>
+""" % (m.app_name, m.copyright, m.version_1, m.libraries)
+
+
+class PivtoolApplication(qt.Application):
 
     def __init__(self, argv):
-        super(PivtoolApplication, self).__init__(argv)
-
-        self._set_basedir()
-
-        m._translate(self)
+        super(PivtoolApplication, self).__init__(m)
 
         QtCore.QCoreApplication.setOrganizationName(m.organization)
         QtCore.QCoreApplication.setOrganizationDomain(m.domain)
         QtCore.QCoreApplication.setApplicationName(m.app_name)
 
-        self.window = self._create_window()
-        self.worker = Worker(self.window)
-
-        QtCore.QTimer.singleShot(0, self.start)
-
-    def start(self):
         args = self._parse_args()
 
         if args.check_only:
@@ -81,8 +64,8 @@ class PivtoolApplication(QtGui.QApplication):
             self.quit()
             return
 
-        self.window.show()
-        self.window.raise_()
+        self._build_menu_bar()
+        self._init_window()
 
     def check_pin(self):
         try:
@@ -103,25 +86,43 @@ class PivtoolApplication(QtGui.QApplication):
         parser.add_argument('-c', '--check-only', action='store_true')
         return parser.parse_args()
 
-    def _set_basedir(self):
-        if getattr(sys, 'frozen', False):
-            # we are running in a PyInstaller bundle
-            self.basedir = sys._MEIPASS
-        else:
-            # we are running in a normal Python environment
-            self.basedir = os.path.dirname(__file__)
+    def _init_window(self):
+        self.window.setWindowTitle(m.win_title_1 % version)
+        self.window.setWindowIcon(QtGui.QIcon(':/pivman.png'))
+        self.window.layout().setSizeConstraint(QtGui.QLayout.SetFixedSize)
+        self.window.setCentralWidget(MainWidget())
+        self.window.show()
+        self.window.raise_()
 
-    def _create_window(self):
-        window = MainWindow()
-        window.setWindowTitle(m.win_title_1 % version)
-        window.setWindowIcon(QtGui.QIcon(':/pivman.png'))
-        return window
+    def _build_menu_bar(self):
+        file_menu = self.window.menuBar().addMenu(m.menu_file)
+        settings_action = QtGui.QAction(m.action_settings, file_menu)
+        settings_action.triggered.connect(self._show_settings)
+        file_menu.addAction(settings_action)
+
+        help_menu = self.window.menuBar().addMenu(m.menu_help)
+        about_action = QtGui.QAction(m.action_about, help_menu)
+        about_action.triggered.connect(self._about)
+        help_menu.addAction(about_action)
+
+    def _libversions(self):
+        return 'ykpiv: %s' % ykpiv_version
+
+    def _about(self):
+        QtGui.QMessageBox.about(self.window, m.about_1 % m.app_name,
+                                ABOUT_TEXT % (version, self._libversions()))
+
+    def _show_settings(self):
+        dialog = SettingsDialog(self.window)
+        if dialog.exec_():
+            self.window.centralWidget().refresh()
 
 
 def main():
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     app = PivtoolApplication(sys.argv)
-    status = app.exec_()
-    app.worker.thread().quit()
-    app.deleteLater()
-    time.sleep(0.01)  # Without this the process sometimes stalls.
-    sys.exit(status)
+    sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()

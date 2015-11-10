@@ -29,10 +29,11 @@ from pivman import messages as m
 from pivman.piv import WrongPinError
 from pivman.storage import settings, SETTINGS
 from pivman.utils import complexity_check
-from pivman.view.utils import Dialog, pin_field
+from pivman.view.utils import pin_field
+from pivman.yubicommon import qt
 
 
-class SetPinDialog(Dialog):
+class SetPinDialog(qt.Dialog):
     window_title = m.change_pin
     label_current = m.current_pin_label
     label_new = m.new_pin_label

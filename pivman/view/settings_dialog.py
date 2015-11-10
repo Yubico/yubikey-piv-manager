@@ -26,11 +26,11 @@
 
 from PySide import QtGui
 from pivman import messages as m
-from pivman.view.utils import Dialog
+from pivman.yubicommon import qt
 from pivman.storage import settings, SETTINGS
 
 
-class SettingsDialog(Dialog):
+class SettingsDialog(qt.Dialog):
 
     def __init__(self, parent=None):
         super(SettingsDialog, self).__init__(parent)

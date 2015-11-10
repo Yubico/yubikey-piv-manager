@@ -26,7 +26,7 @@
 
 from ctypes import (Structure, POINTER, c_int, c_ubyte, c_char_p, c_long,
                     c_ulong, c_size_t)
-from pivman.libloader import load_library
+from pivman.yubicommon.ctypes import load_library
 
 _lib = load_library('ykpiv', '1')
 

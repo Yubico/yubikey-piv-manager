@@ -27,9 +27,10 @@
 from PySide import QtGui, QtCore
 from pivman import messages as m
 from pivman.piv import DeviceGoneError, PivError, KEY_LEN
-from pivman.view.utils import Dialog, KEY_VALIDATOR, pin_field
+from pivman.view.utils import KEY_VALIDATOR, pin_field
 from pivman.utils import complexity_check
 from pivman.storage import settings, SETTINGS
+from pivman.yubicommon import qt
 import os
 
 
@@ -201,7 +202,7 @@ class AdvancedPanel(QtGui.QWidget):
         return puk
 
 
-class InitDialog(Dialog):
+class InitDialog(qt.Dialog):
 
     def __init__(self, controller, parent=None):
         super(InitDialog, self).__init__(parent)

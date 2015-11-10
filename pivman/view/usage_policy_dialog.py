@@ -27,10 +27,10 @@
 from PySide import QtGui
 from pivman import messages as m
 from pivman.storage import settings, SETTINGS
-from pivman.view.utils import Dialog
+from pivman.yubicommon import qt
 
 
-class UsagePolicyDialog(Dialog):
+class UsagePolicyDialog(qt.Dialog):
 
     def __init__(self, controller, parent=None):
         super(UsagePolicyDialog, self).__init__(parent)

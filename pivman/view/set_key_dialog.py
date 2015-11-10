@@ -27,11 +27,12 @@
 from PySide import QtGui, QtCore
 from pivman import messages as m
 from pivman.piv import DeviceGoneError, PivError, KEY_LEN
-from pivman.view.utils import Dialog, KEY_VALIDATOR
+from pivman.view.utils import KEY_VALIDATOR
+from pivman.yubicommon import qt
 import os
 
 
-class SetKeyDialog(Dialog):
+class SetKeyDialog(qt.Dialog):
 
     def __init__(self, controller, parent=None):
         super(SetKeyDialog, self).__init__(parent)

@@ -24,24 +24,14 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from setuptools import setup
-from release import release
-from qt_resources import qt_resources, qt_sdist
-import re
+from pivman.yubicommon.setup.exe import executable
+from pivman.yubicommon.setup.qt import qt_resources
+from pivman.yubicommon.setup import setup
 
-VERSION_PATTERN = re.compile(r"(?m)^__version__\s*=\s*['\"](.+)['\"]$")
-
-
-def get_version():
-    """Return the current version as defined by pivman/__init__.py."""
-
-    with open('pivman/__init__.py', 'r') as f:
-        match = VERSION_PATTERN.search(f.read())
-        return match.group(1)
 
 setup(
     name='yubikey-piv-manager',
-    version=get_version(),
+    long_name='YubiKey PIV Manager',
     author='Dain Nilsson',
     author_email='dain@yubico.com',
     maintainer='Yubico Open Source Maintainers',
@@ -49,14 +39,14 @@ setup(
     url='https://github.com/Yubico/yubikey-piv-manager',
     description='Tool for configuring your PIV-enabled YubiKey.',
     license='GPLv3+',
-    packages=['pivman', 'pivman.view'],
-    scripts=['scripts/pivman'],
-    setup_requires=['nose>=1.0'],
+    entry_points={
+        'gui_scripts': ['pivman=pivman.__main__:main']
+    },
     install_requires=['PySide', 'pycrypto'],
+    yc_requires=['ctypes', 'qt'],
     test_suite='nose.collector',
     tests_require=[''],
-    cmdclass={'release': release, 'qt_resources': qt_resources,
-              'sdist': qt_sdist},
+    cmdclass={'executable': executable, 'qt_resources': qt_resources('pivman')},
     classifiers=[
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
         'Operating System :: OS Independent',
