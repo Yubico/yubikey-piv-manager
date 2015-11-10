@@ -100,6 +100,10 @@ class YkPivCmd(object):
         while new_args:
             full_args = set_arg(full_args, new_args.pop(0), new_args.pop(0))
 
+        if '-k' in full_args:  # Workaround for passing key in 1.1.0
+            i = full_args.index('-k')
+            full_args = full_args[:i] + ['-k' + full_args[i+1]] \
+                + full_args[i+2:]
         p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                              startupinfo=startupinfo)

@@ -116,6 +116,7 @@ class YkPiv(object):
         self._reader = reader
         self._certs = {}
 
+        check(ykpiv_init(byref(self._state), self._verbosity))
         self._connect()
         self._read_status()
 
@@ -126,7 +127,6 @@ class YkPiv(object):
                 pass  # Not autheniticated, perhaps?
 
     def _connect(self):
-        check(ykpiv_init(byref(self._state), self._verbosity))
         check(ykpiv_connect(self._state, self._reader))
 
         self._read_version()
@@ -134,6 +134,7 @@ class YkPiv(object):
 
     def _read_status(self):
         try:
+            check(ykpiv_disconnect(self._state))
             data = self._cmd.run('-a', 'status')
             lines = data.splitlines()
             chunk = []
@@ -175,7 +176,6 @@ class YkPiv(object):
         check(ykpiv_done(self._state))
 
     def _reset(self):
-        self.__del__()
         self._connect()
         args = self._cmd._base_args
         if '-P' in args:
@@ -201,6 +201,7 @@ class YkPiv(object):
 
     def set_chuid(self):
         try:
+            check(ykpiv_disconnect(self._state))
             self._cmd.run('-a', 'set-chuid')
         finally:
             self._reset()
@@ -244,6 +245,7 @@ class YkPiv(object):
         if len(pin) > 8:
             raise ValueError(m.pin_too_long)
         try:
+            check(ykpiv_disconnect(self._state))
             self._cmd.change_pin(pin)
         finally:
             self._reset()
@@ -256,6 +258,7 @@ class YkPiv(object):
         if isinstance(puk, unicode):
             puk = puk.encode('utf8')
         try:
+            check(ykpiv_disconnect(self._state))
             self._cmd.reset_pin(puk, new_pin)
         except ValueError as e:
             wrap_puk_error(e)
@@ -272,6 +275,7 @@ class YkPiv(object):
             raise ValueError(m.puk_too_long)
 
         try:
+            check(ykpiv_disconnect(self._state))
             self._cmd.change_puk(puk, new_puk)
         except ValueError as e:
             wrap_puk_error(e)
@@ -280,6 +284,7 @@ class YkPiv(object):
 
     def reset_device(self):
         try:
+            check(ykpiv_disconnect(self._state))
             self._cmd.run('-a', 'reset')
         finally:
             del self._cmd
@@ -297,24 +302,28 @@ class YkPiv(object):
 
     def generate(self, slot, algorithm):
         try:
+            check(ykpiv_disconnect(self._state))
             return self._cmd.generate(slot, algorithm)
         finally:
             self._reset()
 
     def create_csr(self, subject, pubkey_pem, slot):
         try:
+            check(ykpiv_disconnect(self._state))
             return self._cmd.create_csr(subject, pubkey_pem, slot)
         finally:
             self._reset()
 
     def create_selfsigned_cert(self, subject, pubkey_pem, slot):
         try:
+            check(ykpiv_disconnect(self._state))
             return self._cmd.create_ssc(subject, pubkey_pem, slot)
         finally:
             self._reset()
 
     def import_cert(self, cert_pem, slot, frmt='PEM', password=None):
         try:
+            check(ykpiv_disconnect(self._state))
             return self._cmd.import_cert(cert_pem, slot, frmt, password)
         finally:
             self._reset()
@@ -322,6 +331,7 @@ class YkPiv(object):
 
     def import_key(self, cert_pem, slot, frmt='PEM', password=None):
         try:
+            check(ykpiv_disconnect(self._state))
             return self._cmd.import_key(cert_pem, slot, frmt, password)
         finally:
             self._reset()
@@ -350,6 +360,7 @@ class YkPiv(object):
             raise ValueError('No certificate loaded in slot: %s' % slot)
 
         try:
+            check(ykpiv_disconnect(self._state))
             self._cmd.delete_cert(slot)
             del self._certs[slot]
         finally:
