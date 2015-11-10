@@ -45,7 +45,7 @@ Which algorithm to use for key pair generation.
 key:: algorithm
 type:: string
 registry key type:: REG_SZ
-valid options:: "RSA1024", "RSA2048", "ECC256"
+valid options:: "RSA1024", "RSA2048", "ECC256", "ECC384"
 default value:: "RSA2048"
 
 ==== Card Reader
@@ -121,3 +121,12 @@ key:: subject
 type:: string
 registry key type:: REG_SZ
 default value:: "/CN=%USERNAME%"
+
+==== Touch Policy
+When enabled, the YubiKey will require its button to be touched to perform any
+action with the private key of a slot.
+
+key:: touch_policy
+type:: bool
+registry key type:: REG_SZ
+default value:: "false"
