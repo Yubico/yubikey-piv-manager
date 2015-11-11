@@ -89,12 +89,23 @@ registry key type:: REG_SZ
 default value:: "false"
 
 ==== PIN Expiration
-When non-zero causes a timestamp to be written when the PIN is changed, and to force a PIN change after the specified number of days.
+When non-zero causes a timestamp to be written when the PIN is changed, and to
+force a PIN change after the specified number of days.
 
 key:: pin_expiration
 type:: int
 registry key type:: REG_DWORD
 default value:: 0
+
+==== PIN Requirement Policy
+When set to a value other than "default", override the PIV standard for when
+the PIN is required for using a particular slot.
+
+key:: pin_policy
+type:: string
+registry key type:: REG_SZ
+valid options:: "default" "never", "once", "always"
+default value:: "default"
 
 ==== Displayed Output Formats
 Output formats available when generating a key.

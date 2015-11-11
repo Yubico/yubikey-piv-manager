@@ -314,6 +314,9 @@ class Controller(object):
         if not self.authenticated:
             raise ValueError('Not authenticated')
 
+        if pin_policy == 'default':
+            pin_policy = None
+
         if slot in self.certs:
             self.delete_certificate(slot)
         return self._key.generate(slot, algorithm, pin_policy, touch_policy)
@@ -374,6 +377,10 @@ class Controller(object):
                    touch_policy=False):
         if not self.authenticated:
             raise ValueError('Not authenticated')
+
+        if pin_policy == 'default':
+            pin_policy = None
+
         self._key.import_key(data, slot, frmt, password, pin_policy,
                              touch_policy)
 
