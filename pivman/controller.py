@@ -26,7 +26,7 @@
 
 from pivman.utils import test, der_read
 from pivman.piv import PivError, WrongPinError
-from pivman.storage import get_store, settings, SETTINGS
+from pivman.storage import settings, SETTINGS
 from pivman.view.utils import get_active_window, get_text
 from pivman import messages as m
 from PySide import QtGui, QtNetwork
@@ -93,7 +93,6 @@ class Controller(object):
 
     def __init__(self, key):
         self._key = key
-        self._attributes = get_store(key.chuid)
         self._authenticated = False
         try:
             self._raw_data = self._key.fetch_object(YKPIV_OBJ_PIVMAN_DATA)
@@ -112,10 +111,6 @@ class Controller(object):
 
     def poll(self):
         return test(self._key._read_version)
-
-    @property
-    def attributes(self):
-        return self._attributes
 
     def _save_data(self):
         raw_data = serialize_pivtool_data(self._data)
@@ -313,7 +308,6 @@ class Controller(object):
         if not self.authenticated:
             raise ValueError('Not authenticated')
         self._key.set_chuid()
-        self._attributes.rename(self._key.chuid)
 
     def generate_key(self, slot, algorithm='RSA2048', pin_policy=None,
                      touch_policy=False):

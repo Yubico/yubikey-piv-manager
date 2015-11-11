@@ -27,22 +27,19 @@
 import os
 from pivman import messages as m
 from pivman.piv import CERT_SLOTS
+from pivman.yubicommon import qt
 from PySide import QtCore
-from collections import MutableMapping, namedtuple
+from collections import namedtuple
 from getpass import getuser
 from sys import platform
 
 __all__ = [
     'CONFIG_HOME',
     'SETTINGS',
-    'get_store',
     'settings'
 ]
 
 CONFIG_HOME = os.path.join(os.path.expanduser('~'), '.pivman')
-_settings = QtCore.QSettings(os.path.join(CONFIG_HOME, 'settings.ini'),
-                             QtCore.QSettings.IniFormat)
-_mutex = QtCore.QMutex(QtCore.QMutex.Recursive)
 
 
 Setting = namedtuple('Setting', 'key default type')
@@ -73,54 +70,6 @@ class SETTINGS:
     TOUCH_POLICY = Setting('touch_policy', False, bool)
 
 
-def get_store(group):
-    return PySettings(SettingsGroup(_settings, _mutex, group))
-
-
-def convert_to(value, target_type):
-    if target_type is list:
-        return [] if value is None else [value]
-    if target_type is int:
-        return int(value)
-    if target_type is float:
-        return float(value)
-    if target_type is bool:
-        return value not in ['', 'false', 'False']
-    return value
-
-
-class SettingsGroup(object):
-
-    def __init__(self, settings, mutex, group):
-        self._settings = settings
-        self._mutex = mutex
-        self._group = group
-
-    def __getattr__(self, method_name):
-        if hasattr(self._settings, method_name):
-            fn = getattr(self._settings, method_name)
-
-            def wrapped(*args, **kwargs):
-                try:
-                    self._mutex.lock()
-                    self._settings.beginGroup(self._group)
-                    return fn(*args, **kwargs)
-                finally:
-                    self._settings.endGroup()
-                    self._mutex.unlock()
-            return wrapped
-
-    def rename(self, new_name):
-        data = dict((key, self.value(key)) for key in self.childKeys())
-        self.remove('')
-        self._group = new_name
-        for k, v in data.items():
-            self.setValue(k, v)
-
-    def __repr__(self):
-        return 'Group(%s)' % self._group
-
-
 class SettingsOverlay(object):
 
     def __init__(self, master, overlay):
@@ -138,7 +87,7 @@ class SettingsOverlay(object):
         key, default, d_type = setting
         val = self._master.value(key, self._overlay.value(key, default))
         if not isinstance(val, d_type):
-            val = convert_to(val, d_type)
+            val = qt.convert_to(val, d_type)
         return val
 
     def setValue(self, setting, value):
@@ -158,54 +107,8 @@ class SettingsOverlay(object):
         return 'Overlay(%s, %s)' % (self._master, self._overlay)
 
 
-class PySettings(MutableMapping):
-
-    def __init__(self, settings):
-        self._settings = settings
-
-    def __getattr__(self, method_name):
-        return getattr(self._settings, method_name)
-
-    def get(self, key, default=None):
-        val = self._settings.value(key, default)
-        if not isinstance(val, type(default)):
-            val = convert_to(val, type(default))
-        return val
-
-    def __getitem__(self, key):
-        return self.get(key)
-
-    def __setitem__(self, key, value):
-        self._settings.setValue(key, value)
-
-    def __delitem__(self, key):
-        self._settings.remove(key)
-
-    def __iter__(self):
-        for key in self.keys():
-            yield key
-
-    def __len__(self):
-        return len(self._settings.childKeys())
-
-    def __contains__(self, key):
-        return self._settings.contains(key)
-
-    def keys(self):
-        return self._settings.childKeys()
-
-    def update(self, data):
-        for key, value in data.items():
-            self[key] = value
-
-    def clear(self):
-        self._settings.remove('')
-
-    def __repr__(self):
-        return 'PySettings(%s)' % self._settings
-
-
-settings = PySettings(SettingsOverlay(
+settings = qt.PySettings(SettingsOverlay(
     QtCore.QSettings(m.organization, m.app_name),
-    get_store('settings')
+    qt.Settings.wrap(os.path.join(CONFIG_HOME, 'settings.ini'),
+                     QtCore.QSettings.IniFormat).get_group('settings')
 ))
