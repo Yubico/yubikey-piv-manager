@@ -1,6 +1,7 @@
-* Version 1.1.0 (unreleased)
+* Version 1.1.0 (released 2015-11-12)
  ** Added support for ECC P-384 when supported by the device.
  ** Added usage policy when supported by the device.
+ ** Update to libykpiv1.
 
 * Version 1.0.2 (released 2015-05-18)
  ** Fix bug preventing device from being found with multiple card readers attached.
