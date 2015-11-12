@@ -1,12 +1,12 @@
 !include "MUI2.nsh"
 
-!define MUI_ICON "pivman.ico"
+!define MUI_ICON "yubikey-piv-manager.ico"
 
 ; The name of the installer
 Name "YubiKey PIV Manager"
 
 ; The file to write
-OutFile "../dist/yubikey-piv-manager-${PIVMAN_VERSION}-win.exe"
+OutFile "../dist/yubikey-piv-manager-${VERSION}-win.exe"
 
 ; The default installation directory
 InstallDir "$PROGRAMFILES\Yubico\YubiKey PIV Manager"
@@ -48,6 +48,9 @@ Var STARTMENU_FOLDER
 ;--------------------------------
 
 Section "YubiKey PIV Manager"
+  ; Remove all
+  DELETE "$INSTDIR\*"
+
   SectionIn RO
   SetOutPath $INSTDIR
   FILE "..\dist\YubiKey PIV Manager\*"
@@ -67,7 +70,7 @@ Section
   WriteRegStr       HKLM $MYTMP "DisplayName"     "YubiKey PIV Manager"
   WriteRegExpandStr HKLM $MYTMP "UninstallString" '"$INSTDIR\uninstall.exe"'
   WriteRegExpandStr HKLM $MYTMP "InstallLocation" "$INSTDIR"
-  WriteRegStr       HKLM $MYTMP "DisplayVersion"  "${PIVMAN_VERSION}"
+  WriteRegStr       HKLM $MYTMP "DisplayVersion"  "${VERSION}"
   WriteRegStr       HKLM $MYTMP "Publisher"       "Yubico AB"
   WriteRegStr       HKLM $MYTMP "URLInfoAbout"    "http://www.yubico.com"
   WriteRegDWORD     HKLM $MYTMP "NoModify"        "1"
@@ -78,11 +81,11 @@ Section
 ;Create shortcuts
   SetShellVarContext all
   SetOutPath "$SMPROGRAMS\$STARTMENU_FOLDER"
-  CreateShortCut "YubiKey PIV Manager.lnk" "$INSTDIR\YubiKey PIV Manager.exe" "" "$INSTDIR\YubiKey PIV Manager.exe" 0
+  CreateShortCut "YubiKey PIV Manager.lnk" "$INSTDIR\pivman.exe" "" "$INSTDIR\pivman.exe" 0
   CreateShortCut "Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 1
 !insertmacro MUI_STARTMENU_WRITE_END
 
-  CreateShortCut "$SMSTARTUP\YubiKey PIV Manager PIN-check.lnk" "$INSTDIR\YubiKey PIV Manager.exe" "-c"
+  CreateShortCut "$SMSTARTUP\YubiKey PIV Manager PIN-check.lnk" "$INSTDIR\pivman.exe" "-c"
 SectionEnd
 
 ; Uninstaller
