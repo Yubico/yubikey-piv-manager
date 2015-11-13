@@ -1,4 +1,5 @@
 * Version 1.1.1 (unreleased)
+ ** Better handling of intermittent device disconnects.
 
 * Version 1.1.0 (released 2015-11-12)
  ** Added support for ECC P-384 when supported by the device.
