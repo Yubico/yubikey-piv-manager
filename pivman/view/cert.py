@@ -273,6 +273,9 @@ class CertWidget(QtGui.QWidget):
             func = partial(func, password=password)
 
         try:
+            if not controller.poll():
+                controller.reconnect()
+
             controller.ensure_authenticated()
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(m.importing_file, func, partial(
@@ -305,10 +308,10 @@ class CertDialog(Dialog):
 
         self._complex = settings[SETTINGS.COMPLEX_PINS]
         self._controller = controller
-        controller.use(self._build_ui)
         controller.on_lost(self.accept)
+        self._build_ui()
 
-    def _build_ui(self, controller):
+    def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
         # This unfortunately causes the window to resize when switching tabs.
         # layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)

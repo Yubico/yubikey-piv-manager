@@ -137,6 +137,9 @@ class SetKeyDialog(qt.Dialog):
                 return
 
         try:
+            if not self._controller.poll():
+                self._controller.reconnect()
+
             if self._controller.pin_is_key or self.use_pin:
                 pin = self._controller.ensure_pin()
             else:

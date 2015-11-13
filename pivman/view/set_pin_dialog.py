@@ -114,6 +114,8 @@ class SetPinDialog(qt.Dialog):
             self._invalid_pin(self.warn_not_complex, m.pin_complexity_desc)
         else:
             try:
+                if not self._controller.poll():
+                    self._controller.reconnect()
                 fn = self._prepare_fn(old_pin, new_pin)
                 worker = QtCore.QCoreApplication.instance().worker
                 worker.post(self.busy, fn, self._change_pin_callback, True)

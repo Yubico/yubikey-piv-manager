@@ -241,6 +241,9 @@ class InitDialog(qt.Dialog):
                 if res != QtGui.QMessageBox.Ok:
                     return
 
+            if not self._controller.poll():
+                self._controller.reconnect()
+
             self._controller.ensure_authenticated()
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(

@@ -112,6 +112,9 @@ class Controller(object):
     def poll(self):
         return test(self._key._read_version)
 
+    def reconnect(self):
+        self._key.reconnect()
+
     def _save_data(self):
         raw_data = serialize_pivtool_data(self._data)
         if raw_data != self._raw_data:

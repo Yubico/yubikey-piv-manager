@@ -128,6 +128,10 @@ class YkPiv(object):
             except ValueError:
                 pass  # Not autheniticated, perhaps?
 
+    def reconnect(self):
+        check(ykpiv_disconnect(self._state))
+        self._reset()
+
     def _connect(self):
         check(ykpiv_connect(self._state, self._reader))
 
