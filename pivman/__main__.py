@@ -51,7 +51,7 @@ ABOUT_TEXT = """
 class PivtoolApplication(qt.Application):
 
     def __init__(self, argv):
-        super(PivtoolApplication, self).__init__(m)
+        super(PivtoolApplication, self).__init__(m, version)
 
         QtCore.QCoreApplication.setOrganizationName(m.organization)
         QtCore.QCoreApplication.setOrganizationDomain(m.domain)
@@ -87,7 +87,7 @@ class PivtoolApplication(qt.Application):
         return parser.parse_args()
 
     def _init_window(self):
-        self.window.setWindowTitle(m.win_title_1 % version)
+        self.window.setWindowTitle(m.win_title_1 % self.version)
         self.window.setWindowIcon(QtGui.QIcon(':/pivman.png'))
         self.window.layout().setSizeConstraint(QtGui.QLayout.SetFixedSize)
         self.window.setCentralWidget(MainWidget())
@@ -109,8 +109,11 @@ class PivtoolApplication(qt.Application):
         return 'ykpiv: %s' % ykpiv_version
 
     def _about(self):
-        QtGui.QMessageBox.about(self.window, m.about_1 % m.app_name,
-                                ABOUT_TEXT % (version, self._libversions()))
+        QtGui.QMessageBox.about(
+            self.window,
+            m.about_1 % m.app_name,
+            ABOUT_TEXT % (self.version, self._libversions())
+        )
 
     def _show_settings(self):
         dialog = SettingsDialog(self.window)
