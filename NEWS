@@ -1,3 +1,6 @@
+* Version 1.1.2 (unreleased)
+ ** Packaging improvements.
+
 * Version 1.1.1 (released 2015-11-16)
  ** Better handling of intermittent device disconnects.
 
