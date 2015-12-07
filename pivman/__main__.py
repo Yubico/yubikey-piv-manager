@@ -64,6 +64,8 @@ class PivtoolApplication(qt.Application):
             self.quit()
             return
 
+        self.ensure_singleton()
+
         self._build_menu_bar()
         self._init_window()
 
