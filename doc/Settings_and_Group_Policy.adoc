@@ -1,12 +1,14 @@
 == Settings and Group Policy
-The YubiKey PIV Manager provides various settings which can be used to customize its behavior.
-Some of these can be changed in the *Settings* dialog from within the tool.
-Each of these can be enforced using a Group Policy on Windows, which prevents the user from changing them.
-To do so you will need to set certain registry keys.
-This can be used to simplify the tool by limiting it to a subset of its functionality, and to enforce company policy on usage.
+The YubiKey PIV Manager provides various settings which can be used to
+customize its behavior.  Some of these can be changed in the *Settings* dialog
+from within the tool.  Each of these can be enforced using a Group Policy on
+Windows, which prevents the user from changing them.  To do so you will need to
+set certain registry keys.  This can be used to simplify the tool by limiting
+it to a subset of its functionality, and to enforce company policy on usage.
 
 === User settings
-User settings are stored in a file named pivman.ini, located in the .pivman subdirectory of the users come directory. For example:
+User settings are stored in a file named pivman.ini, located in the .pivman
+subdirectory of the users come directory. For example:
 
 ....
 /home/username/.pivman/pivman.ini
@@ -20,12 +22,14 @@ c:\Users\username\.pivman\pivman.ini
 
 on Windows.
 
-Some of these values are changed by normal use of the YubiKey PIV Manager by performing actions in the tool.
-Others are only available by manually editing the configuration file.
+Some of these values are changed by normal use of the YubiKey PIV Manager by
+performing actions in the tool.  Others are only available by manually editing
+the configuration file.
 
 === Group Policy settings
-All user settings are available on Group Policy level, and take precedence over those on user level.
-On Windows these settings are stored as registry keys, under either:
+All user settings are available on Group Policy level, and take precedence over
+those on user level.  On Windows these settings are stored as registry keys,
+under either:
 
 ....
 Computer\HKEY_CURRENT_USER\Software\Yubico\YubiKey PIV Manager
@@ -107,6 +111,15 @@ registry key type:: REG_SZ
 valid options:: "default" "never", "once", "always"
 default value:: "default"
 
+==== PIN Policy Slots
+Which certificate slots to show the PIN Requirement Policy setting for.
+
+key:: pin_policy_slots
+type:: list of strings
+registry key type:: REG_MULTI_SZ
+valid options:: "9a", "9c", "9d", "9e"
+default value:: []
+
 ==== Displayed Output Formats
 Output formats available when generating a key.
 
@@ -141,3 +154,12 @@ key:: touch_policy
 type:: bool
 registry key type:: REG_SZ
 default value:: "false"
+
+==== Touch Policy Slots
+Which certificate slots to show the Touch Policy setting for.
+
+key:: touch_policy_slots
+type:: list of strings
+registry key type:: REG_MULTI_SZ
+valid options:: "9a", "9c", "9d", "9e"
+default value:: []
