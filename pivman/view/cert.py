@@ -257,9 +257,9 @@ class CertWidget(QtGui.QWidget):
         if func is None:
             QtGui.QMessageBox.warning(self, m.error, m.unsupported_file)
             return
-        if is_key and controller.version_tuple >= (4, 0, 0):
-            dialog = UsagePolicyDialog(controller, self)
-            if dialog.exec_():
+        if is_key:
+            dialog = UsagePolicyDialog(controller, self._slot, self)
+            if dialog.has_content and dialog.exec_():
                 func = partial(func, pin_policy=dialog.pin_policy,
                                touch_policy=dialog.touch_policy)
                 settings[SETTINGS.TOUCH_POLICY] = dialog.touch_policy

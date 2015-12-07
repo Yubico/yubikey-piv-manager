@@ -44,8 +44,7 @@ def needs_subject(forms):
 class GenerateKeyDialog(UsagePolicyDialog):
 
     def __init__(self, controller, slot, parent=None):
-        self._slot = slot
-        super(GenerateKeyDialog, self).__init__(controller, parent)
+        super(GenerateKeyDialog, self).__init__(controller, slot, parent)
 
     def _build_ui(self):
         self.setWindowTitle(m.generate_key)

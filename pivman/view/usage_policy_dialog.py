@@ -32,10 +32,12 @@ from pivman.yubicommon import qt
 
 class UsagePolicyDialog(qt.Dialog):
 
-    def __init__(self, controller, parent=None):
+    def __init__(self, controller, slot, parent=None):
         super(UsagePolicyDialog, self).__init__(parent)
 
         self._controller = controller
+        self._slot = slot
+        self.has_content = False
         self._build_ui()
 
     def _build_ui(self):
@@ -58,33 +60,42 @@ class UsagePolicyDialog(qt.Dialog):
         self._pin_policy.addItem(m.pin_policy_never, 'never')
         self._pin_policy.addItem(m.pin_policy_once, 'once')
         self._pin_policy.addItem(m.pin_policy_always, 'always')
-        pin_policy = settings[SETTINGS.PIN_POLICY]
-        for index in range(self._pin_policy.count()):
-            if self._pin_policy.itemData(index) == pin_policy:
-                pin_policy_text = self._pin_policy.itemText(index)
-                self._pin_policy.setCurrentIndex(index)
-                break
-        else:
-            pin_policy = None
-            pin_policy_text = m.pin_policy_default
 
         self._touch_policy = QtGui.QCheckBox(m.touch_policy)
-        self._touch_policy.setChecked(settings[SETTINGS.TOUCH_POLICY])
         if self._controller.version_tuple < (4, 0, 0):
             return
 
-        layout.addWidget(self.section(m.usage_policy))
-        if settings.is_locked(SETTINGS.PIN_POLICY):
-            layout.addWidget(QtGui.QLabel(m.pin_policy_1 % pin_policy_text))
-        else:
-            pin_policy_box = QtGui.QHBoxLayout()
-            pin_policy_box.addWidget(QtGui.QLabel(m.pin_policy))
-            pin_policy_box.addWidget(self._pin_policy)
-            layout.addLayout(pin_policy_box)
+        use_pin_policy = self._slot in settings[SETTINGS.PIN_POLICY_SLOTS]
+        use_touch_policy = self._slot in settings[SETTINGS.TOUCH_POLICY_SLOTS]
 
-        self._touch_policy.setDisabled(
-            settings.is_locked(SETTINGS.TOUCH_POLICY))
-        layout.addWidget(self._touch_policy)
+        if use_pin_policy or use_touch_policy:
+            self.has_content = True
+            layout.addWidget(self.section(m.usage_policy))
+
+        if use_pin_policy:
+            pin_policy = settings[SETTINGS.PIN_POLICY]
+            for index in range(self._pin_policy.count()):
+                if self._pin_policy.itemData(index) == pin_policy:
+                    pin_policy_text = self._pin_policy.itemText(index)
+                    self._pin_policy.setCurrentIndex(index)
+                    break
+            else:
+                pin_policy = None
+                pin_policy_text = m.pin_policy_default
+
+            if settings.is_locked(SETTINGS.PIN_POLICY):
+                layout.addWidget(QtGui.QLabel(m.pin_policy_1 % pin_policy_text))
+            else:
+                pin_policy_box = QtGui.QHBoxLayout()
+                pin_policy_box.addWidget(QtGui.QLabel(m.pin_policy))
+                pin_policy_box.addWidget(self._pin_policy)
+                layout.addLayout(pin_policy_box)
+
+        if use_touch_policy:
+            self._touch_policy.setChecked(settings[SETTINGS.TOUCH_POLICY])
+            self._touch_policy.setDisabled(
+                settings.is_locked(SETTINGS.TOUCH_POLICY))
+            layout.addWidget(self._touch_policy)
 
     @property
     def pin_policy(self):

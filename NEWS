@@ -1,5 +1,7 @@
 * Version 1.1.2 (unreleased)
  ** Packaging improvements.
+ ** Don't expose some advanced functions (certificate PIN/touch policy) by
+    default, as they are likely to cause confusion.
 
 * Version 1.1.1 (released 2015-11-16)
  ** Better handling of intermittent device disconnects.
