@@ -1,4 +1,4 @@
-* Version 1.2.0 (unreleased)
+* Version 1.2.0 (released 2015-12-07)
  ** Packaging improvements.
  ** Don't expose some advanced functions (certificate PIN/touch policy) by
     default, as they are likely to cause confusion.
