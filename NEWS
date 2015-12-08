@@ -1,3 +1,6 @@
+* Version 1.2.1 (released 2015-12-08)
+ * Bugfix: The device initialization dialog was not being shown.
+
 * Version 1.2.0 (released 2015-12-07)
  ** Packaging improvements.
  ** Don't expose some advanced functions (certificate PIN/touch policy) by

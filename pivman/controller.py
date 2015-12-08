@@ -390,7 +390,13 @@ class Controller(object):
     def import_certificate(self, cert, slot, frmt='PEM', password=None):
         if not self.authenticated:
             raise ValueError('Not authenticated')
-        self._key.import_cert(cert, slot, frmt, password)
+        try:
+            self._key.import_cert(cert, slot, frmt, password)
+        except ValueError:
+            if len(cert) > 2048 and self.version_tuple < (4, 2, 7):
+                raise ValueError('Certificate is to large to fit in buffer.')
+            else:
+                raise
         self.update_chuid()
 
     def delete_certificate(self, slot):
