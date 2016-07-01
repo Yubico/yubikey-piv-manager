@@ -113,6 +113,7 @@ class YkPiv(object):
             reader = 'Yubikey'
 
         self._chuid = None
+        self._ccc = None
         self._pin_blocked = False
         self._verbosity = verbosity
         self._reader = reader
@@ -125,6 +126,12 @@ class YkPiv(object):
         if not self.chuid:
             try:
                 self.set_chuid()
+            except ValueError:
+                pass  # Not autheniticated, perhaps?
+
+        if not self.ccc:
+            try:
+                self.set_ccc()
             except ValueError:
                 pass  # Not autheniticated, perhaps?
 
@@ -178,6 +185,13 @@ class YkPiv(object):
         except PivError:  # No chuid set?
             self._chuid = None
 
+    def _read_ccc(self):
+        try:
+            ccc_data = self.fetch_object(YKPIV.OBJ.CAPABILITY)[29:29 + 16]
+            self._ccc = ccc_data.encode('hex')
+        except PivError:  # No ccc set?
+            self._ccc = None
+
     def __del__(self):
         check(ykpiv.ykpiv_done(self._state))
 
@@ -198,6 +212,10 @@ class YkPiv(object):
         return self._chuid
 
     @property
+    def ccc(self):
+        return self._ccc
+
+    @property
     def pin_blocked(self):
         return self._pin_blocked
 
@@ -209,6 +227,13 @@ class YkPiv(object):
         try:
             check(ykpiv.ykpiv_disconnect(self._state))
             self._cmd.run('-a', 'set-chuid')
+        finally:
+            self._reset()
+
+    def set_ccc(self):
+        try:
+            check(ykpiv.ykpiv_disconnect(self._state))
+            self._cmd.run('-a', 'set-ccc')
         finally:
             self._reset()
 
