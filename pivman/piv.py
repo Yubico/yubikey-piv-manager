@@ -32,9 +32,12 @@ from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
 import re
 
-libversion = ykpiv.ykpiv_check_version('1.1.0')
+
+_YKPIV_MIN_VERSION = '1.2.0'
+
+libversion = ykpiv.ykpiv_check_version(_YKPIV_MIN_VERSION)
 if not libversion:
-    raise Exception('libykpiv >= 1.1.0 required')
+    raise Exception('libykpiv >= %s required' % _YKPIV_MIN_VERSION)
 
 
 class DeviceGoneError(Exception):
