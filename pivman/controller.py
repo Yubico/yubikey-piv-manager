@@ -228,7 +228,7 @@ class Controller(object):
     def _invalidate_puk(self):
         set_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
         for i in range(8):  # Invalidate the PUK
-            test(self._key.set_puk, '', '', catches=ValueError)
+            test(self._key.set_puk, '', '000000', catches=ValueError)
 
     def initialize(self, pin, puk=None, key=None, old_pin='123456',
                    old_puk='12345678'):
