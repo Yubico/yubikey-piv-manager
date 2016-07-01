@@ -46,8 +46,7 @@ class PinPanel(QtGui.QWidget):
 
         layout.addRow(headers.section(m.pin))
         self._new_pin = pin_field()
-        label = m.new_complex_pin_label if self._complex else m.new_pin_label
-        layout.addRow(label, self._new_pin)
+        layout.addRow(m.new_pin_label, self._new_pin)
         self._confirm_pin = pin_field()
         layout.addRow(m.verify_pin_label, self._confirm_pin)
 
@@ -151,8 +150,7 @@ class AdvancedPanel(QtGui.QWidget):
 
         layout.addRow(headers.section(m.puk))
         self._puk = pin_field()
-        label = m.new_complex_puk_label if self._complex else m.new_puk_label
-        layout.addRow(label, self._puk)
+        layout.addRow(m.new_puk_label, self._puk)
         self._confirm_puk = pin_field()
         layout.addRow(m.verify_puk_label, self._confirm_puk)
 

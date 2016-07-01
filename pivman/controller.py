@@ -271,8 +271,8 @@ class Controller(object):
         self._save_data()
 
     def change_pin(self, old_pin, new_pin):
-        if len(new_pin) < 4:
-            raise ValueError('PIN must be at least 4 characters')
+        if len(new_pin) < 6:
+            raise ValueError('PIN must be at least 6 characters')
         self.verify_pin(old_pin)
         if self.pin_is_key or self.does_pin_expire():
             self.ensure_authenticated(old_pin)
@@ -286,8 +286,8 @@ class Controller(object):
         self._save_data()
 
     def reset_pin(self, puk, new_pin):
-        if len(new_pin) < 4:
-            raise ValueError('PIN must be at least 4 characters')
+        if len(new_pin) < 6:
+            raise ValueError('PIN must be at least 6 characters')
         try:
             self._key.reset_pin(puk, new_pin)
         except WrongPinError as e:
@@ -298,8 +298,8 @@ class Controller(object):
     def change_puk(self, old_puk, new_puk):
         if self.puk_blocked:
             raise ValueError('PUK is disabled and cannot be changed')
-        if len(new_puk) < 4:
-            raise ValueError('PUK must be at least 4 characters')
+        if len(new_puk) < 6:
+            raise ValueError('PUK must be at least 6 characters')
         try:
             self._key.set_puk(old_puk, new_puk)
         except WrongPinError as e:

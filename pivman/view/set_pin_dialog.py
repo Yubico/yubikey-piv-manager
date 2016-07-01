@@ -37,7 +37,6 @@ class SetPinDialog(qt.Dialog):
     window_title = m.change_pin
     label_current = m.current_pin_label
     label_new = m.new_pin_label
-    label_new_complex = m.new_complex_pin_label
     label_verify = m.verify_pin_label
     warn_not_changed = m.pin_not_changed
     desc_not_changed = m.pin_not_changed_desc
@@ -63,8 +62,7 @@ class SetPinDialog(qt.Dialog):
         layout.addWidget(QtGui.QLabel(self.label_current))
         self._old_pin = pin_field()
         layout.addWidget(self._old_pin)
-        layout.addWidget(QtGui.QLabel(self.label_new_complex
-                                      if self._complex else self.label_new))
+        layout.addWidget(QtGui.QLabel(self.label_new))
         self._new_pin = pin_field()
         layout.addWidget(self._new_pin)
         layout.addWidget(QtGui.QLabel(self.label_verify))
@@ -142,7 +140,6 @@ class SetPukDialog(SetPinDialog):
     window_title = m.change_puk
     label_current = m.current_puk_label
     label_new = m.new_puk_label
-    label_new_complex = m.new_complex_puk_label
     label_verify = m.verify_puk_label
     warn_not_changed = m.puk_not_changed
     desc_not_changed = m.puk_not_changed_desc
@@ -159,7 +156,6 @@ class ResetPinDialog(SetPinDialog):
     window_title = m.reset_pin
     label_current = m.puk_label
     label_new = m.new_pin_label
-    label_new_complex = m.new_complex_pin_label
     label_verify = m.verify_pin_label
     warn_not_changed = m.pin_puk_same
     desc_not_changed = m.pin_puk_same_desc
