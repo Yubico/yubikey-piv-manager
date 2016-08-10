@@ -47,6 +47,8 @@ TAG_PIN_TIMESTAMP = 0x83  # When the PIN was last changed
 
 FLAG1_PUK_BLOCKED = 0x01  # PUK is blocked
 
+AUTH_SLOT = '9a'
+DEFAULT_SUBJECT = "/CN=Yubico Authentication"
 
 def parse_pivtool_data(raw_data):
     rest, _ = der_read(raw_data, TAG_PIVMAN_DATA)
@@ -230,8 +232,9 @@ class Controller(object):
         for i in range(8):  # Invalidate the PUK
             test(self._key.set_puk, '', '000000', catches=ValueError)
 
-    def initialize(self, pin, puk=None, key=None, old_pin='123456',
+    def initialize(self, default_cert, pin, puk=None, key=None, old_pin='123456',
                    old_puk='12345678'):
+
         if not self.authenticated:
             self.authenticate()
 
@@ -245,6 +248,16 @@ class Controller(object):
                 self._key.set_puk(old_puk, puk)
 
         self.change_pin(old_pin, pin)
+
+        if default_cert:
+            self.create_default_cert(pin)
+
+
+    def create_default_cert(self, pin):
+            generated_key = self.generate_key(AUTH_SLOT)
+            cert = self.selfsign_certificate(AUTH_SLOT, pin, generated_key, DEFAULT_SUBJECT)
+            self.import_certificate(cert, AUTH_SLOT)
+
 
     def set_authentication(self, new_key, is_pin=False):
         if not self.authenticated:
