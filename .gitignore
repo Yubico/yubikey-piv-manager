@@ -4,6 +4,7 @@
 .eggs/
 build/
 dist/
+lib/
 .ropeproject/
 ChangeLog
 MANIFEST
