@@ -44,7 +44,7 @@ setup(
     },
     install_requires=['PySide', 'pycrypto'],
     yc_requires=['ctypes', 'qt'],
-    test_suite='nose.collector',
+    test_suite='test',
     tests_require=[''],
     cmdclass={'executable': executable, 'qt_resources': qt_resources('pivman')},
     classifiers=[
