@@ -200,6 +200,17 @@ class AdvancedPanel(QtGui.QWidget):
         return puk
 
 
+class DefaultCertPanel(QtGui.QWidget):
+
+    def __init__(self, headers):
+        super(DefaultCertPanel, self).__init__()
+        layout = QtGui.QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(headers.section(m.default_cert))
+        self._default_cert_cb = QtGui.QCheckBox(m.default_cert_desc)
+        layout.addWidget(self._default_cert_cb)
+
+
 class InitDialog(qt.Dialog):
 
     def __init__(self, controller, parent=None):
@@ -218,6 +229,8 @@ class InitDialog(qt.Dialog):
         if not settings.is_locked(SETTINGS.PIN_AS_KEY) or \
                 not settings[SETTINGS.PIN_AS_KEY]:
             layout.addWidget(self._key_panel)
+        self._default_cert_panel = DefaultCertPanel(self.headers)
+        layout.addWidget(self._default_cert_panel)
         layout.addStretch()
 
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
@@ -230,7 +243,7 @@ class InitDialog(qt.Dialog):
             pin = self._pin_panel.pin
             key = self._key_panel.key
             puk = self._key_panel.puk
-
+            default_cert = self._default_cert_panel._default_cert_cb
             if key is not None and puk is None:
                 res = QtGui.QMessageBox.warning(self, m.no_puk,
                                                 m.no_puk_warning,
@@ -246,7 +259,7 @@ class InitDialog(qt.Dialog):
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(
                 m.initializing,
-                (self._controller.initialize, pin, puk, key),
+                (self._controller.initialize, default_cert, pin, puk, key),
                 self._init_callback,
                 True
             )
