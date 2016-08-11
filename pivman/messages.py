@@ -256,8 +256,8 @@ touch_needed_desc = "You have chosen to require user interaction to use this " \
     "will start slowly blinking. At that point please touch the button on " \
     "your YubiKey."
 touch_prompt = "Touch the button now..."
-default_cert="Default certificate"
-default_cert_desc="Generate a default certificate for authentication"
+auth_cert="Authentication certificate"
+auth_cert_desc="Generate a certificate for authentication"
 
 def _translate(qt):
     values = globals()
