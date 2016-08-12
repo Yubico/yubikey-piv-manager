@@ -154,8 +154,8 @@ unknown = "Unknown"
 change_cert = "Request certificate"
 change_cert_warning_1 = "This will generate a new private key and request a " \
     "certificate from the Windows CA, overwriting any previously stored " \
-    "credential in slot '%s' of your YubiKey's PIV applet. This action cannot " \
-    "be undone."
+    "credential in slot '%s' of your YubiKey's PIV applet. This action " \
+    "cannot be undone."
 changing_cert = "Requesting certificate..."
 export_to_file = "Export certificate..."
 export_cert = "Export certificate"
@@ -188,8 +188,8 @@ cert_deleted_desc = "Certificate deleted successfully"
 cert_not_loaded = "No certificate loaded."
 cert_expires_1 = "Certificate expires: %s"
 cert_installed = "Certificate installed"
-cert_installed_desc = "A new certificate has been installed. You may need to unplug" \
-        " and re-insert your YubiKey before it can be used."
+cert_installed_desc = "A new certificate has been installed. You may need to " \
+    "unplug and re-insert your YubiKey before it can be used."
 cert_tmpl = "Certificate Template"
 subject = "Subject"
 error = "Error"

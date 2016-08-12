@@ -50,6 +50,7 @@ FLAG1_PUK_BLOCKED = 0x01  # PUK is blocked
 AUTH_SLOT = '9a'
 DEFAULT_SUBJECT = "/CN=Yubico PIV Authentication"
 
+
 def parse_pivtool_data(raw_data):
     rest, _ = der_read(raw_data, TAG_PIVMAN_DATA)
     data = {}
@@ -252,12 +253,11 @@ class Controller(object):
         if auth_cert:
             self.create_auth_cert(pin)
 
-
     def create_auth_cert(self, pin):
             generated_key = self.generate_key(AUTH_SLOT)
-            cert = self.selfsign_certificate(AUTH_SLOT, pin, generated_key, DEFAULT_SUBJECT)
+            cert = self.selfsign_certificate(AUTH_SLOT, pin, generated_key,
+                                             DEFAULT_SUBJECT)
             self.import_certificate(cert, AUTH_SLOT)
-
 
     def set_authentication(self, new_key, is_pin=False):
         if not self.authenticated:

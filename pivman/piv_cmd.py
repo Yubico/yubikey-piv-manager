@@ -40,7 +40,6 @@ else:
     basedir = os.path.dirname(__file__)
 
 
-
 def find_cmd():
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)

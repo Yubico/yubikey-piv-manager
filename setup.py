@@ -48,7 +48,8 @@ setup(
     tests_require=[''],
     cmdclass={'executable': executable, 'qt_resources': qt_resources('pivman')},
     classifiers=[
-        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'License :: OSI Approved :: ' +
+        'GNU General Public License v3 or later (GPLv3+)',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Development Status :: 5 - Production/Stable',

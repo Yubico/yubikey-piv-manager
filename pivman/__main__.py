@@ -27,7 +27,7 @@
 import sys
 import argparse
 import signal
-import pivman.qt_resources
+import pivman.qt_resources  # noqa: F401
 from PySide import QtGui, QtCore
 from pivman.view.main import MainWidget
 from pivman import __version__ as version, messages as m

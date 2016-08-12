@@ -100,11 +100,11 @@ def import_file(controller, slot, fn):
                 controller.import_certificate(data, slot, 'PEM', password)
             elif f_type == 2:
                 controller.import_key(data, slot, 'PEM', password, pin_policy,
-                    touch_policy)
+                                      touch_policy)
             elif f_type == 3:
                 controller.import_certificate(data, slot, 'PEM', password)
                 controller.import_key(data, slot, 'PEM', password, pin_policy,
-                    touch_policy)
+                                      touch_policy)
         else:
             controller.import_certificate(data, slot, 'DER')
 
