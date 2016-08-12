@@ -256,11 +256,5 @@ touch_needed_desc = "You have chosen to require user interaction to use this " \
     "will start slowly blinking. At that point please touch the button on " \
     "your YubiKey."
 touch_prompt = "Touch the button now..."
-auth_cert="Authentication certificate"
-auth_cert_desc="Generate a certificate for authentication"
-
-def _translate(qt):
-    values = globals()
-    for key, value in values.items():
-        if isinstance(value, basestring) and not key.startswith('_'):
-            values[key] = qt.tr(value)
+auth_cert = "Authentication certificate"
+auth_cert_desc = "Generate a certificate for authentication"
