@@ -38,10 +38,9 @@ def has_ca():
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             p = subprocess.Popen(
-                ['certutil', '-dump'], stdout=subprocess.PIPE,
+                ['certutil', '-ping'], stdout=subprocess.PIPE,
                 startupinfo=startupinfo)
-            out, _ = p.communicate()
-            return out.startswith('Entry')
+            return p.returncode == 0
     except OSError:
         pass
     return False
