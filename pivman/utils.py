@@ -26,6 +26,7 @@
 
 from getpass import getuser
 from pivman import messages as m
+from pivman.yubicommon.compat import byte2int
 import re
 import subprocess
 import os
@@ -116,10 +117,10 @@ def complexity_check(password):
 
 
 def der_read(der_data, expected_t=None):
-    t = ord(der_data[0])
+    t = byte2int(der_data[0])
     if expected_t is not None and expected_t != t:
         raise ValueError('Wrong tag. Expected: %x, got: %x' % (expected_t, t))
-    l = ord(der_data[1])
+    l = byte2int(der_data[1])
     offs = 2
     if l > 0x80:
         n_bytes = l - 0x80
@@ -136,5 +137,5 @@ def b2len(bs):
     l = 0
     for b in bs:
         l *= 256
-        l += ord(b)
+        l += byte2int(b)
     return l

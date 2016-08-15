@@ -28,6 +28,7 @@ from pivman.libykpiv import YKPIV, ykpiv, ykpiv_state
 from pivman.piv_cmd import YkPivCmd
 from pivman import messages as m
 from pivman.utils import der_read
+from pivman.yubicommon.compat import text_type, int2byte
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
 import re
@@ -329,7 +330,7 @@ class YkPiv(object):
 
         check(ykpiv.ykpiv_fetch_object(self._state, object_id, buf,
                                        byref(buf_len)))
-        return ''.join(map(chr, buf[:buf_len.value]))
+        return b''.join(map(int2byte, buf[:buf_len.value]))
 
     def save_object(self, object_id, data):
         c_data = (c_ubyte * len(data)).from_buffer_copy(data)
@@ -380,7 +381,7 @@ class YkPiv(object):
         buf_len = c_size_t(sizeof(buf))
         check(ykpiv.ykpiv_sign_data(self._state, c_hashed, len(hashed), buf,
                                     byref(buf_len), algorithm, int(slot, 16)))
-        return ''.join(map(chr, buf[:buf_len.value]))
+        return ''.join(map(int2byte, buf[:buf_len.value]))
 
     def read_cert(self, slot):
         try:
@@ -389,7 +390,7 @@ class YkPiv(object):
             return None
         cert, rest = der_read(data, 0x70)
         zipped, rest = der_read(rest, 0x71)
-        if zipped != chr(0):
+        if zipped != b'\0':
             pass  # TODO: cert is compressed, uncompress.
         return cert
 

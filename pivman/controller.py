@@ -29,6 +29,7 @@ from pivman.piv import PivError, WrongPinError
 from pivman.storage import settings, SETTINGS
 from pivman.view.utils import get_active_window, get_text
 from pivman import messages as m
+from pivman.yubicommon.compat import text_type, byte2int, int2byte
 from PySide import QtGui, QtNetwork
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
@@ -61,22 +62,24 @@ def parse_pivtool_data(raw_data):
 
 
 def serialize_pivtool_data(data):  # NOTE: Doesn't support values > 0x80 bytes.
-    buf = ''.join([chr(k) + chr(len(v)) + v for k, v in sorted(data.items())])
-    return chr(TAG_PIVMAN_DATA) + chr(len(buf)) + buf
+    buf = b''
+    for k, v in sorted(data.items()):
+        buf += int2byte(k) + int2byte(len(v)) + v
+    return int2byte(TAG_PIVMAN_DATA) + int2byte(len(buf)) + buf
 
 
 def has_flag(data, flagkey, flagmask):
-    flags = ord(data.get(flagkey, chr(0)))
+    flags = byte2int(data.get(flagkey, b'\0')[0])
     return bool(flags & flagmask)
 
 
 def set_flag(data, flagkey, flagmask, value=True):
-    flags = ord(data.get(flagkey, chr(0)))
+    flags = byte2int(data.get(flagkey, b'\0')[0])
     if value:
         flags |= flagmask
     else:
         flags &= ~flagmask
-    data[flagkey] = chr(flags)
+    data[flagkey] = int2byte(flags)
 
 
 def derive_key(pin, salt):
@@ -100,7 +103,7 @@ class Controller(object):
         try:
             self._raw_data = self._key.fetch_object(YKPIV_OBJ_PIVMAN_DATA)
             # TODO: Remove in a few versions...
-            if self._raw_data[0] != chr(TAG_PIVMAN_DATA):
+            if byte2int(self._raw_data[0]) != TAG_PIVMAN_DATA:
                 self._data = {}
                 self._data[TAG_PIN_TIMESTAMP] = self._raw_data
                 self._data[TAG_SALT] = self._key.fetch_object(
