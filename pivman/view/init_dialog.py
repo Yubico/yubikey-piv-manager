@@ -32,6 +32,7 @@ from pivman.utils import complexity_check
 from pivman.storage import settings, SETTINGS
 from pivman.yubicommon import qt
 from pivman.controller import AUTH_SLOT
+from binascii import b2a_hex
 import os
 
 
@@ -161,7 +162,7 @@ class AdvancedPanel(QtGui.QWidget):
         self._confirm_puk.setText('')
 
     def randomize(self):
-        self._key.setText(os.urandom(KEY_LEN).encode('hex'))
+        self._key.setText(b2a_hex(os.urandom(KEY_LEN)).decode('ascii'))
 
     def _validate_key(self):
         self._copy_btn.setDisabled(not self._key.hasAcceptableInput())

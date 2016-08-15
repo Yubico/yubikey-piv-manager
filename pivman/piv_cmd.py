@@ -85,6 +85,8 @@ class YkPivCmd(object):
             self._base_args.extend(['-k', key])
 
     def set_arg(self, opt, value):
+        if isinstance(value, bytes):
+            value = value.decode('utf8')
         self._base_args = set_arg(self._base_args, opt, value)
 
     def run(self, *args, **kwargs):

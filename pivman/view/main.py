@@ -95,7 +95,8 @@ class MainWidget(QtGui.QWidget):
         messages = []
         if controller.pin_blocked:
             messages.append(IMPORTANT % m.pin_blocked)
-        messages.append(m.key_with_applet_1 % controller.version)
+        messages.append(m.key_with_applet_1
+                        % controller.version.decode('ascii'))
         n_certs = len(controller.certs)
         messages.append(m.certs_loaded_1 % n_certs or m.no)
 

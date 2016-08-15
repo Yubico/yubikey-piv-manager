@@ -61,15 +61,15 @@ def detect_type(data, fn):
         f_format = 'pfx'
         needs_password = True
     else:
-        f_format = 'pem' if data.startswith('-----') else 'der'
+        f_format = 'pem' if data.startswith(b'-----') else 'der'
         if f_format == 'pem':
-            if 'CERTIFICATE' in data and 'PRIVATE KEY' in data:
+            if b'CERTIFICATE' in data and b'PRIVATE KEY' in data:
                 f_type = 3
-            elif 'PRIVATE KEY' in data:
+            elif b'PRIVATE KEY' in data:
                 f_type = 2
-            elif 'CERTIFICATE' in data:
+            elif b'CERTIFICATE' in data:
                 f_type = 1
-            needs_password = 'ENCRYPTED' in data
+            needs_password = b'ENCRYPTED' in data
         elif suffix in ['cer', 'crt']:
             f_type = 1
         elif suffix in ['key']:
@@ -165,7 +165,7 @@ class CertPanel(QtGui.QWidget):
         if not fn:
             return
 
-        with open(fn, 'w') as f:
+        with open(fn, 'wb') as f:
             f.write(cert.toPem().data())
         QtGui.QMessageBox.information(self, m.cert_exported,
                                       m.cert_exported_desc_1 % fn)

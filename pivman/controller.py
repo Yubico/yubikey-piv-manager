@@ -34,6 +34,7 @@ from PySide import QtGui, QtNetwork
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from datetime import timedelta
+from binascii import a2b_hex
 import re
 import time
 import struct
@@ -85,14 +86,16 @@ def set_flag(data, flagkey, flagmask, value=True):
 def derive_key(pin, salt):
     if pin is None:
         raise ValueError('PIN must not be None!')
-    if isinstance(pin, unicode):
+    if isinstance(pin, text_type):
         pin = pin.encode('utf8')
     return PBKDF2(pin, salt, 24, 10000)
 
 
 def is_hex_key(string):
-    return isinstance(string, basestring) and \
-        bool(re.compile(r'[a-fA-F0-9]{48}').match(string))
+    try:
+        return bool(re.compile(r'^[a-fA-F0-9]{48}$').match(string))
+    except:
+        return False
 
 
 class Controller(object):
@@ -134,7 +137,7 @@ class Controller(object):
 
     @property
     def version_tuple(self):
-        return tuple(map(int, self.version.split('.')))
+        return tuple(map(int, self.version.split(b'.')))
 
     @property
     def authenticated(self):
@@ -220,7 +223,7 @@ class Controller(object):
         if key is not None and salt is not None:
             key = derive_key(key, salt)
         elif is_hex_key(key):
-            key = key.decode('hex')
+            key = a2b_hex(key)
 
         self._authenticated = False
         if test(self._key.authenticate, key, catches=PivError):
@@ -243,7 +246,7 @@ class Controller(object):
             self.authenticate()
 
         if key is None:  # Derive key from PIN
-            self._data[TAG_SALT] = ''  # Used as a marker for change_pin
+            self._data[TAG_SALT] = b''  # Used as a marker for change_pin
         else:
             self.set_authentication(key)
             if puk is None:
@@ -278,7 +281,7 @@ class Controller(object):
                 self._invalidate_puk()
         else:
             if is_hex_key(new_key):
-                new_key = new_key.decode('hex')
+                new_key = a2b_hex(new_key)
 
             self._key.set_authentication(new_key)
             if self.pin_is_key:

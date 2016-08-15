@@ -31,10 +31,11 @@ from pivman.utils import der_read
 from pivman.yubicommon.compat import text_type, int2byte
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
+from binascii import a2b_hex, b2a_hex
 import re
 
 
-_YKPIV_MIN_VERSION = '1.2.0'
+_YKPIV_MIN_VERSION = b'1.2.0'
 
 libversion = ykpiv.ykpiv_check_version(_YKPIV_MIN_VERSION)
 if not libversion:
@@ -93,7 +94,7 @@ def wrap_puk_error(error):
 
 
 KEY_LEN = 24
-DEFAULT_KEY = '010203040506070801020304050607080102030405060708'.decode('hex')
+DEFAULT_KEY = a2b_hex(b'010203040506070801020304050607080102030405060708')
 
 CERT_SLOTS = {
     '9a': YKPIV.OBJ.AUTHENTICATION,
@@ -144,7 +145,7 @@ class YkPiv(object):
         self._reset()
 
     def _connect(self):
-        check(ykpiv.ykpiv_connect(self._state, self._reader))
+        check(ykpiv.ykpiv_connect(self._state, self._reader.encode('utf8')))
 
         self._read_version()
         self._read_chuid()
@@ -157,7 +158,7 @@ class YkPiv(object):
             chunk = []
             while lines:
                 line = lines.pop(0)
-                if chunk and not line.startswith('\t'):
+                if chunk and not line.startswith(b'\t'):
                     self._parse_status(chunk)
                     chunk = []
                 chunk.append(line)
@@ -169,13 +170,14 @@ class YkPiv(object):
 
     def _parse_status(self, chunk):
         parts, rest = chunk[0].split(), chunk[1:]
-        if parts[0] == 'Slot' and rest:
+        if parts[0] == b'Slot' and rest:
             self._parse_slot(parts[1][:-1], rest)
-        elif parts[0] == 'PIN':
+        elif parts[0] == b'PIN':
             self._pin_blocked = parts[-1] == '0'
 
     def _parse_slot(self, slot, lines):
-        self._certs[slot] = dict(l.strip().split(':\t', 1) for l in lines)
+        slot = slot.decode('ascii')
+        self._certs[slot] = dict(l.strip().split(b':\t', 1) for l in lines)
 
     def _read_version(self):
         v = create_string_buffer(10)
@@ -185,14 +187,14 @@ class YkPiv(object):
     def _read_chuid(self):
         try:
             chuid_data = self.fetch_object(YKPIV.OBJ.CHUID)[29:29 + 16]
-            self._chuid = chuid_data.encode('hex')
+            self._chuid = b2a_hex(chuid_data)
         except PivError:  # No chuid set?
             self._chuid = None
 
     def _read_ccc(self):
         try:
             ccc_data = self.fetch_object(YKPIV.OBJ.CAPABILITY)[29:29 + 16]
-            self._ccc = ccc_data.encode('hex')
+            self._ccc = b2a_hex(ccc_data)
         except PivError:  # No ccc set?
             self._ccc = None
 
@@ -205,7 +207,7 @@ class YkPiv(object):
         if '-P' in args:
             self.verify_pin(args[args.index('-P') + 1])
         if '-k' in args:
-            self.authenticate(args[args.index('-k') + 1].decode('hex'))
+            self.authenticate(a2b_hex(args[args.index('-k') + 1]))
 
     @property
     def version(self):
@@ -248,7 +250,7 @@ class YkPiv(object):
             raise ValueError('Key must be %d bytes' % KEY_LEN)
         c_key = (c_ubyte * KEY_LEN).from_buffer_copy(key)
         check(ykpiv.ykpiv_authenticate(self._state, c_key))
-        self._cmd.set_arg('-k', key.encode('hex'))
+        self._cmd.set_arg('-k', b2a_hex(key))
         if not self.chuid:
             self.set_chuid()
 
@@ -257,10 +259,10 @@ class YkPiv(object):
             raise ValueError('Key must be %d bytes' % KEY_LEN)
         c_key = (c_ubyte * len(key)).from_buffer_copy(key)
         check(ykpiv.ykpiv_set_mgmkey(self._state, c_key))
-        self._cmd.set_arg('-k', key.encode('hex'))
+        self._cmd.set_arg('-k', b2a_hex(key))
 
     def verify_pin(self, pin):
-        if isinstance(pin, unicode):
+        if isinstance(pin, text_type):
             pin = pin.encode('utf8')
         buf = create_string_buffer(pin)
         tries = c_int(-1)
@@ -275,7 +277,7 @@ class YkPiv(object):
         self._cmd.set_arg('-P', pin)
 
     def set_pin(self, pin):
-        if isinstance(pin, unicode):
+        if isinstance(pin, text_type):
             pin = pin.encode('utf8')
         if len(pin) > 8:
             raise ValueError(m.pin_too_long)
@@ -286,11 +288,11 @@ class YkPiv(object):
             self._reset()
 
     def reset_pin(self, puk, new_pin):
-        if isinstance(new_pin, unicode):
+        if isinstance(new_pin, text_type):
             new_pin = new_pin.encode('utf8')
         if len(new_pin) > 8:
             raise ValueError(m.pin_too_long)
-        if isinstance(puk, unicode):
+        if isinstance(puk, text_type):
             puk = puk.encode('utf8')
         try:
             check(ykpiv.ykpiv_disconnect(self._state))
@@ -302,9 +304,9 @@ class YkPiv(object):
             self._read_status()
 
     def set_puk(self, puk, new_puk):
-        if isinstance(puk, unicode):
+        if isinstance(puk, text_type):
             puk = puk.encode('utf8')
-        if isinstance(new_puk, unicode):
+        if isinstance(new_puk, text_type):
             new_puk = new_puk.encode('utf8')
         if len(new_puk) > 8:
             raise ValueError(m.puk_too_long)

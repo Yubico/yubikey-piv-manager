@@ -29,6 +29,7 @@ from pivman import messages as m
 from pivman.piv import DeviceGoneError, PivError, KEY_LEN
 from pivman.view.utils import KEY_VALIDATOR
 from pivman.yubicommon import qt
+from binascii import b2a_hex
 import os
 
 
@@ -108,7 +109,7 @@ class SetKeyDialog(qt.Dialog):
         self._validate()
 
     def randomize(self):
-        self._key.setText(os.urandom(KEY_LEN).encode('hex'))
+        self._key.setText(b2a_hex(os.urandom(KEY_LEN)).decode('ascii'))
 
     def _copy(self):
         self._key.selectAll()
