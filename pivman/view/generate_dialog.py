@@ -134,6 +134,12 @@ class GenerateKeyDialog(UsagePolicyDialog):
 
         self._subject = QtGui.QLineEdit(settings[SETTINGS.SUBJECT])
         self._subject.setValidator(SUBJECT_VALIDATOR)
+
+        today = QtCore.QDate.currentDate()
+        self._expire_date = QtGui.QDateTimeEdit(today.addYears(1))
+        self._expire_date.setDisplayFormat("yyyy-MM-dd")
+        self._expire_date.setMinimumDate(today.addDays(1))
+
         if not out_btns:
             layout.addWidget(QtGui.QLabel(m.no_output))
             buttons.button(QtGui.QDialogButtonBox.Ok).setDisabled(True)
@@ -144,6 +150,11 @@ class GenerateKeyDialog(UsagePolicyDialog):
                 subject_box.addWidget(QtGui.QLabel(m.subject))
                 subject_box.addWidget(self._subject)
                 layout.addLayout(subject_box)
+                expire_date = QtGui.QHBoxLayout()
+                expire_date.addWidget(QtGui.QLabel(m.expiration_date))
+                expire_date.addWidget(self._expire_date)
+                layout.addLayout(expire_date)
+
             out_btn = self._out_type.checkedButton()
             if out_btn is None:
                 out_btn = out_btns[0]
@@ -156,6 +167,7 @@ class GenerateKeyDialog(UsagePolicyDialog):
     def _output_changed(self, btn):
         self._cert_tmpl.setEnabled(btn is self._out_ca)
         self._subject.setDisabled(btn is self._out_pk)
+        self._expire_date.setDisabled(btn is self._out_pk)
 
     @property
     def algorithm(self):
@@ -203,14 +215,18 @@ class GenerateKeyDialog(UsagePolicyDialog):
                 self.accept()
             return
 
-        worker = QtCore.QCoreApplication.instance().worker
-        worker.post(m.generating_key, (self._do_generate, pin, out_fn),
-                    self._generate_callback, True)
+        valid_days = QtCore.QDate.currentDate().daysTo(self._expire_date.date())
 
-    def _do_generate(self, pin=None, out_fn=None):
+        worker = QtCore.QCoreApplication.instance().worker
+        worker.post(
+            m.generating_key, (self._do_generate, pin, out_fn, valid_days),
+            self._generate_callback, True)
+
+    def _do_generate(self, pin=None, out_fn=None, valid_days=365):
         data = self._controller.generate_key(self._slot, self.algorithm,
-                                             self.pin_policy, self.touch_policy)
-        return (self._do_generate2, data, pin, out_fn)
+                                             self.pin_policy,
+                                             self.touch_policy)
+        return (self._do_generate2, data, pin, out_fn, valid_days)
 
     def _generate_callback(self, result):
         if isinstance(result, Exception):
@@ -224,7 +240,7 @@ class GenerateKeyDialog(UsagePolicyDialog):
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(busy_message, result, self._generate_callback2, True)
 
-    def _do_generate2(self, data, pin, out_fn):
+    def _do_generate2(self, data, pin, out_fn, valid_days=365):
         subject = self._subject.text()
         if self.out_format in ['csr', 'ca']:
             data = self._controller.create_csr(self._slot, pin, data, subject)
@@ -236,7 +252,7 @@ class GenerateKeyDialog(UsagePolicyDialog):
         else:
             if self.out_format == 'ssc':
                 cert = self._controller.selfsign_certificate(
-                    self._slot, pin, data, subject)
+                    self._slot, pin, data, subject, valid_days)
             elif self.out_format == 'ca':
                 cert = request_cert_from_ca(data, self._cert_tmpl.text())
             self._controller.import_certificate(cert, self._slot)

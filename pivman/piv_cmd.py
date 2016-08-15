@@ -140,11 +140,12 @@ class YkPivCmd(object):
         return self.run('-a', 'verify-pin', '-s', slot, '-a',
                         'request-certificate', '-S', subject, input=pem)
 
-    def create_ssc(self, subject, pem, slot):
+    def create_ssc(self, subject, pem, slot, valid_days=365):
         if '-P' not in self._base_args:
             raise ValueError('PIN has not been verified')
         return self.run('-a', 'verify-pin', '-s', slot, '-a',
-                        'selfsign-certificate', '-S', subject, input=pem)
+                        'selfsign-certificate', '-S', subject,
+                        '--valid-days', str(valid_days), input=pem)
 
     def import_cert(self, data, slot, frmt='PEM', password=None):
         return self._do_import('import-cert', data, slot, frmt, password)

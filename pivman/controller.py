@@ -349,11 +349,12 @@ class Controller(object):
             raise ValueError('Not authenticated')
         return self._key.create_csr(subject, pubkey, slot)
 
-    def selfsign_certificate(self, slot, pin, pubkey, subject):
+    def selfsign_certificate(self, slot, pin, pubkey, subject, valid_days=365):
         self.verify_pin(pin)
         if not self.authenticated:
             raise ValueError('Not authenticated')
-        return self._key.create_selfsigned_cert(subject, pubkey, slot)
+        return self._key.create_selfsigned_cert(
+            subject, pubkey, slot, valid_days)
 
     def does_pin_expire(self):
         return bool(settings[SETTINGS.PIN_EXPIRATION])

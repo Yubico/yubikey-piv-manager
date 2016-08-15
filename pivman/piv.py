@@ -353,10 +353,10 @@ class YkPiv(object):
         finally:
             self._reset()
 
-    def create_selfsigned_cert(self, subject, pubkey_pem, slot):
+    def create_selfsigned_cert(self, subject, pubkey_pem, slot, valid_days=365):
         try:
             check(ykpiv.ykpiv_disconnect(self._state))
-            return self._cmd.create_ssc(subject, pubkey_pem, slot)
+            return self._cmd.create_ssc(subject, pubkey_pem, slot, valid_days)
         finally:
             self._reset()
 

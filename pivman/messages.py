@@ -258,3 +258,4 @@ touch_needed_desc = "You have chosen to require user interaction to use this " \
 touch_prompt = "Touch the button now..."
 auth_cert = "Authentication certificate"
 auth_cert_desc = "Generate a certificate for authentication"
+expiration_date = "Expiration date"
