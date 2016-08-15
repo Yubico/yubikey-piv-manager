@@ -250,7 +250,7 @@ class InitDialog(qt.Dialog):
             key = self._key_panel.key
             puk = self._key_panel.puk
             try:
-                auth_cert = self._auth_cert_panel._auth_cert_cb
+                auth_cert = self._auth_cert_panel._auth_cert_cb.isChecked()
             except AttributeError:
                 auth_cert = None
 
