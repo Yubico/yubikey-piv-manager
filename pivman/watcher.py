@@ -30,7 +30,10 @@ from pivman.controller import Controller
 from pivman.piv import YkPiv, PivError, DeviceGoneError
 from pivman.storage import settings, SETTINGS
 from functools import partial
-from Queue import Queue
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 
 
 class Release(object):

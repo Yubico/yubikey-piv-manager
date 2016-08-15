@@ -88,8 +88,8 @@ def get_active_window():
     if active_win is not None:
         return active_win
 
-    wins = filter(lambda w: isinstance(w, Dialog) and w.isVisible(),
-                  QtGui.QApplication.topLevelWidgets())
+    wins = [w for w in QtGui.QApplication.topLevelWidgets()
+            if isinstance(w, Dialog) and w.isVisible()]
 
     if not wins:
         return QtCore.QCoreApplication.instance().window

@@ -87,7 +87,7 @@ def check(rc):
 
 
 def wrap_puk_error(error):
-    match = TRIES_PATTERN.search(error.message)
+    match = TRIES_PATTERN.search(str(error))
     if match:
         raise WrongPukError(int(match.group(1)))
     raise WrongPukError(0)
