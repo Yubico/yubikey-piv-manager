@@ -167,7 +167,7 @@ class GenerateKeyDialog(UsagePolicyDialog):
     def _output_changed(self, btn):
         self._cert_tmpl.setEnabled(btn is self._out_ca)
         self._subject.setDisabled(btn is self._out_pk)
-        self._expire_date.setDisabled(btn is self._out_pk)
+        self._expire_date.setDisabled(btn is not self._out_ssc)
 
     @property
     def algorithm(self):
