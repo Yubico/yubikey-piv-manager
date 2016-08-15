@@ -24,6 +24,7 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
+from __future__ import print_function
 import sys
 import argparse
 import signal
@@ -73,14 +74,14 @@ class PivtoolApplication(qt.Application):
         try:
             controller = Controller(YkPiv())
             if controller.is_uninitialized():
-                print 'Device not initialized'
+                print('Device not initialized')
             elif controller.is_pin_expired():
                 dialog = SetPinDialog(controller, None, True)
                 if dialog.exec_():
                     QtGui.QMessageBox.information(None, m.pin_changed,
                                                   m.pin_changed_desc)
         except:
-            print 'No YubiKey PIV applet detected'
+            print('No YubiKey PIV applet detected')
 
     def _parse_args(self):
         parser = argparse.ArgumentParser(description='YubiKey PIV Manager',

@@ -77,7 +77,6 @@ class SettingsDialog(qt.Dialog):
         layout.addWidget(buttons)
 
     def _pin_expires_changed(self, val):
-        print val
         self._pin_expires_days.setEnabled(val)
 
     def _save(self):
