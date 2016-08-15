@@ -179,7 +179,7 @@ class Controller(object):
             window, m.enter_pin, m.pin_label, QtGui.QLineEdit.Password)
         if not status:
             raise ValueError('PIN entry aborted!')
-        return self.ensure_pin(pin)
+        return self.ensure_pin(pin, window)
 
     def ensure_authenticated(self, key=None, window=None):
         if self.authenticated or test(self.authenticate, catches=ValueError):
