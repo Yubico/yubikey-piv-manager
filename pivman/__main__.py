@@ -109,7 +109,7 @@ class PivtoolApplication(qt.Application):
         help_menu.addAction(about_action)
 
     def _libversions(self):
-        return 'ykpiv: %s' % ykpiv_version
+        return 'ykpiv: %s' % ykpiv_version.decode('ascii')
 
     def _about(self):
         QtGui.QMessageBox.about(
