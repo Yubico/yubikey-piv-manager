@@ -1,5 +1,7 @@
 == YubiKey PIV Manager
-Tool for configuring your PIV-enabled YubiKey.
+image:https://travis-ci.org/Yubico/yubikey-piv-manager.svg?branch=master["Build Status", link="https://travis-ci.org/Yubico/yubikey-piv-manager"]
+
+Graphical application for configuring a PIV-enabled YubiKey.
 
 image::screenshot.png[]
 
