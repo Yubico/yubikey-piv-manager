@@ -31,10 +31,10 @@ from pivman.view.utils import get_active_window, get_text
 from pivman import messages as m
 from pivman.yubicommon.compat import text_type, byte2int, int2byte
 from PySide import QtGui, QtNetwork
-from Crypto.Protocol.KDF import PBKDF2
-from Crypto.Random import get_random_bytes
 from datetime import timedelta
+from hashlib import pbkdf2_hmac
 from binascii import a2b_hex
+import os
 import re
 import time
 import struct
@@ -89,7 +89,7 @@ def derive_key(pin, salt):
         raise ValueError('PIN must not be None!')
     if isinstance(pin, text_type):
         pin = pin.encode('utf8')
-    return PBKDF2(pin, salt, 24, 10000)
+    return pbkdf2_hmac('sha1', pin, salt, 10000, dklen=24)
 
 
 def is_hex_key(string):
@@ -273,7 +273,7 @@ class Controller(object):
 
         if is_pin:
             self.verify_pin(new_key)
-            salt = get_random_bytes(16)
+            salt = os.urandom(16)
             key = derive_key(new_key, salt)
             self._data[TAG_SALT] = salt
             self._key.set_authentication(key)
