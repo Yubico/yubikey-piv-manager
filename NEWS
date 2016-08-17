@@ -1,5 +1,5 @@
 * Version 1.3.0 (unreleased)
- ** Updated to be inline with yubico-piv-tool 1.4.0.
+ ** Updated to be inline with yubico-piv-tool 1.4.2.
  ** Allow generation of a authentication certificate when initialising a new YubiKey.
  ** Set the CCC when initialising a new YubiKey.
  ** Show an option for expiration date when generating new certificates.
@@ -8,7 +8,7 @@
  ** Add compability with Python 3.
 
 * Version 1.2.1 (released 2015-12-08)
- * Bugfix: The device initialization dialog was not being shown.
+ ** Bugfix: The device initialization dialog was not being shown.
 
 * Version 1.2.0 (released 2015-12-07)
  ** Packaging improvements.
