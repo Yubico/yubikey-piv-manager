@@ -1,4 +1,4 @@
-* Version 1.3.0 (unreleased)
+* Version 1.3.0 (released 2016-08-18)
  ** Updated to be inline with yubico-piv-tool 1.4.2.
  ** Allow generation of a authentication certificate when initialising a new YubiKey.
  ** Set the CCC when initialising a new YubiKey.
