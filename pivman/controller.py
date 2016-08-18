@@ -51,7 +51,7 @@ FLAG1_PUK_BLOCKED = 0x01  # PUK is blocked
 
 AUTH_SLOT = '9a'
 DEFAULT_SUBJECT = "/CN=Yubico PIV Authentication"
-AUTH_CERT_VALID_DAYS = 36500
+AUTH_CERT_VALID_DAYS = 10950  # 30 years
 
 
 def parse_pivtool_data(raw_data):
