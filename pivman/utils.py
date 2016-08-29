@@ -41,7 +41,7 @@ def has_ca():
             p = subprocess.Popen(
                 ['certutil', '-ping'], stdout=subprocess.PIPE,
                 startupinfo=startupinfo)
-            return p.returncode == 0
+            return p.wait() == 0
     except OSError:
         pass
     return False
