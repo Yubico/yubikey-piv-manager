@@ -28,7 +28,6 @@ from PySide import QtGui, QtCore
 from pivman import messages as m
 from pivman.utils import has_ca, request_cert_from_ca
 from pivman.storage import settings, SETTINGS
-from pivman.piv import DeviceGoneError
 from pivman.view.usage_policy_dialog import UsagePolicyDialog
 from pivman.view.utils import SUBJECT_VALIDATOR
 
