@@ -211,8 +211,6 @@ class GenerateKeyDialog(UsagePolicyDialog):
             self._controller.ensure_authenticated(pin)
         except Exception as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))
-            if not isinstance(e, DeviceGoneError):
-                self.accept()
             return
 
         valid_days = QtCore.QDate.currentDate().daysTo(self._expire_date.date())
