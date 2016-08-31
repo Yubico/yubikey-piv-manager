@@ -69,8 +69,7 @@ class SETTINGS:
     SHOWN_SLOTS = Setting('shown_slots', sorted(CERT_SLOTS.keys()), list)
     SUBJECT = Setting('subject', '/CN=%s' % getuser(), str)
     TOUCH_POLICY = Setting('touch_policy', False, bool)
-    TOUCH_POLICY_SLOTS = Setting('touch_policy_slots',
-                                 sorted(CERT_SLOTS.keys()), list)
+    TOUCH_POLICY_SLOTS = Setting('touch_policy_slots', [], list)
 
 
 class SettingsOverlay(object):
