@@ -1,5 +1,5 @@
-** Version 1.3.1 (unreleased)
- ** Bugfix: Connecting to a Certificate Authority didn'w work.
+* Version 1.3.1 (unreleased)
+ ** Bugfix: Connecting to a Certificate Authority didn't work.
  ** Touch policy was exposed in the previous version, it's not anymore.
 
 * Version 1.3.0 (released 2016-08-18)
