@@ -435,9 +435,10 @@ class Controller(object):
             raise ValueError('Not authenticated')
         self._key.delete_cert(slot)
 
-    def is_macos_sierra_or_later(self):
-        if sys.platform == 'darwin':
-            from platform import mac_ver
-            mac_version = tuple(int(x) for x in mac_ver()[0].split('.'))
-            return mac_version >= (10, 12)
+    def should_show_macos_dialog(self):
+        if AUTH_SLOT not in self.certs and ENCRYPTION_SLOT not in self.certs:
+            if sys.platform == 'darwin':
+                from platform import mac_ver
+                mac_version = tuple(int(x) for x in mac_ver()[0].split('.'))
+                return mac_version >= (10, 12)
         return False

@@ -105,7 +105,7 @@ class MainWidget(QtGui.QWidget):
         if controller.is_uninitialized():
             dialog = InitDialog(controller, self)
             if dialog.exec_():
-                if controller.is_macos_sierra_or_later():
+                if controller.should_show_macos_dialog():
                     dialog = MacOSPairingDialog(controller, self)
                     dialog.exec_()
                 self.refresh()
