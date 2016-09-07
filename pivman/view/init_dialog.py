@@ -274,13 +274,18 @@ class MacOSPairingDialog(qt.Dialog):
         self.setWindowTitle(m.macos_pairing_title)
         self._controller = controller
         self._build_ui()
+        self.setMinimumHeight(200)
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
-        layout.addWidget(QtGui.QLabel(m.macos_pairing_desc))
+        lbl = QtGui.QLabel(m.macos_pairing_desc)
+        lbl.setWordWrap(True)
+        layout.addWidget(lbl)
         buttons = QtGui.QDialogButtonBox()
-        buttons.addButton(QtGui.QDialogButtonBox.Yes)
-        buttons.addButton(QtGui.QDialogButtonBox.No)
+        yes_btn = buttons.addButton(QtGui.QDialogButtonBox.Yes)
+        yes_btn.setDefault(True)
+        no_btn = buttons.addButton(QtGui.QDialogButtonBox.No)
+        no_btn.setAutoDefault(False)
         buttons.accepted.connect(self._setup)
         buttons.rejected.connect(self.close)
         layout.addWidget(buttons)

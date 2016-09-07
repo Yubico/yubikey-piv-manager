@@ -260,9 +260,9 @@ expiration_date = "Expiration date"
 setting_up_macos = "Setting up for macOS..."
 macos_pairing_title = "Generate certificates for macOS"
 macos_pairing_desc = "Your version of macOS allows you to pair your YubiKey " \
-        "with your user account.\n" \
+        "with your user account. " \
         "This allows you to use your YubiKey for operating system tasks such "\
-        "as login.\n" \
+        "as login. " \
         "To enable this the YubiKey requires certificates in the slots for " \
         "authentication and key management.\n\n" \
         "Do you wish to generate self-signed certificates "\
