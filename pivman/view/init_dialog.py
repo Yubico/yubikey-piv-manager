@@ -291,7 +291,7 @@ class MacOSPairingDialog(qt.Dialog):
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(
                 m.setting_up_macos,
-                (self._controller.setup_for_sierra, pin),
+                (self._controller.setup_for_macos, pin),
                 self.setup_callback)
         except Exception as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))

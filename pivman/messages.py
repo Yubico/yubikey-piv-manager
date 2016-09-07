@@ -257,9 +257,12 @@ touch_needed_desc = "You have chosen to require user interaction to use this " \
     "your YubiKey."
 touch_prompt = "Touch the button now..."
 expiration_date = "Expiration date"
+setting_up_macos = "Setting up for macOS..."
 macos_pairing_title = "Generate certificates for macOS"
-macos_pairing_desc = "Your version of macOS allows you to pair your user " \
-        "account with a smart card, such as the YubiKey.\n" \
+macos_pairing_desc = "Your version of macOS allows you to pair your YubiKey " \
+        "with your user account.\n" \
+        "This allows you to use your YubiKey for operating system tasks such "\
+        "as login.\n" \
         "To enable this the YubiKey requires certificates in the slots for " \
         "authentication and key management.\n\n" \
         "Do you wish to generate self-signed certificates "\
