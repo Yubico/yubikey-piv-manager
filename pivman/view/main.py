@@ -29,7 +29,7 @@ from PySide import QtCore
 from pivman import messages as m
 from pivman.watcher import ControllerWatcher
 from pivman.view.utils import IMPORTANT
-from pivman.view.init_dialog import InitDialog
+from pivman.view.init_dialog import InitDialog, MacOSPairingDialog
 from pivman.view.set_pin_dialog import SetPinDialog
 from pivman.view.manage import ManageDialog
 from pivman.view.cert import CertDialog
@@ -105,6 +105,9 @@ class MainWidget(QtGui.QWidget):
         if controller.is_uninitialized():
             dialog = InitDialog(controller, self)
             if dialog.exec_():
+                if controller.is_macos_sierra_or_later():
+                    dialog = MacOSPairingDialog(controller, self)
+                    dialog.exec_()
                 self.refresh()
             else:
                 QtCore.QCoreApplication.instance().quit()

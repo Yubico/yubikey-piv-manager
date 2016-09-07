@@ -38,7 +38,7 @@ import os
 import re
 import time
 import struct
-
+import sys
 
 YKPIV_OBJ_PIVMAN_DATA = 0x5fff00
 
@@ -50,8 +50,10 @@ TAG_PIN_TIMESTAMP = 0x83  # When the PIN was last changed
 FLAG1_PUK_BLOCKED = 0x01  # PUK is blocked
 
 AUTH_SLOT = '9a'
-DEFAULT_SUBJECT = "/CN=Yubico PIV Authentication"
-AUTH_CERT_VALID_DAYS = 10950  # 30 years
+ENCRYPTION_SLOT = '9d'
+DEFAULT_AUTH_SUBJECT = "/CN=Yubico PIV Authentication"
+DEFAULT_ENCRYPTION_SUBJECT = "/CN=Yubico PIV Encryption"
+DEFAULT_VALID_DAYS = 10950  # 30 years
 
 
 def parse_pivtool_data(raw_data):
@@ -240,7 +242,7 @@ class Controller(object):
         for i in range(8):  # Invalidate the PUK
             test(self._key.set_puk, '', '000000', catches=ValueError)
 
-    def initialize(self, auth_cert, pin, puk=None, key=None, old_pin='123456',
+    def initialize(self, pin, puk=None, key=None, old_pin='123456',
                    old_puk='12345678'):
 
         if not self.authenticated:
@@ -257,15 +259,22 @@ class Controller(object):
 
         self.change_pin(old_pin, pin)
 
-        if auth_cert:
-            self.create_auth_cert(pin)
+    def setup_for_macos(self, pin):
 
-    def create_auth_cert(self, pin):
-            generated_key = self.generate_key(AUTH_SLOT)
-            cert = self.selfsign_certificate(
-                AUTH_SLOT, pin, generated_key,
-                DEFAULT_SUBJECT, AUTH_CERT_VALID_DAYS)
-            self.import_certificate(cert, AUTH_SLOT)
+        """Generate self-signed certificates in slot 9a and 9d
+        to allow pairing a YubiKey with a user account on macOS"""
+
+        auth_key = self.generate_key(AUTH_SLOT)
+        auth_cert = self.selfsign_certificate(
+            AUTH_SLOT, pin, auth_key,
+            DEFAULT_AUTH_SUBJECT, DEFAULT_VALID_DAYS)
+        self.import_certificate(auth_cert, AUTH_SLOT)
+
+        encryption_key = self.generate_key(ENCRYPTION_SLOT)
+        encryption_cert = self.selfsign_certificate(
+            ENCRYPTION_SLOT, pin, encryption_key,
+            DEFAULT_ENCRYPTION_SUBJECT, DEFAULT_VALID_DAYS)
+        self.import_certificate(encryption_cert, ENCRYPTION_SLOT)
 
     def set_authentication(self, new_key, is_pin=False):
         if not self.authenticated:
@@ -425,3 +434,10 @@ class Controller(object):
         if not self.authenticated:
             raise ValueError('Not authenticated')
         self._key.delete_cert(slot)
+
+    def is_macos_sierra_or_later(self):
+        if sys.platform == 'darwin':
+            from platform import mac_ver
+            mac_version = tuple(int(x) for x in mac_ver()[0].split('.'))
+            return mac_version >= (10, 12)
+        return False

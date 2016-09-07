@@ -31,7 +31,6 @@ from pivman.view.utils import KEY_VALIDATOR, pin_field
 from pivman.utils import complexity_check
 from pivman.storage import settings, SETTINGS
 from pivman.yubicommon import qt
-from pivman.controller import AUTH_SLOT
 from binascii import b2a_hex
 import os
 
@@ -202,18 +201,6 @@ class AdvancedPanel(QtGui.QWidget):
         return puk
 
 
-class DefaultCertPanel(QtGui.QWidget):
-
-    def __init__(self, headers):
-        super(DefaultCertPanel, self).__init__()
-        layout = QtGui.QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(headers.section(m.auth_cert))
-        self._auth_cert_cb = QtGui.QCheckBox(m.auth_cert_desc)
-        self._auth_cert_cb.setChecked(True)
-        layout.addWidget(self._auth_cert_cb)
-
-
 class InitDialog(qt.Dialog):
 
     def __init__(self, controller, parent=None):
@@ -233,10 +220,6 @@ class InitDialog(qt.Dialog):
                 not settings[SETTINGS.PIN_AS_KEY]:
             layout.addWidget(self._key_panel)
 
-        if AUTH_SLOT not in self._controller.certs:
-            self._auth_cert_panel = DefaultCertPanel(self.headers)
-            layout.addWidget(self._auth_cert_panel)
-
         layout.addStretch()
 
         buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
@@ -249,10 +232,6 @@ class InitDialog(qt.Dialog):
             pin = self._pin_panel.pin
             key = self._key_panel.key
             puk = self._key_panel.puk
-            try:
-                auth_cert = self._auth_cert_panel._auth_cert_cb.isChecked()
-            except AttributeError:
-                auth_cert = None
 
             if key is not None and puk is None:
                 res = QtGui.QMessageBox.warning(self, m.no_puk,
@@ -269,7 +248,7 @@ class InitDialog(qt.Dialog):
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(
                 m.initializing,
-                (self._controller.initialize, auth_cert, pin, puk, key),
+                (self._controller.initialize, pin, puk, key),
                 self._init_callback,
                 True
             )
@@ -285,4 +264,40 @@ class InitDialog(qt.Dialog):
         else:
             if not settings.is_locked(SETTINGS.PIN_AS_KEY):
                 settings[SETTINGS.PIN_AS_KEY] = self._key_panel.use_pin
+            self.accept()
+
+
+class MacOSPairingDialog(qt.Dialog):
+
+    def __init__(self, controller, parent=None):
+        super(MacOSPairingDialog, self).__init__(parent)
+        self.setWindowTitle(m.macos_pairing_title)
+        self._controller = controller
+        self._build_ui()
+
+    def _build_ui(self):
+        layout = QtGui.QVBoxLayout(self)
+        layout.addWidget(QtGui.QLabel(m.macos_pairing_desc))
+        buttons = QtGui.QDialogButtonBox()
+        buttons.addButton(QtGui.QDialogButtonBox.Yes)
+        buttons.addButton(QtGui.QDialogButtonBox.No)
+        buttons.accepted.connect(self._setup)
+        buttons.rejected.connect(self.close)
+        layout.addWidget(buttons)
+
+    def _setup(self):
+        try:
+            pin = self._controller.ensure_pin()
+            worker = QtCore.QCoreApplication.instance().worker
+            worker.post(
+                m.setting_up_macos,
+                (self._controller.setup_for_sierra, pin),
+                self.setup_callback)
+        except Exception as e:
+            QtGui.QMessageBox.warning(self, m.error, str(e))
+
+    def setup_callback(self, result):
+        if isinstance(result, Exception):
+            QtGui.QMessageBox.warning(self, m.error, str(result))
+        else:
             self.accept()
