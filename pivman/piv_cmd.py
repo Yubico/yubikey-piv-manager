@@ -44,7 +44,7 @@ def find_cmd():
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
-    cmd = CMD + '.exe' if subprocess.mswindows else CMD
+    cmd = CMD + '.exe' if sys.platform == 'win32' else CMD
     paths = [basedir] + os.environ.get('PATH', '').split(os.pathsep)
     for path in paths:
         path = path.strip('"')
@@ -90,7 +90,7 @@ class YkPivCmd(object):
         self._base_args = set_arg(self._base_args, opt, value)
 
     def run(self, *args, **kwargs):
-        if subprocess.mswindows:  # Avoid showing console window on Windows
+        if sys.platform == 'win32':  # Avoid showing console window on Windows
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         else:
