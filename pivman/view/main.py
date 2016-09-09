@@ -44,7 +44,7 @@ class MainWidget(QtGui.QWidget):
         self._lock = QtCore.QMutex()
         self._controller = ControllerWatcher()
         self._build_ui()
-        self._controller.on_found(self._refresh_controller, True)
+        self._controller.on_found(self._refresh_controller)
         self._controller.on_lost(self._no_controller)
         self._no_controller()
 
@@ -64,7 +64,8 @@ class MainWidget(QtGui.QWidget):
         btns.addWidget(self._pin_btn)
         if is_macos_sierra_or_later():
             self._setup_macos_btn = QtGui.QPushButton(m.setup_for_macos)
-            self._setup_macos_btn.clicked.connect(self._setup_for_macos)
+            self._setup_macos_btn.clicked.connect(
+                self._controller.wrap(self._setup_for_macos))
             btns.addWidget(self._setup_macos_btn)
         layout.addLayout(btns)
 
@@ -81,12 +82,12 @@ class MainWidget(QtGui.QWidget):
         CertDialog(self._controller, self).exec_()
         self.refresh()
 
-    def _setup_for_macos(self):
-        MacOSPairingDialog(self._controller, self).exec_()
+    def _setup_for_macos(self, controller):
+        MacOSPairingDialog(controller, self).exec_()
         self.refresh()
 
     def refresh(self):
-        self._controller.use(self._refresh_controller, True)
+        self._controller.use(self._refresh_controller)
 
     def _no_controller(self):
         self._pin_btn.setEnabled(False)
@@ -94,7 +95,7 @@ class MainWidget(QtGui.QWidget):
         self._setup_macos_btn.setEnabled(False)
         self._messages.setHtml(m.no_key)
 
-    def _refresh_controller(self, controller, release):
+    def _refresh_controller(self, controller):
         if not controller.poll():
             self._no_controller()
             return
@@ -117,8 +118,7 @@ class MainWidget(QtGui.QWidget):
             dialog = InitDialog(controller, self)
             if dialog.exec_():
                 if controller.should_show_macos_dialog():
-                    del dialog
-                    self._setup_for_macos()
+                    self._setup_for_macos(controller)
                 else:
                     self.refresh()
             else:

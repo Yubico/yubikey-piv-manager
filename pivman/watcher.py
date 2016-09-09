@@ -45,7 +45,6 @@ class Release(object):
         self._fn()
 
     def __call__(self):
-        raise Exception('EXPLICIT CALL')
         self._fn()
         self._fn = lambda: None
 

@@ -252,13 +252,16 @@ class InitDialog(qt.Dialog):
                 self._init_callback,
                 True
             )
-        except (DeviceGoneError, PivError, ValueError) as e:
+        except DeviceGoneError:
+            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.close()
+        except (PivError, ValueError) as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))
 
     def _init_callback(self, result):
         if isinstance(result, DeviceGoneError):
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
-            self.accept()
+            self.close()
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
@@ -273,7 +276,6 @@ class MacOSPairingDialog(qt.Dialog):
         super(MacOSPairingDialog, self).__init__(parent)
         self.setWindowTitle(m.macos_pairing_title)
         self._controller = controller
-        self._controller.on_lost(self.close)
         self._build_ui()
 
     def _build_ui(self):
@@ -286,24 +288,36 @@ class MacOSPairingDialog(qt.Dialog):
         yes_btn.setDefault(True)
         no_btn = buttons.addButton(QtGui.QDialogButtonBox.No)
         no_btn.setAutoDefault(False)
-        buttons.accepted.connect(self._controller.wrap(self._setup))
+        no_btn.setDefault(False)
+        buttons.accepted.connect(self._setup)
         buttons.rejected.connect(self.close)
         layout.addWidget(buttons)
 
-    def _setup(self, controller):
+    def _setup(self):
         try:
-            pin = controller.ensure_pin()
-            controller.ensure_authenticated(pin)
+            if not self._controller.poll():
+                self._controller.reconnect()
+
+            pin = self._controller.ensure_pin()
+            self._controller.ensure_authenticated(pin)
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(
                 m.setting_up_macos,
-                (controller.setup_for_macos, pin),
-                self.setup_callback)
+                (self._controller.setup_for_macos, pin),
+                self.setup_callback,
+                True
+            )
+        except DeviceGoneError:
+            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.close()
         except Exception as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))
 
     def setup_callback(self, result):
-        if isinstance(result, Exception):
+        if isinstance(result, DeviceGoneError):
+            QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.close()
+        elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
             self.accept()
