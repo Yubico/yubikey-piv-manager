@@ -274,7 +274,6 @@ class MacOSPairingDialog(qt.Dialog):
         self.setWindowTitle(m.macos_pairing_title)
         self._controller = controller
         self._build_ui()
-        self.setMinimumHeight(200)
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)

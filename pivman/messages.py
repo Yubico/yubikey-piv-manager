@@ -259,14 +259,13 @@ touch_prompt = "Touch the button now..."
 expiration_date = "Expiration date"
 setting_up_macos = "Setting up for macOS..."
 macos_pairing_title = "Generate certificates for macOS"
-macos_pairing_desc = "Your version of macOS allows you to pair your YubiKey " \
+macos_pairing_desc = "<h2>Setup YubiKey for macOS</h2>" \
+        "<p>Your version of macOS allows you to pair your YubiKey " \
         "with your user account. " \
         "This allows you to use your YubiKey for operating system tasks such "\
-        "as login. " \
-        "To enable this the YubiKey requires certificates in the slots for " \
-        "authentication and key management.\n\n" \
-        "Do you wish to generate self-signed certificates "\
-        "for these slots (recommended)?"
+        "as login. </p>" \
+        "<p>Do you wish to generate self-signed certificates "\
+        "for this purpose (recommended)?</p>"
 setup_for_macos = "Setup for macOS"
 setup_macos_compl = "Setup for macOS completed"
 setup_macos_compl_desc = "Your YubiKey is now setup for pairing with macOS. " \
