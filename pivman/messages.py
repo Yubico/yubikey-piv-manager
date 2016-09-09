@@ -267,3 +267,4 @@ macos_pairing_desc = "Your version of macOS allows you to pair your YubiKey " \
         "authentication and key management.\n\n" \
         "Do you wish to generate self-signed certificates "\
         "for these slots (recommended)?"
+setup_for_macos = "Setup for macOS"

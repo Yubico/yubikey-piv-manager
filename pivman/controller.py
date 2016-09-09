@@ -24,7 +24,7 @@
 # non-source form of such a combination shall include the source code
 # for the parts of OpenSSL used as well as that of the covered work.
 
-from pivman.utils import test, der_read
+from pivman.utils import test, der_read, is_macos_sierra_or_later
 from pivman.piv import PivError, WrongPinError
 from pivman.storage import settings, SETTINGS
 from pivman.view.utils import get_active_window, get_text
@@ -38,7 +38,6 @@ import os
 import re
 import time
 import struct
-import sys
 
 YKPIV_OBJ_PIVMAN_DATA = 0x5fff00
 
@@ -436,9 +435,6 @@ class Controller(object):
         self._key.delete_cert(slot)
 
     def should_show_macos_dialog(self):
-        if AUTH_SLOT not in self.certs and ENCRYPTION_SLOT not in self.certs:
-            if sys.platform == 'darwin':
-                from platform import mac_ver
-                mac_version = tuple(int(x) for x in mac_ver()[0].split('.'))
-                return mac_version >= (10, 12)
-        return False
+        return is_macos_sierra_or_later() \
+            and AUTH_SLOT not in self.certs \
+            and ENCRYPTION_SLOT not in self.certs

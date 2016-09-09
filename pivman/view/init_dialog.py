@@ -293,6 +293,7 @@ class MacOSPairingDialog(qt.Dialog):
     def _setup(self):
         try:
             pin = self._controller.ensure_pin()
+            self._controller.ensure_authenticated(pin)
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(
                 m.setting_up_macos,

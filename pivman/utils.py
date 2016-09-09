@@ -31,6 +31,7 @@ import re
 import subprocess
 import os
 import tempfile
+import sys
 
 
 def has_ca():
@@ -139,3 +140,11 @@ def b2len(bs):
         l *= 256
         l += byte2int(b)
     return l
+
+
+def is_macos_sierra_or_later():
+    if sys.platform == 'darwin':
+        from platform import mac_ver
+        mac_version = tuple(int(x) for x in mac_ver()[0].split('.'))
+        return mac_version >= (10, 12)
+    return False

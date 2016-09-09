@@ -27,6 +27,7 @@
 from PySide import QtGui
 from PySide import QtCore
 from pivman import messages as m
+from pivman.utils import is_macos_sierra_or_later
 from pivman.watcher import ControllerWatcher
 from pivman.view.utils import IMPORTANT
 from pivman.view.init_dialog import InitDialog, MacOSPairingDialog
@@ -61,6 +62,10 @@ class MainWidget(QtGui.QWidget):
         self._pin_btn = QtGui.QPushButton(m.manage_pin)
         self._pin_btn.clicked.connect(self._manage_pin)
         btns.addWidget(self._pin_btn)
+        if is_macos_sierra_or_later():
+            self._setup_macos_btn = QtGui.QPushButton(m.setup_for_macos)
+            self._setup_macos_btn.clicked.connect(self._setup_for_macos)
+            btns.addWidget(self._setup_macos_btn)
         layout.addLayout(btns)
 
         self._messages = QtGui.QTextEdit()
@@ -74,6 +79,10 @@ class MainWidget(QtGui.QWidget):
 
     def _manage_certs(self):
         CertDialog(self._controller, self).exec_()
+        self.refresh()
+
+    def _setup_for_macos(self):
+        MacOSPairingDialog(self._controller._controller, self).exec_()
         self.refresh()
 
     def refresh(self):
@@ -106,8 +115,7 @@ class MainWidget(QtGui.QWidget):
             dialog = InitDialog(controller, self)
             if dialog.exec_():
                 if controller.should_show_macos_dialog():
-                    dialog = MacOSPairingDialog(controller, self)
-                    dialog.exec_()
+                    MacOSPairingDialog(controller, self).exec_()
                 self.refresh()
             else:
                 QtCore.QCoreApplication.instance().quit()
