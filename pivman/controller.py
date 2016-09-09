@@ -263,13 +263,13 @@ class Controller(object):
         """Generate self-signed certificates in slot 9a and 9d
         to allow pairing a YubiKey with a user account on macOS"""
 
-        auth_key = self.generate_key(AUTH_SLOT)
+        auth_key = self.generate_key(AUTH_SLOT, 'ECCP256')
         auth_cert = self.selfsign_certificate(
             AUTH_SLOT, pin, auth_key,
             DEFAULT_AUTH_SUBJECT, DEFAULT_VALID_DAYS)
         self.import_certificate(auth_cert, AUTH_SLOT)
 
-        encryption_key = self.generate_key(ENCRYPTION_SLOT)
+        encryption_key = self.generate_key(ENCRYPTION_SLOT, 'ECCP256')
         encryption_cert = self.selfsign_certificate(
             ENCRYPTION_SLOT, pin, encryption_key,
             DEFAULT_ENCRYPTION_SUBJECT, DEFAULT_VALID_DAYS)
