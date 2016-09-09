@@ -82,7 +82,7 @@ class MainWidget(QtGui.QWidget):
         self.refresh()
 
     def _setup_for_macos(self):
-        MacOSPairingDialog(self._controller._controller, self).exec_()
+        MacOSPairingDialog(self._controller, self).exec_()
         self.refresh()
 
     def refresh(self):
@@ -117,8 +117,10 @@ class MainWidget(QtGui.QWidget):
             dialog = InitDialog(controller, self)
             if dialog.exec_():
                 if controller.should_show_macos_dialog():
-                    MacOSPairingDialog(controller, self).exec_()
-                self.refresh()
+                    del dialog
+                    self._setup_for_macos()
+                else:
+                    self.refresh()
             else:
                 QtCore.QCoreApplication.instance().quit()
         elif controller.is_pin_expired() and not controller.pin_blocked:

@@ -273,6 +273,7 @@ class MacOSPairingDialog(qt.Dialog):
         super(MacOSPairingDialog, self).__init__(parent)
         self.setWindowTitle(m.macos_pairing_title)
         self._controller = controller
+        self._controller.on_lost(self.close)
         self._build_ui()
 
     def _build_ui(self):
@@ -285,18 +286,18 @@ class MacOSPairingDialog(qt.Dialog):
         yes_btn.setDefault(True)
         no_btn = buttons.addButton(QtGui.QDialogButtonBox.No)
         no_btn.setAutoDefault(False)
-        buttons.accepted.connect(self._setup)
+        buttons.accepted.connect(self._controller.wrap(self._setup))
         buttons.rejected.connect(self.close)
         layout.addWidget(buttons)
 
-    def _setup(self):
+    def _setup(self, controller):
         try:
-            pin = self._controller.ensure_pin()
-            self._controller.ensure_authenticated(pin)
+            pin = controller.ensure_pin()
+            controller.ensure_authenticated(pin)
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(
                 m.setting_up_macos,
-                (self._controller.setup_for_macos, pin),
+                (controller.setup_for_macos, pin),
                 self.setup_callback)
         except Exception as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))
