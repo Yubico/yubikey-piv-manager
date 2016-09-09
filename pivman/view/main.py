@@ -91,6 +91,7 @@ class MainWidget(QtGui.QWidget):
     def _no_controller(self):
         self._pin_btn.setEnabled(False)
         self._cert_btn.setEnabled(False)
+        self._setup_macos_btn.setEnabled(False)
         self._messages.setHtml(m.no_key)
 
     def _refresh_controller(self, controller, release):
@@ -100,6 +101,7 @@ class MainWidget(QtGui.QWidget):
 
         self._pin_btn.setEnabled(True)
         self._cert_btn.setDisabled(controller.pin_blocked)
+        self._setup_macos_btn.setDisabled(controller.pin_blocked)
 
         messages = []
         if controller.pin_blocked:
