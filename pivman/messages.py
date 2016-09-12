@@ -266,5 +266,5 @@ macos_pairing_desc = "<p>This version of macOS allows you to pair your " \
 setup_for_macos = "Setup for macOS"
 setup_macos_compl = "Setup for macOS completed"
 setup_macos_compl_desc = "Your YubiKey is now set up to be paired with your " \
-    "user account. To start the pairing process, please remove and re-insert " \
+    "user account. To start the pairing process, remove and re-insert " \
     "your YubiKey."
