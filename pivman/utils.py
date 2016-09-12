@@ -143,7 +143,6 @@ def b2len(bs):
 
 
 def is_macos_sierra_or_later():
-    return True
     if sys.platform == 'darwin':
         from platform import mac_ver
         mac_version = tuple(int(x) for x in mac_ver()[0].split('.'))

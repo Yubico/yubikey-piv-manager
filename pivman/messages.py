@@ -271,3 +271,5 @@ setup_macos_compl_desc = "Your YubiKey is now set up to be paired with your " \
 allow_non_numeric_pin = "Allow non-numeric PIN"
 allow_non_numeric_pin_warning = "<b>Note:</b> A non-numeric PIN is not " \
     "supported in all PIV environments."
+non_numeric_pin = "Pairing your YubiKey with macOS requires your PIN to only "\
+    "contain numeric characters. Do you want to change your PIN?"

@@ -27,6 +27,7 @@
 from PySide import QtGui, QtCore
 from pivman import messages as m
 from pivman.piv import DeviceGoneError, PivError, KEY_LEN
+from pivman.view.set_pin_dialog import SetPinDialog
 from pivman.view.utils import (
         NUMERIC_PIN_VALIDATOR, PIN_VALIDATOR,
         KEY_VALIDATOR, pin_field)
@@ -35,6 +36,9 @@ from pivman.storage import settings, SETTINGS
 from pivman.yubicommon import qt
 from binascii import b2a_hex
 import os
+import re
+
+NUMERIC_PATTERN = re.compile("^[0-9]+$")
 
 
 class PinPanel(QtGui.QWidget):
@@ -317,14 +321,26 @@ class MacOSPairingDialog(qt.Dialog):
                 self._controller.reconnect()
 
             pin = self._controller.ensure_pin()
-            self._controller.ensure_authenticated(pin)
-            worker = QtCore.QCoreApplication.instance().worker
-            worker.post(
-                m.setting_up_macos,
-                (self._controller.setup_for_macos, pin),
-                self.setup_callback,
-                True
-            )
+            if NUMERIC_PATTERN.match(pin):
+                self._controller.ensure_authenticated(pin)
+                worker = QtCore.QCoreApplication.instance().worker
+                worker.post(
+                    m.setting_up_macos,
+                    (self._controller.setup_for_macos, pin),
+                    self.setup_callback,
+                    True
+                )
+            else:
+                res = QtGui.QMessageBox.warning(
+                    self,
+                    m.error,
+                    m.non_numeric_pin,
+                    QtGui.QMessageBox.Yes,
+                    QtGui.QMessageBox.No)
+
+                if res == QtGui.QMessageBox.Yes:
+                    SetPinDialog(self._controller, self).exec_()
+
         except DeviceGoneError:
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
             self.close()
