@@ -268,3 +268,6 @@ setup_macos_compl = "Setup for macOS completed"
 setup_macos_compl_desc = "Your YubiKey is now set up to be paired with your " \
     "user account. To start the pairing process, remove and re-insert " \
     "your YubiKey."
+allow_non_numeric_pin = "Allow non-numeric PIN"
+allow_non_numeric_pin_warning = "<b>Note:</b> A non-numeric PIN is not " \
+    "supported in all PIV environments."

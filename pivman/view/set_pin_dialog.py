@@ -29,7 +29,8 @@ from pivman import messages as m
 from pivman.piv import WrongPinError
 from pivman.storage import settings, SETTINGS
 from pivman.utils import complexity_check
-from pivman.view.utils import pin_field
+from pivman.view.utils import (
+    pin_field, NUMERIC_PIN_VALIDATOR, PIN_VALIDATOR)
 from pivman.yubicommon import qt
 
 
@@ -63,11 +64,18 @@ class SetPinDialog(qt.Dialog):
         self._old_pin = pin_field()
         layout.addWidget(self._old_pin)
         layout.addWidget(QtGui.QLabel(self.label_new))
-        self._new_pin = pin_field()
+
+        self._new_pin = pin_field(self._complex)
         layout.addWidget(self._new_pin)
         layout.addWidget(QtGui.QLabel(self.label_verify))
-        self._confirm_pin = pin_field()
+        self._confirm_pin = pin_field(self._complex)
         layout.addWidget(self._confirm_pin)
+
+        if not self._complex:
+            self._allow_non_numeric_cb = QtGui.QCheckBox(
+                m.allow_non_numeric_pin)
+            self._allow_non_numeric_cb.toggled.connect(self._allow_non_numeric)
+            layout.addWidget(self._allow_non_numeric_cb)
 
         self._new_pin.textChanged.connect(self._check_confirm)
         self._confirm_pin.textChanged.connect(self._check_confirm)
@@ -82,6 +90,11 @@ class SetPinDialog(qt.Dialog):
         buttons.accepted.connect(self._set_pin)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
+
+    def _allow_non_numeric(self, checked):
+        validator = PIN_VALIDATOR if checked else NUMERIC_PIN_VALIDATOR
+        self._new_pin.setValidator(validator)
+        self._confirm_pin.setValidator(validator)
 
     def _check_confirm(self):
         new_pin = self._new_pin.text()
