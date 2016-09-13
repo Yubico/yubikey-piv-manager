@@ -152,6 +152,7 @@ def _pubkey_to_pem(algo, data):
 
 def _create_cert(pubkey_pem, subject, valid_days):
     pubkey = load_pem_public_key(pubkey_pem, default_backend())
+    # TODO: Use correct type of dummy key
     dummy_key = ec.generate_private_key(ec.SECP256R1, default_backend())
     today = datetime.datetime.today()
 
@@ -392,7 +393,7 @@ class YkPiv(object):
 
     def create_selfsigned_cert(self, subject, pubkey_pem, slot, valid_days=365):
         cert = _create_cert(pubkey_pem, subject, valid_days)
-        # TODO: Overwrite signature
+        # TODO: Overwrite signature correctly, for each type of key.
         data = cert.tbs_certificate_bytes
         digest = sha256(data).digest()
         print(cert.public_bytes(Encoding.PEM).decode('ascii'))

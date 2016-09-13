@@ -50,8 +50,8 @@ FLAG1_PUK_BLOCKED = 0x01  # PUK is blocked
 
 AUTH_SLOT = '9a'
 ENCRYPTION_SLOT = '9d'
-DEFAULT_AUTH_SUBJECT = "/CN=Yubico PIV Authentication"
-DEFAULT_ENCRYPTION_SUBJECT = "/CN=Yubico PIV Encryption"
+DEFAULT_AUTH_SUBJECT = u"/CN=Yubico PIV Authentication"
+DEFAULT_ENCRYPTION_SUBJECT = u"/CN=Yubico PIV Encryption"
 DEFAULT_VALID_DAYS = 10950  # 30 years
 
 
