@@ -133,11 +133,11 @@ class LibYkPiv(CLibrary):
 
     def generate_key(self, state, slot, algorithm, pin_policy, touch_policy):
         templ = (c_ubyte * 4).from_buffer_copy(b'\0\x47\0' + int2byte(slot))
-        in_data = b'\xac\x03\x80\x01' + int2byte(algorithm)
+        in_data = tlv(0xac, tlv(0x80, int2byte(algorithm)))
         if pin_policy != YKPIV.PINPOLICY.DEFAULT:
-            in_data += b'\xaa\x01' + int2byte(pin_policy)
+            in_data += tlv(0xaa, int2byte(pin_policy))
         if touch_policy != YKPIV.TOUCHPOLICY.DEFAULT:
-            in_data += b'\xab\x01' + int2byte(touch_policy)
+            in_data += tlv(0xab, int2byte(touch_policy))
         in_data = (c_ubyte * len(in_data)).from_buffer_copy(in_data)
         sw = c_int(0)
         buf = (c_ubyte * 1024)()

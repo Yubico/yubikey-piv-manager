@@ -432,7 +432,6 @@ class YkPiv(object):
     def read_cert(self, slot):
         try:
             data = self.fetch_object(CERT_SLOTS[slot])
-            print('cert', b2a_hex(data))
         except PivError:
             return None
         cert, rest = der_read(data, 0x70)
