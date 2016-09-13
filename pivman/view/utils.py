@@ -76,12 +76,10 @@ def get_text(*args, **kwargs):
     return QtGui.QInputDialog.getText(*args, **kwargs)
 
 
-def pin_field(allow_non_numeric=True):
+def pin_field():
     field = QtGui.QLineEdit()
     field.setEchoMode(QtGui.QLineEdit.Password)
     field.setMaxLength(8)
-    field.setValidator(
-        PIN_VALIDATOR if allow_non_numeric else NUMERIC_PIN_VALIDATOR)
     return field
 
 
