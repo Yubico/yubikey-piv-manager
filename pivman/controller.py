@@ -25,7 +25,7 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from pivman.utils import test, der_read, is_macos_sierra_or_later
-from pivman.piv import PivError, WrongPinError
+from pivman.piv import PivError, WrongPinError, WrongPukError
 from pivman.storage import settings, SETTINGS
 from pivman.view.utils import get_active_window, get_text
 from pivman import messages as m
@@ -238,8 +238,12 @@ class Controller(object):
 
     def _invalidate_puk(self):
         set_flag(self._data, TAG_FLAGS_1, FLAG1_PUK_BLOCKED)
-        for i in range(8):  # Invalidate the PUK
-            test(self._key.set_puk, '', '000000', catches=ValueError)
+        for _ in range(99):  # Invalidate the PUK, but don't go on forever.
+            try:
+                self._key.set_puk('', '000000')
+            except WrongPukError as e:
+                if e.blocked:
+                    break
 
     def initialize(self, pin, puk=None, key=None, old_pin='123456',
                    old_puk='12345678'):

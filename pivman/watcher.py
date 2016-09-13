@@ -34,6 +34,8 @@ try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
+import os
+import traceback
 
 
 class Release(object):
@@ -89,8 +91,9 @@ class ControllerWatcher(QtCore.QObject):
         try:
             self._controller = Controller(YkPiv(reader=reader))
             self._device_found.emit()
-        except (PivError, DeviceGoneError) as e:
-            print(e)
+        except (PivError, DeviceGoneError):
+            if os.getenv('DEBUG'):
+                traceback.print_exc()
 
     def on_found(self, fn, hold_lock=False):
         self._device_found.connect(self.wrap(fn, hold_lock))

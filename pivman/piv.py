@@ -25,14 +25,23 @@
 # for the parts of OpenSSL used as well as that of the covered work.
 
 from pivman.libykpiv import YKPIV, ykpiv, ykpiv_state
-from pivman.piv_cmd import YkPivCmd
 from pivman import messages as m
 from pivman.utils import der_read
 from pivman.yubicommon.compat import text_type, int2byte
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
 from binascii import a2b_hex, b2a_hex
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import (
+    Encoding, PublicFormat, load_pem_public_key)
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import hashes
+from cryptography import x509
+from hashlib import sha256
 import re
+import os
+import struct
+import datetime
 
 
 _YKPIV_MIN_VERSION = b'1.2.0'
@@ -51,13 +60,13 @@ class DeviceGoneError(Exception):
 class PivError(Exception):
 
     def __init__(self, code):
-        message = ykpiv.ykpiv_strerror(code)
+        message = ykpiv.ykpiv_strerror(code).decode('utf8')
         super(PivError, self).__init__(code, message)
         self.code = code
         self.message = message
 
     def __str__(self):
-        return m.ykpiv.ykpiv_error_2 % (self.code, self.message)
+        return m.ykpiv_error_2 % (self.code, self.message)
 
 
 class WrongPinError(ValueError):
@@ -71,7 +80,7 @@ class WrongPinError(ValueError):
 
     @property
     def blocked(self):
-        return self.tries == 0
+        return self.tries < 1
 
 
 class WrongPukError(WrongPinError):
@@ -96,6 +105,13 @@ def wrap_puk_error(error):
 KEY_LEN = 24
 DEFAULT_KEY = a2b_hex(b'010203040506070801020304050607080102030405060708')
 
+KEY_SLOTS = {
+    '9a': 0x9a,
+    '9c': 0x9c,
+    '9d': 0x9d,
+    '9e': 0x9e
+}
+
 CERT_SLOTS = {
     '9a': YKPIV.OBJ.AUTHENTICATION,
     '9c': YKPIV.OBJ.SIGNATURE,
@@ -108,76 +124,96 @@ ATTR_NAME = 'name'
 TRIES_PATTERN = re.compile(r'now (\d+) tries')
 
 
+def _generate_chuid():
+    val = a2b_hex(b'3019d4e739da739ced39ce739d836858210842108421384210c3f53410')
+    val += os.urandom(16)
+    val += a2b_hex(b'350832303330303130313e00fe00')
+    return val
+
+
+def _generate_ccc():
+    val = a2b_hex(b'f015a000000116ff02')
+    val += os.urandom(14)
+    val += a2b_hex(b'f10121f20121f300f40100f50110f600f700fa00fb00fc00fd00fe00')
+    return val
+
+
+def _pubkey_to_pem(algo, data):
+    # TODO: Handle the rest...
+    if algo == YKPIV.ALGO.ECCP256:
+        curve = ec.SECP256R1()
+        numbers = ec.EllipticCurvePublicNumbers.from_encoded_point(curve,
+                                                                   data[-65:])
+        key = numbers.public_key(default_backend())
+    else:
+        raise ValueError('Algorithm not supported!')
+    return key.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
+
+
+def _create_cert(pubkey_pem, subject, valid_days):
+    pubkey = load_pem_public_key(pubkey_pem, default_backend())
+    dummy_key = ec.generate_private_key(ec.SECP256R1, default_backend())
+    today = datetime.datetime.today()
+
+    return x509.CertificateBuilder() \
+        .issuer_name(x509.Name([
+            x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, subject),
+        ])) \
+        .subject_name(x509.Name([
+            x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, subject),
+        ])) \
+        .public_key(pubkey) \
+        .serial_number(struct.unpack('L', os.urandom(8))[0]) \
+        .not_valid_before(today - datetime.timedelta(1, 0, 0)) \
+        .not_valid_after(today + datetime.timedelta(valid_days, 0, 0)) \
+        .sign(dummy_key, hashes.SHA256(), default_backend())
+
+
 class YkPiv(object):
 
     def __init__(self, verbosity=0, reader=None):
-        self._cmd = YkPivCmd(verbosity=verbosity, reader=reader)
-
         self._state = POINTER(ykpiv_state)()
         if not reader:
             reader = 'Yubikey'
 
-        self._chuid = None
-        self._ccc = None
+        self._key = None
+        self._pin = None
         self._pin_blocked = False
         self._verbosity = verbosity
         self._reader = reader
+        self._chuid = None
+        self._ccc = None
         self._certs = {}
 
         check(ykpiv.ykpiv_init(byref(self._state), self._verbosity))
         self._connect()
         self._read_status()
 
-        if not self.chuid:
-            try:
-                self.set_chuid()
-            except ValueError:
-                pass  # Not autheniticated, perhaps?
-
-        if not self.ccc:
-            try:
-                self.set_ccc()
-            except ValueError:
-                pass  # Not autheniticated, perhaps?
-
     def reconnect(self):
         check(ykpiv.ykpiv_disconnect(self._state))
-        self._reset()
+        self._connect()
+        self._read_status()
 
     def _connect(self):
         check(ykpiv.ykpiv_connect(self._state, self._reader.encode('utf8')))
 
-        self._read_version()
-        self._read_chuid()
+    def _read_cert_slots(self):
+        for slot in CERT_SLOTS:
+            der = self.read_cert(slot)
+            if der:
+                self._certs[slot] = x509.load_der_x509_certificate(
+                    der, default_backend())
 
     def _read_status(self):
+        self._read_version()
+        self._read_chuid()
+        self._read_ccc()
         try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            data = self._cmd.run('-a', 'status')
-            lines = data.splitlines()
-            chunk = []
-            while lines:
-                line = lines.pop(0)
-                if chunk and not line.startswith(b'\t'):
-                    self._parse_status(chunk)
-                    chunk = []
-                chunk.append(line)
-            if chunk:
-                self._parse_status(chunk)
-            self._status = data
-        finally:
-            self._reset()
+            self.verify_pin(None)
+        except WrongPinError as e:
+            self._pin_blocked = e.blocked
 
-    def _parse_status(self, chunk):
-        parts, rest = chunk[0].split(), chunk[1:]
-        if parts[0] == b'Slot' and rest:
-            self._parse_slot(parts[1][:-1], rest)
-        elif parts[0] == b'PIN':
-            self._pin_blocked = parts[-1] == '0'
-
-    def _parse_slot(self, slot, lines):
-        slot = slot.decode('ascii')
-        self._certs[slot] = dict(l.strip().split(b':\t', 1) for l in lines)
+        self._read_cert_slots()
 
     def _read_version(self):
         v = create_string_buffer(10)
@@ -201,14 +237,6 @@ class YkPiv(object):
     def __del__(self):
         check(ykpiv.ykpiv_done(self._state))
 
-    def _reset(self):
-        self._connect()
-        args = self._cmd._base_args
-        if '-P' in args:
-            self.verify_pin(args[args.index('-P') + 1])
-        if '-k' in args:
-            self.authenticate(a2b_hex(args[args.index('-k') + 1]))
-
     @property
     def version(self):
         return self._version
@@ -230,18 +258,14 @@ class YkPiv(object):
         return dict(self._certs)
 
     def set_chuid(self):
-        try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            self._cmd.run('-a', 'set-chuid')
-        finally:
-            self._reset()
+        chuid = _generate_chuid()
+        self.save_object(YKPIV.OBJ.CHUID, chuid)
+        self._chuid = chuid
 
     def set_ccc(self):
-        try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            self._cmd.run('-a', 'set-ccc')
-        finally:
-            self._reset()
+        ccc = _generate_ccc()
+        self.save_object(YKPIV.OBJ.CAPABILITY, ccc)
+        self._ccc = ccc
 
     def authenticate(self, key=None):
         if key is None:
@@ -250,42 +274,46 @@ class YkPiv(object):
             raise ValueError('Key must be %d bytes' % KEY_LEN)
         c_key = (c_ubyte * KEY_LEN).from_buffer_copy(key)
         check(ykpiv.ykpiv_authenticate(self._state, c_key))
-        self._cmd.set_arg('-k', b2a_hex(key))
+        self._key = key
         if not self.chuid:
             self.set_chuid()
+        if not self.ccc:
+            self.set_ccc()
 
     def set_authentication(self, key):
         if len(key) != KEY_LEN:
             raise ValueError('Key must be %d bytes' % KEY_LEN)
         c_key = (c_ubyte * len(key)).from_buffer_copy(key)
         check(ykpiv.ykpiv_set_mgmkey(self._state, c_key))
-        self._cmd.set_arg('-k', b2a_hex(key))
+        self._key = key
 
     def verify_pin(self, pin):
         if isinstance(pin, text_type):
             pin = pin.encode('utf8')
-        buf = create_string_buffer(pin)
+        buf = create_string_buffer(pin) if pin is not None else None
         tries = c_int(-1)
         rc = ykpiv.ykpiv_verify(self._state, buf, byref(tries))
 
         if rc == YKPIV.WRONG_PIN:
             if tries.value == 0:
                 self._pin_blocked = True
-                self._cmd.set_arg('-P', None)
             raise WrongPinError(tries.value)
         check(rc)
-        self._cmd.set_arg('-P', pin)
+        self._pin = pin
 
     def set_pin(self, pin):
         if isinstance(pin, text_type):
             pin = pin.encode('utf8')
         if len(pin) > 8:
             raise ValueError(m.pin_too_long)
-        try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            self._cmd.change_pin(pin)
-        finally:
-            self._reset()
+
+        tries = c_int(-1)
+        rc = ykpiv.ykpiv_change_pin(self._state, self._pin, len(self._pin),
+                                    pin, len(pin), byref(tries))
+        if rc in [YKPIV.WRONG_PIN, YKPIV.PIN_LOCKED]:
+            raise WrongPukError(tries.value)
+        check(rc)
+        self._pin = pin
 
     def reset_pin(self, puk, new_pin):
         if isinstance(new_pin, text_type):
@@ -294,14 +322,15 @@ class YkPiv(object):
             raise ValueError(m.pin_too_long)
         if isinstance(puk, text_type):
             puk = puk.encode('utf8')
-        try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            self._cmd.reset_pin(puk, new_pin)
-        except ValueError as e:
-            wrap_puk_error(e)
-        finally:
-            self._reset()
-            self._read_status()
+
+        tries = c_int(-1)
+        rc = ykpiv.ykpiv_unblock_pin(self._state, puk, len(puk), new_pin,
+                                     len(new_pin), byref(tries))
+
+        if rc in [YKPIV.WRONG_PIN, YKPIV.PIN_LOCKED]:
+            raise WrongPukError(tries.value)
+        check(rc)
+        self._pin = new_pin
 
     def set_puk(self, puk, new_puk):
         if isinstance(puk, text_type):
@@ -311,20 +340,18 @@ class YkPiv(object):
         if len(new_puk) > 8:
             raise ValueError(m.puk_too_long)
 
-        try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            self._cmd.change_puk(puk, new_puk)
-        except ValueError as e:
-            wrap_puk_error(e)
-        finally:
-            self._reset()
+        tries = c_int(-1)
+        rc = ykpiv.ykpiv_change_puk(self._state, puk, len(puk), new_puk,
+                                    len(new_puk), byref(tries))
+        if rc in [YKPIV.WRONG_PIN, YKPIV.PIN_LOCKED]:
+            raise WrongPukError(tries.value)
+        check(rc)
 
     def reset_device(self):
-        try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            self._cmd.run('-a', 'reset')
-        finally:
-            del self._cmd
+        check(ykpiv.reset(self._state))
+        self._key = None
+        self._pin = None
+        self._read_status()
 
     def fetch_object(self, object_id):
         buf = (c_ubyte * 4096)()
@@ -335,16 +362,26 @@ class YkPiv(object):
         return b''.join(map(int2byte, buf[:buf_len.value]))
 
     def save_object(self, object_id, data):
-        c_data = (c_ubyte * len(data)).from_buffer_copy(data)
-        check(ykpiv.ykpiv_save_object(self._state, object_id, c_data,
-                                      len(data)))
+        if data is None:
+            c_data = None
+            d_len = 0
+        else:
+            c_data = (c_ubyte * len(data)).from_buffer_copy(data)
+            d_len = len(data)
+        check(ykpiv.ykpiv_save_object(self._state, object_id, c_data, d_len))
 
     def generate(self, slot, algorithm, pin_policy, touch_policy):
-        try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            return self._cmd.generate(slot, algorithm, pin_policy, touch_policy)
-        finally:
-            self._reset()
+        slot = KEY_SLOTS[slot]
+        algorithm = getattr(YKPIV.ALGO, algorithm)
+        if not pin_policy:
+            pin_policy = 'DEFAULT'
+        pin_policy = getattr(YKPIV.PINPOLICY, pin_policy.upper())
+
+        rc, pubkey = ykpiv.generate_key(self._state, slot, algorithm,
+                                        pin_policy, touch_policy)
+
+        check(rc)
+        return _pubkey_to_pem(algorithm, pubkey)
 
     def create_csr(self, subject, pubkey_pem, slot):
         try:
@@ -354,19 +391,27 @@ class YkPiv(object):
             self._reset()
 
     def create_selfsigned_cert(self, subject, pubkey_pem, slot, valid_days=365):
-        try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            return self._cmd.create_ssc(subject, pubkey_pem, slot, valid_days)
-        finally:
-            self._reset()
+        cert = _create_cert(pubkey_pem, subject, valid_days)
+        # TODO: Overwrite signature
+        data = cert.tbs_certificate_bytes
+        digest = sha256(data).digest()
+        print(cert.public_bytes(Encoding.PEM).decode('ascii'))
+        return cert.public_bytes(Encoding.PEM)
 
     def import_cert(self, cert_pem, slot, frmt='PEM', password=None):
-        try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            return self._cmd.import_cert(cert_pem, slot, frmt, password)
-        finally:
-            self._reset()
-            self._read_status()
+        if frmt == 'PEM':
+            cert = x509.load_pem_x509_certificate(cert_pem, default_backend())
+        else:
+            cert = x509.load_der_x509_certificate(cert_pem, default_backend())
+        cert_der = cert.public_bytes(Encoding.DER)
+        # TODO: length must be 2-3 bytes
+        data = b'\x70\x82' + int2byte(len(cert_der) >> 8) + int2byte(len(cert_der) & 0xff) + cert_der \
+            + b'\x71\x01\x00\xfe\x00'
+        c_data = (c_ubyte * len(data)).from_buffer_copy(data)
+        d_len = len(data)
+        check(ykpiv.ykpiv_save_object(self._state, CERT_SLOTS[slot], c_data,
+                                      d_len))
+        self._read_cert_slots()
 
     def import_key(self, cert_pem, slot, frmt, password, pin_policy,
                    touch_policy):
@@ -400,9 +445,5 @@ class YkPiv(object):
         if slot not in self._certs:
             raise ValueError('No certificate loaded in slot: %s' % slot)
 
-        try:
-            check(ykpiv.ykpiv_disconnect(self._state))
-            self._cmd.delete_cert(slot)
-            del self._certs[slot]
-        finally:
-            self._reset()
+        self.save_object(CERT_SLOTS[slot], None)
+        del self._certs[slot]
