@@ -27,12 +27,18 @@
 from PySide import QtGui, QtCore
 from pivman import messages as m
 from pivman.piv import DeviceGoneError, PivError, KEY_LEN
-from pivman.view.utils import KEY_VALIDATOR, pin_field
+from pivman.view.set_pin_dialog import SetPinDialog
+from pivman.view.utils import (
+        NUMERIC_PIN_VALIDATOR, PIN_VALIDATOR,
+        KEY_VALIDATOR, pin_field)
 from pivman.utils import complexity_check
 from pivman.storage import settings, SETTINGS
 from pivman.yubicommon import qt
 from binascii import b2a_hex
 import os
+import re
+
+NUMERIC_PATTERN = re.compile("^[0-9]+$")
 
 
 class PinPanel(QtGui.QWidget):
@@ -44,12 +50,20 @@ class PinPanel(QtGui.QWidget):
 
         layout = QtGui.QFormLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-
         layout.addRow(headers.section(m.pin))
-        self._new_pin = pin_field()
+        self._new_pin = pin_field(self._complex)
         layout.addRow(m.new_pin_label, self._new_pin)
-        self._confirm_pin = pin_field()
+        self._confirm_pin = pin_field(self._complex)
         layout.addRow(m.verify_pin_label, self._confirm_pin)
+
+        if not self._complex:
+            self._allow_non_numeric_cb = QtGui.QCheckBox()
+            self._allow_non_numeric_cb.toggled.connect(self.allow_non_numeric)
+            self._allow_non_numeric_warning = QtGui.QLabel(
+                m.allow_non_numeric_pin_warning)
+            self._allow_non_numeric_warning.setVisible(False)
+            layout.addRow(m.allow_non_numeric_pin, self._allow_non_numeric_cb)
+            layout.addRow(self._allow_non_numeric_warning)
 
     @property
     def pin(self):
@@ -70,6 +84,14 @@ class PinPanel(QtGui.QWidget):
             raise ValueError(error)
 
         return new_pin
+
+    def allow_non_numeric(self, checked):
+        self._allow_non_numeric_warning.setVisible(checked)
+        self.adjustSize()
+        self.parentWidget().adjustSize()
+        validator = PIN_VALIDATOR if checked else NUMERIC_PIN_VALIDATOR
+        self._new_pin.setValidator(validator)
+        self._confirm_pin.setValidator(validator)
 
 
 class KeyPanel(QtGui.QWidget):
@@ -299,14 +321,26 @@ class MacOSPairingDialog(qt.Dialog):
                 self._controller.reconnect()
 
             pin = self._controller.ensure_pin()
-            self._controller.ensure_authenticated(pin)
-            worker = QtCore.QCoreApplication.instance().worker
-            worker.post(
-                m.setting_up_macos,
-                (self._controller.setup_for_macos, pin),
-                self.setup_callback,
-                True
-            )
+            if NUMERIC_PATTERN.match(pin):
+                self._controller.ensure_authenticated(pin)
+                worker = QtCore.QCoreApplication.instance().worker
+                worker.post(
+                    m.setting_up_macos,
+                    (self._controller.setup_for_macos, pin),
+                    self.setup_callback,
+                    True
+                )
+            else:
+                res = QtGui.QMessageBox.warning(
+                    self,
+                    m.error,
+                    m.non_numeric_pin,
+                    QtGui.QMessageBox.Yes,
+                    QtGui.QMessageBox.No)
+
+                if res == QtGui.QMessageBox.Yes:
+                    SetPinDialog(self._controller, self).exec_()
+
         except DeviceGoneError:
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
             self.close()
