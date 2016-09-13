@@ -26,7 +26,7 @@
 
 from getpass import getuser
 from pivman import messages as m
-from pivman.yubicommon.compat import byte2int
+from pivman.yubicommon.compat import byte2int, int2byte
 import re
 import subprocess
 import os
@@ -115,6 +115,18 @@ def complexity_check(password):
         return False
 
     return True
+
+
+def tlv(tag, value=b''):
+    data = int2byte(tag)
+    length = len(value)
+    if length < 0x80:
+        data += int2byte(length)
+    elif length < 0xff:
+        data += b'\x81' + int2byte(length)
+    else:
+        data += b'\x82' + int2byte(length >> 8) + int2byte(length & 0xff)
+    return data + value
 
 
 def der_read(der_data, expected_t=None):

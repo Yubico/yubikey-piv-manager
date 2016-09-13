@@ -26,7 +26,7 @@
 
 from pivman.libykpiv import YKPIV, ykpiv, ykpiv_state
 from pivman import messages as m
-from pivman.utils import der_read
+from pivman.utils import der_read, tlv
 from pivman.yubicommon.compat import text_type, int2byte
 from ctypes import (POINTER, byref, create_string_buffer, sizeof, c_ubyte,
                     c_size_t, c_int)
@@ -396,6 +396,7 @@ class YkPiv(object):
         data = cert.tbs_certificate_bytes
         digest = sha256(data).digest()
         print(cert.public_bytes(Encoding.PEM).decode('ascii'))
+        print('digest:', digest)
         return cert.public_bytes(Encoding.PEM)
 
     def import_cert(self, cert_pem, slot, frmt='PEM', password=None):
@@ -404,9 +405,7 @@ class YkPiv(object):
         else:
             cert = x509.load_der_x509_certificate(cert_pem, default_backend())
         cert_der = cert.public_bytes(Encoding.DER)
-        # TODO: length must be 2-3 bytes
-        data = b'\x70\x82' + int2byte(len(cert_der) >> 8) + int2byte(len(cert_der) & 0xff) + cert_der \
-            + b'\x71\x01\x00\xfe\x00'
+        data = tlv(0x70, cert_der) + tlv(0x71, b'\0') + tlv(0xfe)
         c_data = (c_ubyte * len(data)).from_buffer_copy(data)
         d_len = len(data)
         check(ykpiv.ykpiv_save_object(self._state, CERT_SLOTS[slot], c_data,
@@ -433,6 +432,7 @@ class YkPiv(object):
     def read_cert(self, slot):
         try:
             data = self.fetch_object(CERT_SLOTS[slot])
+            print('cert', b2a_hex(data))
         except PivError:
             return None
         cert, rest = der_read(data, 0x70)

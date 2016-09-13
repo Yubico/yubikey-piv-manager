@@ -28,6 +28,7 @@ from ctypes import (Structure, POINTER, c_int, c_ubyte, c_char_p, c_long,
                     c_ulong, c_size_t, byref, sizeof)
 from pivman.yubicommon.ctypes import CLibrary
 from pivman.yubicommon.compat import int2byte
+from pivman.utils import tlv
 
 
 ykpiv_state = type('ykpiv_state', (Structure,), {})
@@ -132,11 +133,12 @@ class LibYkPiv(CLibrary):
 
     def generate_key(self, state, slot, algorithm, pin_policy, touch_policy):
         templ = (c_ubyte * 4).from_buffer_copy(b'\0\x47\0' + int2byte(slot))
-        in_data = (c_ubyte * 11).from_buffer_copy(
-            b'\xac\x09\x80\x01' + int2byte(algorithm) +
-            b'\xaa\x01' + int2byte(pin_policy) +
-            b'\xab\x01' + int2byte(touch_policy)
-        )
+        in_data = b'\xac\x03\x80\x01' + int2byte(algorithm)
+        if pin_policy != YKPIV.PINPOLICY.DEFAULT:
+            in_data += b'\xaa\x01' + int2byte(pin_policy)
+        if touch_policy != YKPIV.TOUCHPOLICY.DEFAULT:
+            in_data += b'\xab\x01' + int2byte(touch_policy)
+        in_data = (c_ubyte * len(in_data)).from_buffer_copy(in_data)
         sw = c_int(0)
         buf = (c_ubyte * 1024)()
         buf_len = c_size_t(sizeof(buf))
