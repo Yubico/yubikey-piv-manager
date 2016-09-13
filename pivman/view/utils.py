@@ -31,6 +31,7 @@ SECTION = '<br><b>%s</b>'
 IMPORTANT = '<strong>%s</strong>'
 
 PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'.{6,8}'))
+NUMERIC_PIN_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'[0-9]{6,8}'))
 KEY_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(r'[0-9a-fA-F]{48}'))
 SUBJECT_VALIDATOR = QtGui.QRegExpValidator(QtCore.QRegExp(
     r'^(/[a-zA-Z]+=[^/]+)+/?$'))
@@ -75,11 +76,12 @@ def get_text(*args, **kwargs):
     return QtGui.QInputDialog.getText(*args, **kwargs)
 
 
-def pin_field():
+def pin_field(allow_non_numeric=True):
     field = QtGui.QLineEdit()
     field.setEchoMode(QtGui.QLineEdit.Password)
     field.setMaxLength(8)
-    field.setValidator(PIN_VALIDATOR)
+    field.setValidator(
+        PIN_VALIDATOR if allow_non_numeric else NUMERIC_PIN_VALIDATOR)
     return field
 
 
