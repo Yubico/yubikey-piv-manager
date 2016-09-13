@@ -28,6 +28,7 @@
 import subprocess
 import sys
 import os
+import re
 
 
 CMD = 'yubico-piv-tool'
@@ -113,8 +114,20 @@ class YkPivCmd(object):
 
         return out
 
+    def tool_version(self):
+        v_bytes = self.run('-V', '-')
+        return re.search(rb'\d+.\d+.\d+', v_bytes).group()
+
     def status(self):
         return self.run('-a', 'status')
+
+    def version(self):
+        v_bytes = self.run('-a', 'version')
+        return re.search(rb'\d+.\d+.\d+', v_bytes).group()
+
+    def set_mgm_key(self, new_key):
+        self.run('-a', 'set-mgm-key', '-n', new_key)
+        self.set_arg('-k', new_key)
 
     def change_pin(self, new_pin):
         if '-P' not in self._base_args:
@@ -167,3 +180,11 @@ class YkPivCmd(object):
         if '-k' not in self._base_args:
             raise ValueError('Management key has not been provided')
         return self.run('-s', slot, '-a', 'delete-certificate')
+
+    def read_object(self, object_id):
+        return self.run('-a', 'read-object', '-f', 'binary', '--id',
+                        hex(object_id))
+
+    def write_object(self, object_id, data):
+        self.run('-a', 'write-object', '-f', 'binary', '--id', hex(object_id),
+                 input=data)
