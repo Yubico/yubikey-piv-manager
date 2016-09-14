@@ -77,7 +77,10 @@ class ManageDialog(Dialog):
     def timerEvent(self, event):
         if QtGui.QApplication.activeWindow() == self.window():
             print('refresh manage widget')
-            self.refresh(self._controller)
+            if not self._controller.poll():
+                self.close()
+            else:
+                self.refresh(self._controller)
         event.accept()
 
     def refresh(self, controller):

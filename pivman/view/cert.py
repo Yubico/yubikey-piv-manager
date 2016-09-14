@@ -118,7 +118,7 @@ class CertPanel(QtGui.QWidget):
 
         self._controller = controller
         self._slot = slot
-        controller.use(self._build_ui)
+        self._build_ui(controller)
 
     def _build_ui(self, controller):
         cert = controller.get_certificate(self._slot)
@@ -153,8 +153,7 @@ class CertPanel(QtGui.QWidget):
         buttons.addWidget(export_btn)
 
         delete_btn = QtGui.QPushButton(m.delete_cert)
-        delete_btn.clicked.connect(
-            self._controller.wrap(self._delete_cert, True))
+        delete_btn.clicked.connect(self._delete_cert)
         buttons.addWidget(delete_btn)
         layout.addStretch()
         layout.addLayout(buttons)
@@ -170,7 +169,8 @@ class CertPanel(QtGui.QWidget):
         QtGui.QMessageBox.information(self, m.cert_exported,
                                       m.cert_exported_desc_1 % fn)
 
-    def _delete_cert(self, controller, release):
+    def _delete_cert(self):
+        controller = self._controller
         res = QtGui.QMessageBox.warning(self, m.delete_cert,
                                         m.delete_cert_warning_1 % self._slot,
                                         QtGui.QMessageBox.Ok,
@@ -182,19 +182,18 @@ class CertPanel(QtGui.QWidget):
                 worker.post(
                     m.deleting_cert,
                     (controller.delete_certificate, self._slot),
-                    partial(self._delete_cert_callback, controller, release),
-                    True)
+                    self._delete_cert_callback, True)
             except (DeviceGoneError, PivError, ValueError) as e:
                 QtGui.QMessageBox.warning(self, m.error, str(e))
 
-    def _delete_cert_callback(self, controller, release, result):
+    def _delete_cert_callback(self, result):
         if isinstance(result, DeviceGoneError):
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
-            self.window().accept()
+            self.window().close()
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
-            self.parent().refresh(controller)
+            self.parent().refresh(self._controller)
             QtGui.QMessageBox.information(self, m.cert_deleted,
                                           m.cert_deleted_desc)
 
@@ -209,7 +208,7 @@ class CertWidget(QtGui.QWidget):
 
         self._build_ui()
 
-        controller.use(self.refresh)
+        self.refresh(controller)
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
@@ -220,21 +219,19 @@ class CertWidget(QtGui.QWidget):
         buttons = QtGui.QHBoxLayout()
 
         from_file_btn = QtGui.QPushButton(m.import_from_file)
-        from_file_btn.clicked.connect(
-            self._controller.wrap(self._import_file, True))
+        from_file_btn.clicked.connect(self._import_file)
         if settings[SETTINGS.ENABLE_IMPORT]:
             buttons.addWidget(from_file_btn)
 
         generate_btn = QtGui.QPushButton(m.generate_key)
-        generate_btn.clicked.connect(
-            self._controller.wrap(self._generate_key, True))
+        generate_btn.clicked.connect(self._generate_key)
         buttons.addWidget(generate_btn)
 
         layout.addLayout(buttons)
 
     def refresh(self, controller):
         if controller.pin_blocked:
-            self.window().accept()
+            self.window().close()
             return
 
         self.layout().removeWidget(self._status)
@@ -247,7 +244,8 @@ class CertWidget(QtGui.QWidget):
             self._status.setWordWrap(True)
         self.layout().insertWidget(0, self._status)
 
-    def _import_file(self, controller, release):
+    def _import_file(self):
+        controller = self._controller
         res = QtGui.QMessageBox.warning(self, m.import_from_file,
                                         m.import_from_file_warning_1 %
                                         self._slot,
@@ -286,26 +284,26 @@ class CertWidget(QtGui.QWidget):
 
             controller.ensure_authenticated()
             worker = QtCore.QCoreApplication.instance().worker
-            worker.post(m.importing_file, func, partial(
-                self._import_file_callback, controller, release), True)
+            worker.post(m.importing_file, func, self._import_file_callback,
+                        True)
         except (DeviceGoneError, PivError, ValueError) as e:
             QtGui.QMessageBox.warning(self, m.error, str(e))
 
-    def _import_file_callback(self, controller, release, result):
+    def _import_file_callback(self, result):
         if isinstance(result, DeviceGoneError):
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
             self.window().accept()
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
-            self.refresh(controller)
+            self.refresh(self._controller)
             QtGui.QMessageBox.information(self, m.cert_installed,
                                           m.cert_installed_desc)
 
-    def _generate_key(self, controller, release):
-        dialog = GenerateKeyDialog(controller, self._slot, self)
+    def _generate_key(self):
+        dialog = GenerateKeyDialog(self._controller, self._slot, self)
         if dialog.exec_():
-            self.refresh(controller)
+            self.refresh(self._controller)
 
 
 class CertDialog(Dialog):
@@ -316,8 +314,8 @@ class CertDialog(Dialog):
 
         self._complex = settings[SETTINGS.COMPLEX_PINS]
         self._controller = controller
-        controller.on_lost(self.accept)
         self._build_ui()
+        self._t = self.startTimer(2000)
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
@@ -339,3 +337,10 @@ class CertDialog(Dialog):
                 index = self._cert_tabs.addTab(QtGui.QLabel(), label)
                 self._cert_tabs.setTabEnabled(index, False)
         layout.addWidget(self._cert_tabs)
+
+    def timerEvent(self, event):
+        if QtGui.QApplication.activeWindow() == self.window():
+            print('refresh cert widget')
+            if not self._controller.poll():
+                self.close()
+        event.accept()
