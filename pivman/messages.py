@@ -269,7 +269,7 @@ setup_macos_compl_desc = "Your YubiKey is now set up to be paired with your " \
     "user account. To start the pairing process, remove and re-insert " \
     "your YubiKey."
 non_numeric_pin_warning = "For cross-platform compatibility, " \
-    "we recommend<br/>" \
-    "you enter a PIN of 6-8 numeric digits"
+    "we recommend " \
+    "you enter a PIN of 6-8 numeric digits."
 non_numeric_pin = "Pairing your YubiKey with macOS requires your PIN to only "\
     "contain numeric characters. Do you want to change your PIN?"

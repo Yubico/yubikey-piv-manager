@@ -45,17 +45,18 @@ class PinPanel(QtGui.QWidget):
         super(PinPanel, self).__init__()
 
         self._complex = settings[SETTINGS.COMPLEX_PINS]
-
-        layout = QtGui.QFormLayout(self)
+        layout = QtGui.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addRow(headers.section(m.pin))
+        rowLayout = QtGui.QFormLayout()
+        rowLayout.addRow(headers.section(m.pin))
         self._new_pin = pin_field()
-        layout.addRow(m.new_pin_label, self._new_pin)
+        rowLayout.addRow(m.new_pin_label, self._new_pin)
         self._confirm_pin = pin_field()
-        layout.addRow(m.verify_pin_label, self._confirm_pin)
-        self._non_numeric_pin_warning = QtGui.QLabel(
-            "<p>" + m.non_numeric_pin_warning + "</p>")
-        layout.addRow(self._non_numeric_pin_warning)
+        rowLayout.addRow(m.verify_pin_label, self._confirm_pin)
+        layout.addLayout(rowLayout)
+        self._non_numeric_pin_warning = QtGui.QLabel(m.non_numeric_pin_warning)
+        self._non_numeric_pin_warning.setWordWrap(True)
+        layout.addWidget(self._non_numeric_pin_warning)
 
     @property
     def pin(self):
