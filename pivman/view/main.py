@@ -39,7 +39,6 @@ from pivman.view.cert import CertDialog
 
 
 class MainWidget(QtGui.QWidget):
-
     def __init__(self):
         super(MainWidget, self).__init__()
 
@@ -47,7 +46,7 @@ class MainWidget(QtGui.QWidget):
         self._build_ui()
         self.refresh()
 
-        self.startTimer(2000)
+        self._t = self.startTimer(2000)
 
     @property
     def _controller(self):
@@ -87,16 +86,28 @@ class MainWidget(QtGui.QWidget):
         layout.addWidget(self._messages)
 
     def _manage_pin(self):
-        ManageDialog(self._controller, self).exec_()
-        self.refresh()
+        self.killTimer(self._t)
+        try:
+            ManageDialog(self._controller, self).exec_()
+        finally:
+            self._t = self.startTimer(2000)
+        # self.refresh()
 
     def _manage_certs(self):
-        CertDialog(self._controller, self).exec_()
-        self.refresh()
+        self.killTimer(self._t)
+        try:
+            CertDialog(self._controller, self).exec_()
+        finally:
+            self._t = self.startTimer(2000)
+        # self.refresh()
 
     def _setup_for_macos(self):
-        MacOSPairingDialog(self._controller, self).exec_()
-        self.refresh()
+        self.killTimer(self._t)
+        try:
+            MacOSPairingDialog(self._controller, self).exec_()
+        finally:
+            self._t = self.startTimer(2000)
+        # self.refresh()
 
     def refresh(self):
         self._refresh_controller(self._controller)

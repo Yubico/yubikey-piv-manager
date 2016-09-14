@@ -142,6 +142,6 @@ class ManageDialog(Dialog):
             self.refresh(controller)
 
     def _reset_callback(self, result):
-        self.accept()
         QtGui.QMessageBox.information(self, m.device_resetted,
                                       m.device_resetted_desc)
+        self.accept()
