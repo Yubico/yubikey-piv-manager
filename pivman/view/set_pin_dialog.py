@@ -131,9 +131,9 @@ class SetPinDialog(qt.Dialog):
             else:
                 self.reject()
         else:
-            self.accept()
             QtGui.QMessageBox.information(self, self.info_changed,
                                           self.desc_changed)
+            self.accept()
 
 
 class SetPukDialog(SetPinDialog):

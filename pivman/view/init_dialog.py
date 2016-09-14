@@ -339,6 +339,6 @@ class MacOSPairingDialog(qt.Dialog):
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
-            self.accept()
             QtGui.QMessageBox.information(
                 self, m.setup_macos_compl, m.setup_macos_compl_desc)
+            self.accept()

@@ -255,7 +255,6 @@ class GenerateKeyDialog(UsagePolicyDialog):
             self._controller.import_certificate(cert, self._slot)
 
     def _generate_callback2(self, result):
-        self.accept()
         if isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
         else:
@@ -283,3 +282,4 @@ class GenerateKeyDialog(UsagePolicyDialog):
                 message += '\n' + m.gen_out_ca
 
             QtGui.QMessageBox.information(self, m.generated_key, message)
+        self.accept()
