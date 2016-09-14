@@ -100,4 +100,4 @@ class LibYkPiv(CLibrary):
     ykpiv_check_version = [c_char_p], c_char_p
 
 
-ykpiv = LibYkPiv('ykpiv', '1')
+#ykpiv = LibYkPiv('ykpiv', '1')
