@@ -139,6 +139,7 @@ class YkPiv(object):
         self._reader = reader
         self._certs = {}
 
+        self._read_version()
         self._read_status()
 
         if not self.chuid:

@@ -43,9 +43,11 @@ class ManageDialog(Dialog):
 
         self._controller = controller
         self._build_ui()
-        self._controller.on_found(self.refresh)
-        self._controller.on_lost(self.accept)
-        self._controller.use(self.refresh)
+        self.refresh(controller)
+        self._t = self.startTimer(2000)
+        #self._controller.on_found(self.refresh)
+        #self._controller.on_lost(self.accept)
+        #self._controller.use(self.refresh)
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
@@ -53,17 +55,14 @@ class ManageDialog(Dialog):
 
         btns = QtGui.QHBoxLayout()
         self._pin_btn = QtGui.QPushButton(m.change_pin)
-        self._pin_btn.clicked.connect(self._controller.wrap(self._change_pin,
-                                                            True))
+        self._pin_btn.clicked.connect(self._change_pin)
         btns.addWidget(self._pin_btn)
 
         self._puk_btn = QtGui.QPushButton(m.change_puk)
-        self._puk_btn.clicked.connect(self._controller.wrap(self._change_puk,
-                                                            True))
+        self._puk_btn.clicked.connect(self._change_puk)
 
         self._key_btn = QtGui.QPushButton(m.change_key)
-        self._key_btn.clicked.connect(self._controller.wrap(self._change_key,
-                                                            True))
+        self._key_btn.clicked.connect(self._change_key)
         if not settings.is_locked(SETTINGS.PIN_AS_KEY) or \
                 not settings[SETTINGS.PIN_AS_KEY]:
             btns.addWidget(self._puk_btn)
@@ -74,6 +73,12 @@ class ManageDialog(Dialog):
         self._messages.setFixedSize(480, 100)
         self._messages.setReadOnly(True)
         layout.addWidget(self._messages)
+
+    def timerEvent(self, event):
+        if QtGui.QApplication.activeWindow() == self.window():
+            print('refresh manage widget')
+            self.refresh(self._controller)
+        event.accept()
 
     def refresh(self, controller):
         messages = []
@@ -104,16 +109,18 @@ class ManageDialog(Dialog):
                                   controller.pin_blocked)
         self._messages.setHtml('<br>'.join(messages))
 
-    def _change_pin(self, controller, release):
+    def _change_pin(self):
+        controller = self._controller
         if controller.pin_blocked:
             if controller.puk_blocked:
                 res = QtGui.QMessageBox.warning(
                     self, m.reset_device, m.reset_device_warning,
                     QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
                 if res == QtGui.QMessageBox.Ok:
+                    self.killTimer(self._t)
                     worker = QtCore.QCoreApplication.instance().worker
                     worker.post(m.resetting_device, controller.reset_device,
-                                partial(self._reset_callback, release), True)
+                                self._reset_callback, True)
                 return
             else:
                 dialog = ResetPinDialog(controller, self)
@@ -122,19 +129,21 @@ class ManageDialog(Dialog):
         if dialog.exec_():
             self.refresh(controller)
 
-    def _change_puk(self, controller, release):
+    def _change_puk(self):
+        controller = self._controller
         dialog = SetPukDialog(controller, self)
         if dialog.exec_():
             self.refresh(controller)
 
-    def _change_key(self, controller, release):
+    def _change_key(self):
+        controller = self._controller
         dialog = SetKeyDialog(controller, self)
         if dialog.exec_():
             QtGui.QMessageBox.information(self, m.key_changed,
                                           m.key_changed_desc)
             self.refresh(controller)
 
-    def _reset_callback(self, release, result):
+    def _reset_callback(self, result):
         self.accept()
         QtGui.QMessageBox.information(self, m.device_resetted,
                                       m.device_resetted_desc)
