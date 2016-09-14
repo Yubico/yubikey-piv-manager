@@ -340,7 +340,6 @@ class CertDialog(Dialog):
 
     def timerEvent(self, event):
         if QtGui.QApplication.activeWindow() == self.window():
-            print('refresh cert widget')
             if not self._controller.poll():
                 self.close()
         event.accept()

@@ -31,7 +31,6 @@ from pivman.view.set_pin_dialog import (SetPinDialog, SetPukDialog,
 from pivman.view.set_key_dialog import SetKeyDialog
 from pivman.view.utils import IMPORTANT, Dialog
 from pivman.storage import settings, SETTINGS
-from functools import partial
 
 
 class ManageDialog(Dialog):
@@ -45,9 +44,6 @@ class ManageDialog(Dialog):
         self._build_ui()
         self.refresh(controller)
         self._t = self.startTimer(2000)
-        #self._controller.on_found(self.refresh)
-        #self._controller.on_lost(self.accept)
-        #self._controller.use(self.refresh)
 
     def _build_ui(self):
         layout = QtGui.QVBoxLayout(self)
@@ -76,7 +72,6 @@ class ManageDialog(Dialog):
 
     def timerEvent(self, event):
         if QtGui.QApplication.activeWindow() == self.window():
-            print('refresh manage widget')
             if not self._controller.poll():
                 self.close()
             else:

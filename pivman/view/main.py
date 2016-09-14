@@ -45,7 +45,7 @@ class MainWidget(QtGui.QWidget):
 
         self._lock = QtCore.QMutex()
         self._build_ui()
-        self._no_controller()
+        self.refresh()
 
         self.startTimer(2000)
 
@@ -62,7 +62,6 @@ class MainWidget(QtGui.QWidget):
 
     def timerEvent(self, event):
         if QtGui.QApplication.activeWindow() == self.window():
-            print('refresh main widget')
             self.refresh()
         event.accept()
 
