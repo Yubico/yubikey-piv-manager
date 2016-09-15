@@ -54,6 +54,9 @@ DEFAULT_AUTH_SUBJECT = "/CN=Yubico PIV Authentication"
 DEFAULT_ENCRYPTION_SUBJECT = "/CN=Yubico PIV Encryption"
 DEFAULT_VALID_DAYS = 10950  # 30 years
 
+NEO_MAX_CERT_LEN = 1024 * 2 - 23
+YK4_MAX_CERT_LEN = 1024 * 3 - 23
+
 
 def parse_pivtool_data(raw_data):
     rest, _ = der_read(raw_data, TAG_PIVMAN_DATA)
@@ -423,8 +426,19 @@ class Controller(object):
         try:
             self._key.import_cert(cert, slot, frmt, password)
         except ValueError:
-            if len(cert) > 2048 and self.version_tuple < (4, 2, 7):
-                raise ValueError('Certificate is to large to fit in buffer.')
+            cert_len = len(cert)
+            if cert_len > NEO_MAX_CERT_LEN and self.version_tuple < (4, 2, 7):
+                raise ValueError(
+                    'Certificate too large, maximum is '
+                    + str(NEO_MAX_CERT_LEN)
+                    + ' bytes (was '
+                    + str(cert_len) + ' bytes).')
+            elif cert_len > YK4_MAX_CERT_LEN:
+                raise ValueError(
+                    'Certificate too large, maximum is '
+                    + str(YK4_MAX_CERT_LEN)
+                    + ' bytes (was '
+                    + str(cert_len) + ' bytes).')
             else:
                 raise
         self.update_chuid()
