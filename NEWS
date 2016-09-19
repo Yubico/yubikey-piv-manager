@@ -1,6 +1,9 @@
-* Version 1.4.0 (unreleased)
- ** Bugfix: Connecting to a Certificate Authority didn't work.
- ** Touch policy was exposed in the previous version, it's not anymore.
+* Version 1.4.0 (released 2016-09-20)
+ ** New wizard for setting up a YubiKey for pairing with macOS Sierra, providing an easy way to generate certificates in the authentication and key management slots. After the YubiKey is paired, macOS Sierra will recognize the YubiKey and allow you to pair it with an account on macOS.
+ ** Improved appearance on Retina displays.
+ ** More specific error messages when trying to import a certificate that is too large.
+ ** Bugfix: Connecting to a Certificate Authority should now work again.
+ ** Removed touch policy that was erroneously added in the previous version.
 
 * Version 1.3.0 (released 2016-08-18)
  ** Updated to be inline with yubico-piv-tool 1.4.2.
