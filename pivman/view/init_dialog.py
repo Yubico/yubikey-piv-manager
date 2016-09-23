@@ -110,12 +110,12 @@ class KeyPanel(QtGui.QWidget):
         if btn == self._kt_pin:
             self.layout().removeWidget(self._adv_panel)
             self._adv_panel.hide()
-            self.adjustSize()
-            self.parentWidget().adjustSize()
         else:
             self._adv_panel.reset()
             self.layout().addWidget(self._adv_panel)
             self._adv_panel.show()
+        self.adjustSize()
+        self.parentWidget().adjustSize()
 
     @property
     def use_pin(self):
