@@ -163,8 +163,7 @@ save_pk = "Save Public Key as..."
 save_csr = "Save Certificate Signing Request as..."
 generate_key = "Generate new key..."
 generate_key_warning_1 = "A new private key will be generated and stored in " \
-    "slot '%s'. Anything currently in the slot will be deleted. This action " \
-    "cannot be undone."
+    "slot '%s'."
 generating_key = "Generating new key..."
 generated_key = "New key generated"
 generated_key_desc_1 = "A new private key has been generated in slot '%s'."
@@ -273,3 +272,10 @@ non_numeric_pin_warning = "For cross-platform compatibility, " \
     "you enter a PIN of 6-8 numeric digits."
 non_numeric_pin = "Pairing your YubiKey with macOS requires your PIN to only "\
     "contain numeric characters. Do you want to change your PIN?"
+overwrite_slot_warning = "Overwrite slot?"
+overwrite_slot_warning_desc = "This will overwrite all data currently " \
+    "stored in slot '%s'. This action cannot be undone. " \
+    "Do you want to continue?"
+overwrite_slot_warning_macos = "This will overwrite all data currently " \
+    "stored in slot '9a' and '9d'. This action cannot be undone. "\
+    "Do you want to continue?"

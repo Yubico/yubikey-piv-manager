@@ -248,13 +248,6 @@ class CertWidget(QtGui.QWidget):
         self.layout().insertWidget(0, self._status)
 
     def _import_file(self, controller, release):
-        res = QtGui.QMessageBox.warning(self, m.import_from_file,
-                                        m.import_from_file_warning_1 %
-                                        self._slot,
-                                        QtGui.QMessageBox.Ok,
-                                        QtGui.QMessageBox.Cancel)
-        if res != QtGui.QMessageBox.Ok:
-            return
 
         fn, fn_filter = QtGui.QFileDialog.getOpenFileName(
             self, m.import_from_file, filter=FILE_FILTER)
@@ -283,8 +276,22 @@ class CertWidget(QtGui.QWidget):
         try:
             if not controller.poll():
                 controller.reconnect()
-
             controller.ensure_authenticated()
+        except Exception as e:
+            QtGui.QMessageBox.warning(self, m.error, str(e))
+
+        # User confirmation for overwriting slot data
+        if self._slot in controller.certs:
+            res = QtGui.QMessageBox.warning(
+                self,
+                m.overwrite_slot_warning,
+                m.overwrite_slot_warning_desc % self._slot,
+                QtGui.QMessageBox.Ok,
+                QtGui.QMessageBox.Cancel)
+            if res == QtGui.QMessageBox.Cancel:
+                return
+
+        try:
             worker = QtCore.QCoreApplication.instance().worker
             worker.post(m.importing_file, func, partial(
                 self._import_file_callback, controller, release), True)

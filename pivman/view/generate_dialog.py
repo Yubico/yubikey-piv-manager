@@ -179,6 +179,7 @@ class GenerateKeyDialog(UsagePolicyDialog):
         return self._out_type.checkedButton().property('value')
 
     def _generate(self):
+
         if self.out_format != 'pk' and not \
                 self._subject.hasAcceptableInput():
             QtGui.QMessageBox.warning(self, m.invalid_subject,
@@ -213,6 +214,17 @@ class GenerateKeyDialog(UsagePolicyDialog):
             return
 
         valid_days = QtCore.QDate.currentDate().daysTo(self._expire_date.date())
+
+        # User confirmation for overwriting slot data
+        if self._slot in self._controller.certs:
+            res = QtGui.QMessageBox.warning(
+                self,
+                m.overwrite_slot_warning,
+                m.overwrite_slot_warning_desc % self._slot,
+                QtGui.QMessageBox.Ok,
+                QtGui.QMessageBox.Cancel)
+            if res == QtGui.QMessageBox.Cancel:
+                return
 
         worker = QtCore.QCoreApplication.instance().worker
         worker.post(

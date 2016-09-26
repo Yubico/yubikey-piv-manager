@@ -33,6 +33,7 @@ from pivman.utils import complexity_check
 from pivman.storage import settings, SETTINGS
 from pivman.yubicommon import qt
 from binascii import b2a_hex
+from pivman.controller import AUTH_SLOT, ENCRYPTION_SLOT
 import os
 import re
 
@@ -308,6 +309,19 @@ class MacOSPairingDialog(qt.Dialog):
             pin = self._controller.ensure_pin()
             if NUMERIC_PATTERN.match(pin):
                 self._controller.ensure_authenticated(pin)
+
+                # User confirmation for overwriting slot data
+                if (AUTH_SLOT in self._controller.certs
+                        or ENCRYPTION_SLOT in self._contoller.certs):
+                    res = QtGui.QMessageBox.warning(
+                        self,
+                        m.overwrite_slot_warning,
+                        m.overwrite_slot_warning_macos,
+                        QtGui.QMessageBox.Cancel,
+                        QtGui.QMessageBox.Ok)
+                    if res == QtGui.QMessageBox.Cancel:
+                        return
+
                 worker = QtCore.QCoreApplication.instance().worker
                 worker.post(
                     m.setting_up_macos,
