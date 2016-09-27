@@ -279,3 +279,7 @@ overwrite_slot_warning_desc = "This will overwrite all data currently " \
 overwrite_slot_warning_macos = "This will overwrite all data currently " \
     "stored in slot '9a' and '9d'. This action cannot be undone. "\
     "Do you want to continue?"
+not_default_pin = "Your credentials for the YubiKey are not the default " \
+    "values. This may occur when the PIN or PUK has been changed with a " \
+    "different tool. Use the 'Manage device PINs' option to change the " \
+    "credentials."

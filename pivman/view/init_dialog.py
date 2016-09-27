@@ -26,7 +26,7 @@
 
 from PySide import QtGui, QtCore
 from pivman import messages as m
-from pivman.piv import DeviceGoneError, PivError, KEY_LEN
+from pivman.piv import DeviceGoneError, PivError, WrongPinError, KEY_LEN
 from pivman.view.set_pin_dialog import SetPinDialog
 from pivman.view.utils import KEY_VALIDATOR, pin_field
 from pivman.utils import complexity_check
@@ -269,6 +269,9 @@ class InitDialog(qt.Dialog):
     def _init_callback(self, result):
         if isinstance(result, DeviceGoneError):
             QtGui.QMessageBox.warning(self, m.error, m.device_unplugged)
+            self.close()
+        if isinstance(result, WrongPinError):
+            QtGui.QMessageBox.warning(self, m.error, m.not_default_pin)
             self.close()
         elif isinstance(result, Exception):
             QtGui.QMessageBox.warning(self, m.error, str(result))
