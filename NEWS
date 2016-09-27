@@ -1,3 +1,9 @@
+* Version 1.4.1 (unreleased)
+ ** Always show a confirmation dialog when overwriting data in a slot (including in the macOS Sierra wizard).
+ ** On initialisation: Show a warning when the PIN or PUK has been changed in another tool.
+ ** Make it possible to close the initialisation dialog and the expired PIN dialog without closing the application.
+ ** Bugfix: Layout in the initialisation dialog was acting wierd when the radio buttons was clicked.
+
 * Version 1.4.0 (released 2016-09-20)
  ** New wizard for setting up a YubiKey for pairing with macOS Sierra, providing an easy way to generate certificates in the authentication and key management slots. After the YubiKey is paired, macOS Sierra will recognize the YubiKey and allow you to pair it with an account on macOS.
  ** Improved appearance on Retina displays.
