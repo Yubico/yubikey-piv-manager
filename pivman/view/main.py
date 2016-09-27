@@ -121,11 +121,7 @@ class MainWidget(QtGui.QWidget):
                     self._setup_for_macos(controller)
                 else:
                     self.refresh()
-            else:
-                QtCore.QCoreApplication.instance().quit()
         elif controller.is_pin_expired() and not controller.pin_blocked:
             dialog = SetPinDialog(controller, self, True)
             if dialog.exec_():
                 self.refresh()
-            else:
-                QtCore.QCoreApplication.instance().quit()
