@@ -312,7 +312,7 @@ class MacOSPairingDialog(qt.Dialog):
 
                 # User confirmation for overwriting slot data
                 if (AUTH_SLOT in self._controller.certs
-                        or ENCRYPTION_SLOT in self._contoller.certs):
+                        or ENCRYPTION_SLOT in self._controller.certs):
                     res = QtGui.QMessageBox.warning(
                         self,
                         m.overwrite_slot_warning,
