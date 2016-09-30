@@ -1,4 +1,4 @@
-* Version 1.4.1 (2016-09-30)
+* Version 1.4.1 (released 2016-09-30)
  ** Now displays a confirmation dialog box when overwriting certificate data in a slot (including in the macOS Sierra wizard).
  ** On initialization, now shows a warning when the PIN or PUK has been changed in another tool.
  ** It is now possible to close the initialization and the expired PIN dialog boxes without closing the application.
