@@ -1,9 +1,9 @@
-* Version 1.4.1 (unreleased)
- ** Always show a confirmation dialog when overwriting certificate data in a slot (including in the macOS Sierra wizard).
- ** On initialisation: Show a warning when the PIN or PUK has been changed in another tool.
- ** Make it possible to close the initialisation dialog and the expired PIN dialog without closing the application.
- ** Bugfix: Connecting to a Certificate Authority should now work again (even over a network).
- ** Bugfix: Layout in the initialisation dialog was acting weird when the radio buttons was clicked.
+* Version 1.4.1 (2016-09-30)
+ ** Now displays a confirmation dialog box when overwriting certificate data in a slot (including in the macOS Sierra wizard).
+ ** On initialization, now shows a warning when the PIN or PUK has been changed in another tool.
+ ** It is now possible to close the initialization and the expired PIN dialog boxes without closing the application.
+ ** Bugfix: Connecting to a Certificate Authority should now work as expected (even over a network).
+ ** Bugfix: Layout in the initialization dialog box was not acting as expected when the radio buttons were clicked.
 
 * Version 1.4.0 (released 2016-09-20)
  ** New wizard for setting up a YubiKey for pairing with macOS Sierra, providing an easy way to generate certificates in the authentication and key management slots. After the YubiKey is paired, macOS Sierra will recognize the YubiKey and allow you to pair it with an account on macOS.
