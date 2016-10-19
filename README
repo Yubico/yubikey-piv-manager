@@ -13,3 +13,8 @@ https://developers.yubico.com/yubikey-piv-manager/Releases/[here].
 For Ubuntu we have a custom PPA with a package for it
 https://launchpad.net/~yubico/+archive/ubuntu/stable[here].
 
+=== Usage guides
+For information and examples on what you can do with a PIV enabled YubiKey,
+see https://developers.yubico.com/PIV/
+
+
