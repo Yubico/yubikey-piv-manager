@@ -75,6 +75,9 @@ def set_arg(args, opt, value):
 
 class YkPivCmd(object):
 
+    _pin = None
+    _key = None
+
     def __init__(self, cmd=find_cmd(), verbosity=0, reader=None, key=None):
         self._base_args = [cmd]
         if verbosity > 0:
@@ -82,7 +85,7 @@ class YkPivCmd(object):
         if reader:
             self._base_args.extend(['-r', reader])
         if key:
-            self._base_args.extend(['-k', key])
+            self._key = key
 
     def set_arg(self, opt, value):
         if isinstance(value, bytes):
@@ -90,12 +93,6 @@ class YkPivCmd(object):
         self._base_args = set_arg(self._base_args, opt, value)
 
     def run(self, *args, **kwargs):
-        if sys.platform == 'win32':  # Avoid showing console window on Windows
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        else:
-            startupinfo = None
-
         full_args = list(self._base_args)
         new_args = list(args)
         while new_args:
@@ -107,45 +104,137 @@ class YkPivCmd(object):
                 + full_args[i+2:]
         p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                             startupinfo=startupinfo)
+                             startupinfo=self.get_startup_info())
         out, err = p.communicate(**kwargs)
         check(p.returncode, err)
 
         return out
 
+    def get_startup_info(self):
+        if sys.platform == 'win32':  # Avoid showing console window on Windows
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        else:
+            startupinfo = None
+        return startupinfo
+
     def status(self):
         return self.run('-a', 'status')
 
     def change_pin(self, new_pin):
-        if '-P' not in self._base_args:
+        if self._pin is None:
             raise ValueError('PIN has not been verified')
-        self.run('-a', 'change-pin', '-N', new_pin)
-        self.set_arg('-P', new_pin)
+        full_args = list(self._base_args)
+        full_args = set_arg(full_args, '-a', 'change-pin')
+        full_args.append('--stdin-input')
+        p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             startupinfo=self.get_startup_info())
+        p.stdin.write(self._pin + '\n')
+        p.stdin.write(new_pin + '\n')
+        p.stdin.flush()
+        out, err = p.communicate()
+        check(p.returncode, err)
+        self._pin = new_pin
 
     def change_puk(self, old_puk, new_puk):
-        self.run('-a', 'change-puk', '-P', old_puk, '-N', new_puk)
+        full_args = list(self._base_args)
+        full_args = set_arg(full_args, '-a', 'change-puk')
+        full_args.append('--stdin-input')
+        p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             startupinfo=self.get_startup_info())
+        p.stdin.write(old_puk + '\n')
+        p.stdin.write(new_puk + '\n')
+        p.stdin.flush()
+        out, err = p.communicate()
+        check(p.returncode, err)
 
     def reset_pin(self, puk, new_pin):
-        self.run('-a', 'unblock-pin', '-P', puk, '-N', new_pin)
-        self.set_arg('-P', new_pin)
+        full_args = list(self._base_args)
+        full_args = set_arg(full_args, '-a', 'unblock-pin')
+        full_args.append('--stdin-input')
+        p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             startupinfo=self.get_startup_info())
+        p.stdin.write(puk + '\n')
+        p.stdin.write(new_pin + '\n')
+        p.stdin.flush()
+        out, err = p.communicate()
+        check(p.returncode, err)
+
+    def set_chuid(self):
+        full_args = list(self._base_args)
+        full_args = set_arg(full_args, '-a', 'set-chuid')
+        if self._key is not None:
+            full_args.append('-k')
+            full_args.append('--stdin-input')
+        p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             startupinfo=self.get_startup_info())
+        if self._key is not None:
+            p.stdin.write(self._key + '\n')
+            p.stdin.flush()
+        out, err = p.communicate()
+        check(p.returncode, err)
 
     def generate(self, slot, algorithm, pin_policy, touch_policy):
-        return self.run('-s', slot, '-a', 'generate', '-A', algorithm,
-                        '--pin-policy', pin_policy, '--touch-policy',
-                        'always' if touch_policy else 'never')
+        full_args = list(self._base_args)
+        full_args = set_arg(full_args, '-s', slot)
+        full_args = set_arg(full_args, '-a', 'generate')
+        full_args = set_arg(full_args, '-A', algorithm)
+        full_args = set_arg(full_args, '--pin-policy', pin_policy)
+        full_args = set_arg(
+            full_args, '--touch-policy', 'always' if touch_policy else 'never')
+        full_args.append('-k')
+        full_args.append('--stdin-input')
+        p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             startupinfo=self.get_startup_info())
+        p.stdin.write(self._key + '\n')
+        p.stdin.flush()
+        out, err = p.communicate()
+        check(p.returncode, err)
+        return out
 
     def create_csr(self, subject, pem, slot):
-        if '-P' not in self._base_args:
+        if self._pin is None:
             raise ValueError('PIN has not been verified')
-        return self.run('-a', 'verify-pin', '-s', slot, '-a',
-                        'request-certificate', '-S', subject, input=pem)
+        full_args = list(self._base_args)
+        full_args = set_arg(full_args, '-a', 'verify-pin')
+        full_args = set_arg(full_args, '-s', slot)
+        full_args = set_arg(full_args, '-a', 'request-certificate')
+        full_args = set_arg(full_args, '-S', subject)
+        full_args.append('--stdin-input')
+        p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             startupinfo=self.get_startup_info())
+        p.stdin.write(self._pin + '\n')
+        p.stdin.flush()
+        out, err = p.communicate(input=pem)
+        check(p.returncode, err)
+        return out
 
     def create_ssc(self, subject, pem, slot, valid_days=365):
-        if '-P' not in self._base_args:
+        if self._pin is None:
             raise ValueError('PIN has not been verified')
-        return self.run('-a', 'verify-pin', '-s', slot, '-a',
-                        'selfsign-certificate', '-S', subject,
-                        '--valid-days', str(valid_days), input=pem)
+        full_args = list(self._base_args)
+        full_args = set_arg(full_args, '-a', 'verify-pin')
+        full_args = set_arg(full_args, '-s', slot)
+        full_args = set_arg(full_args, '-a', 'selfsign-certificate')
+        full_args = set_arg(full_args, '-S', subject)
+        full_args = set_arg(full_args, '--valid-days', str(valid_days))
+        full_args.append('-k')
+        full_args.append('--stdin-input')
+        p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             startupinfo=self.get_startup_info())
+        p.stdin.write(self._pin + '\n')
+        p.stdin.write(self._key + '\n')
+        p.stdin.flush()
+        out, err = p.communicate(input=pem)
+        check(p.returncode, err)
+        return out
 
     def import_cert(self, data, slot, frmt='PEM', password=None):
         return self._do_import('import-cert', data, slot, frmt, password)
@@ -156,14 +245,45 @@ class YkPivCmd(object):
                                'always' if touch_policy else 'never')
 
     def _do_import(self, action, data, slot, frmt, password, *args):
-        if '-k' not in self._base_args:
+        if self._key is None:
             raise ValueError('Management key has not been provided')
-        args = ['-s', slot, '-K', frmt, '-a', action] + list(args)
+        full_args = list(self._base_args)
+        full_args = set_arg(full_args, '-s', slot)
+        full_args = set_arg(full_args, '-K', frmt)
+        full_args = set_arg(full_args, '-a', action)
+        new_args = list(args)
+        while new_args:
+            full_args = set_arg(full_args, new_args.pop(0), new_args.pop(0))
+        full_args.append('-k')
+        full_args.append('--stdin-input')
+        p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             startupinfo=self.get_startup_info())
         if password is not None:
-            args.extend(['-p', password])
-        return self.run(*args, input=data)
+            p.stdin.write(password + '\n')
+        p.stdin.write(self._key + '\n')
+        p.stdin.flush()
+        # A small sleep is needed to get yubico-piv-tool
+        # to read properly in all cases.
+        import time
+        time.sleep(0.1)
+        out, err = p.communicate(input=data)
+        check(p.returncode, err)
+        return out
 
     def delete_cert(self, slot):
-        if '-k' not in self._base_args:
+        if self._key is None:
             raise ValueError('Management key has not been provided')
-        return self.run('-s', slot, '-a', 'delete-certificate')
+        full_args = list(self._base_args)
+        full_args = set_arg(full_args, '-a', 'delete-certificate')
+        full_args = set_arg(full_args, '-s', slot)
+        full_args.append('-k')
+        full_args.append('--stdin-input')
+        p = subprocess.Popen(full_args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             startupinfo=self.get_startup_info())
+        p.stdin.write(self._key + '\n')
+        p.stdin.flush()
+        out, err = p.communicate()
+        check(p.returncode, err)
+        return out
