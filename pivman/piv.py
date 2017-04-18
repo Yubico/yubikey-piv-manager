@@ -203,11 +203,10 @@ class YkPiv(object):
 
     def _reset(self):
         self._connect()
-        args = self._cmd._base_args
-        if '-P' in args:
-            self.verify_pin(args[args.index('-P') + 1])
-        if '-k' in args:
-            self.authenticate(a2b_hex(args[args.index('-k') + 1]))
+        if self._cmd._pin is not None:
+            self.verify_pin(self._cmd._pin)
+        if self._cmd._key is not None:
+            self.authenticate(a2b_hex(self._cmd._key))
 
     @property
     def version(self):
@@ -232,7 +231,7 @@ class YkPiv(object):
     def set_chuid(self):
         try:
             check(ykpiv.ykpiv_disconnect(self._state))
-            self._cmd.run('-a', 'set-chuid')
+            self._cmd.set_chuid()
         finally:
             self._reset()
 
@@ -250,7 +249,7 @@ class YkPiv(object):
             raise ValueError('Key must be %d bytes' % KEY_LEN)
         c_key = (c_ubyte * KEY_LEN).from_buffer_copy(key)
         check(ykpiv.ykpiv_authenticate(self._state, c_key))
-        self._cmd.set_arg('-k', b2a_hex(key))
+        self._cmd._key = b2a_hex(key)
         if not self.chuid:
             self.set_chuid()
 
@@ -259,7 +258,7 @@ class YkPiv(object):
             raise ValueError('Key must be %d bytes' % KEY_LEN)
         c_key = (c_ubyte * len(key)).from_buffer_copy(key)
         check(ykpiv.ykpiv_set_mgmkey(self._state, c_key))
-        self._cmd.set_arg('-k', b2a_hex(key))
+        self._cmd._key = b2a_hex(key)
 
     def verify_pin(self, pin):
         if isinstance(pin, text_type):
@@ -271,10 +270,10 @@ class YkPiv(object):
         if rc == YKPIV.WRONG_PIN:
             if tries.value == 0:
                 self._pin_blocked = True
-                self._cmd.set_arg('-P', None)
+                self._cmd._pin = None
             raise WrongPinError(tries.value)
         check(rc)
-        self._cmd.set_arg('-P', pin)
+        self._cmd._pin = pin
 
     def set_pin(self, pin):
         if isinstance(pin, text_type):
