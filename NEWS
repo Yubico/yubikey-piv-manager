@@ -1,3 +1,6 @@
+* Version 1.4.2b (released 2017-04-24)
+ ** A new installer for macOS, due to some issues with how a dependency was being built, causing the application to crash randomly.
+
 * Version 1.4.2 (released 2017-04-19)
  ** PIN, PUK, management key and certificate passwords are now passed to yubico-piv-tool using 
  standard input instead of as CLI arguments. This prevents them from being logged by some
