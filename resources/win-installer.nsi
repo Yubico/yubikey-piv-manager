@@ -81,8 +81,9 @@ Section
 ;Create shortcuts
   SetShellVarContext all
   SetOutPath "$SMPROGRAMS\$STARTMENU_FOLDER"
-  CreateShortCut "YubiKey PIV Manager.lnk" "$INSTDIR\pivman.exe" "" "$INSTDIR\pivman.exe" 0
-  CreateShortCut "Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 1
+  CreateDirectory "$SMPROGRAMS\$STARTMENU_FOLDER"
+  CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\YubiKey PIV Manager.lnk" "$INSTDIR\pivman.exe" "" "$INSTDIR\pivman.exe" 0
+  CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\Uninstall YubiKey PIV Manager.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 1
 !insertmacro MUI_STARTMENU_WRITE_END
 
   CreateShortCut "$SMSTARTUP\YubiKey PIV Manager PIN-check.lnk" "$INSTDIR\pivman.exe" "-c"
@@ -103,7 +104,7 @@ Section "Uninstall"
   !insertmacro MUI_STARTMENU_GETFOLDER Application $MUI_TEMP
   SetShellVarContext all
 
-  Delete "$SMPROGRAMS\$MUI_TEMP\Uninstall.lnk"
+  Delete "$SMPROGRAMS\$MUI_TEMP\Uninstall YubiKey PIV Manager.lnk"
   Delete "$SMPROGRAMS\$MUI_TEMP\YubiKey PIV Manager.lnk"
   Delete "$SMSTARTUP\YubiKey PIV Manager PIN-check.lnk"
 
