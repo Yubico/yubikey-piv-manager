@@ -1,3 +1,6 @@
+* Version 1.4.2c (released 2017-07-04)
+ ** A new installer for Windows, fixing an issue with start menu shortcuts on Windows 10.
+
 * Version 1.4.2b (released 2017-04-24)
  ** A new installer for macOS, due to some issues with how a dependency was being built, causing the application to crash randomly.
 
