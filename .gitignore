@@ -10,3 +10,4 @@ ChangeLog
 MANIFEST
 pivman/qt_resources.py
 .DS_Store
+/vagrant/*/.vagrant/
