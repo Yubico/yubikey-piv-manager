@@ -3,6 +3,41 @@
 === Dependencies
 YubiKey PIV Manager requires PySide, pycrypto and yubico-piv-tool.
 
+
+=== Vagrant VM for development
+
+A Vagrant VM definition for development is included. To use it:
+
+1. Set up the VM:
++
+---
+  $ cd vagrant/development
+  $ vagrant up
+
+After first startup, restart the VM as instructed on first login:
+
+   alice@work $ vagrant ssh
+   ubuntu@ubuntu-xenial $ sudo poweroff
+---
+
+2. Restart the VM:
++
+  alice@work $ vagrant up
+
+3. Log into the GUI as the user `ubuntu` (no password)
+4. Start X:
++
+  ubuntu@ubuntu-xenial $ startx
+
+5. Open a terminal and install and run YubiKey PIV Manager:
++
+  ubuntu@ubuntu-xenial $ cd /vagrant
+  ubuntu@ubuntu-xenial $ sudo python3 setup.py install
+  ubuntu@ubuntu-xenial $ pivman
+
+Repeat from (2) as necessary on subsequent uses of the VM.
+
+
 === Building binaries
 Binaries for Windows and OSX are built using PyInstaller.
 
