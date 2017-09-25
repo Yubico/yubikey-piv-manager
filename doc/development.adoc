@@ -10,15 +10,13 @@ A Vagrant VM definition for development is included. To use it:
 
 1. Set up the VM:
 +
----
   $ cd vagrant/development
   $ vagrant up
-
++
 After first startup, restart the VM as instructed on first login:
-
-   alice@work $ vagrant ssh
-   ubuntu@ubuntu-xenial $ sudo poweroff
----
++
+  alice@work $ vagrant ssh
+  ubuntu@ubuntu-xenial $ sudo poweroff
 
 2. Restart the VM:
 +
