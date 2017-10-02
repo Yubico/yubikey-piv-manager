@@ -14,4 +14,7 @@ YubiKey.
 
 This `Vagrantfile` sets up USB forwarding in VirtualBox of YubiKey 4s with _all_
 of the OTP+U2F+CCID transports enabled (device ID `1050:0407`). If you use a
-different VM engine or YubiKey, adjust these settings as necessary.
+different VM engine or YubiKey, adjust these settings as necessary. In Linux,
+you can find the device ID using `lsusb`:
+
+    $ lsusb -d 1050:
