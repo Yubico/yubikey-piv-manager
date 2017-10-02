@@ -13,5 +13,5 @@ install a Windows release, run
 YubiKey.
 
 This `Vagrantfile` sets up USB forwarding in VirtualBox of YubiKey 4s with _all_
-of the USB+NFC+CCID transports enabled (device ID `1050:0407`). If you use a
+of the OTP+U2F+CCID transports enabled (device ID `1050:0407`). If you use a
 different VM engine or YubiKey, adjust these settings as necessary.
