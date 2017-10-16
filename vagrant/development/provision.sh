@@ -11,18 +11,18 @@ sudo apt-get install -qq \
     libqt4-dev \
     qt4-default \
     qt4-qmake \
-    python3-dev \
-    python3-pip \
-    python3-pyside=1.2.2-2build2 \
-    python3-setuptools \
+    python-dev \
+    python-pip \
+    python-pyside=1.2.2-2build2 \
+    python-setuptools \
     pyside-tools \
     libykpiv1 \
     xfce4 \
     yubico-piv-tool
-pip3 install --upgrade pip
+pip install --upgrade pip
 
 # Install flake8 for linting
-pip3 install pre-commit flake8
+pip install pre-commit flake8
 
 # Fix permissions in repo, install pre-commit hook
 cd /vagrant && chown -R ubuntu . && pre-commit install
@@ -36,7 +36,7 @@ sudo passwd -d ubuntu
 
 # Add manifest file missing from PySide package
 
-cat << EOF | sudo tee /usr/lib/python3/dist-packages/PySide-1.2.2-2build2.egg-info
+cat << EOF | sudo tee /usr/lib/python2.7/dist-packages/PySide-1.2.2-2build2.egg-info
 Metadata-Version: 1.0
 Name: PySide
 Version: 1.2.2-2build2
@@ -45,7 +45,7 @@ Home-page: http://www.pyside.org/
 Author: UNKNOWN
 Author-email: UNKNOWN
 License: UNKNOWN
-Description: Python3 bindings for Qt4
+Description: Python bindings for Qt4
 Platform: UNKNOWN
 Summary: UNKNOWN
 EOF

@@ -1,7 +1,7 @@
 == Development
 
 === Dependencies
-YubiKey PIV Manager requires PySide, pycrypto and yubico-piv-tool.
+YubiKey PIV Manager requires Python 2, PySide, pycrypto and yubico-piv-tool.
 
 
 === Vagrant VM for development
@@ -30,7 +30,7 @@ After first startup, restart the VM as instructed on first login:
 5. Open a terminal and install and run YubiKey PIV Manager:
 +
   ubuntu@ubuntu-xenial $ cd /vagrant
-  ubuntu@ubuntu-xenial $ sudo python3 setup.py install
+  ubuntu@ubuntu-xenial $ sudo python setup.py install
   ubuntu@ubuntu-xenial $ pivman
 
 Repeat from (2) as necessary on subsequent uses of the VM.
