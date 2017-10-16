@@ -30,6 +30,7 @@ After first startup, restart the VM as instructed on first login:
 5. Open a terminal and install and run YubiKey PIV Manager:
 +
   ubuntu@ubuntu-xenial $ cd /vagrant
+  ubuntu@ubuntu-xenial $ sudo python setup.py qt_resources
   ubuntu@ubuntu-xenial $ sudo python setup.py install
   ubuntu@ubuntu-xenial $ pivman
 
