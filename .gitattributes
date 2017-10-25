@@ -1,0 +1,6 @@
+# By default, normalise line endings if it looks like a text file
+* text=auto
+
+# Force a specific line ending style for these file names
+*.sh text eol=lf
+*.bat text eol=crlf
