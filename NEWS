@@ -1,8 +1,8 @@
 * Version 1.4.2e (released 2017-10-25)
-  * Rerelease for Mac with bundled yubico-piv-tool upgraded to version 1.4.4 to mitigate http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-15361[CVE-2017-15361]
+  * Re-release for Mac with bundled yubico-piv-tool upgraded to version 1.4.4 to mitigate http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-15361[CVE-2017-15361]
 
 * Version 1.4.2d (released 2017-10-25)
-  * Rerelease for Windows with bundled yubico-piv-tool upgraded to version 1.4.4 to mitigate http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-15361[CVE-2017-15361]
+  * Re-release for Windows with bundled yubico-piv-tool upgraded to version 1.4.4 to mitigate http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-15361[CVE-2017-15361]
 
 * Version 1.4.2c (released 2017-07-04)
  ** A new installer for Windows, fixing an issue with start menu shortcuts on Windows 10.
