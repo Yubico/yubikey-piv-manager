@@ -13,7 +13,6 @@ for up to 8 ASCII characters. There is a setting in the YubiKey PIV Manager,
 which enforces password complexity rules on your PIN (as well as your PUK). If
 this setting is active, your PIN will need to:
 
-* Be at least 6 characters in length.
 * Not contain all or part of the user's account name.
 * Contain characters from three of the following four categories:
  ** English uppercase characters (A through Z)
