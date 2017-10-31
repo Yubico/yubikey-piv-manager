@@ -8,10 +8,10 @@ a digital signature for any of the loaded certificates. Entering an incorrect
 PIN three times consecutively will cause the PIN to become blocked, rendering
 the PIV features unusable. The PIN must be at least 6 characters, and can
 contain any characters, though for cross-platform portability it is recommended
-to only use only decimal digits. There is a limit of 8 bytes for a PIN, which
-allows for up to 8 ASCII characters. There is a setting in the YubiKey PIV
-Manager, which enforces password complexity rules on your PIN (as well as your
-PUK). If this setting is active, your PIN will need to:
+to only use decimal digits. There is a limit of 8 bytes for a PIN, which allows
+for up to 8 ASCII characters. There is a setting in the YubiKey PIV Manager,
+which enforces password complexity rules on your PIN (as well as your PUK). If
+this setting is active, your PIN will need to:
 
 * Be at least 6 characters in length.
 * Not contain all or part of the user's account name.
