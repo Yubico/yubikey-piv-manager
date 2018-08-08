@@ -1,3 +1,6 @@
+* Version 1.4.2f (released 2018-08-08)
+ ** Re-release for Mac and Windows with bundled yubico-piv-tool upgraded to version 1.6.0 to mitigate https://www.yubico.com/support/security-advisories/ysa-2018-03/[YSA-2018-03]
+
 * Version 1.4.2e (released 2017-10-25)
  ** Re-release for Mac with bundled yubico-piv-tool upgraded to version 1.4.4 to mitigate http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-15361[CVE-2017-15361]
 
