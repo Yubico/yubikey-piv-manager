@@ -13,6 +13,27 @@ https://developers.yubico.com/yubikey-piv-manager/Releases/[here].
 For Ubuntu we have a custom PPA with a package for it
 https://launchpad.net/~yubico/+archive/ubuntu/stable[here].
 
+
+==== Building from source (Linux)
+
+1.  Install build dependencies:
+
+    - Python 2 `setuptools` library
+    - http://www.pyside.org/[PySide], Pyside tools and PySide development tools
+    - https://cmake.org/[CMake]
+    - https://doc.qt.io/archives/qt-4.8/[Qt 4] development tools
+    - https://gcc.gnu.org/[`gcc` and `g++`]
+
+2.  Build and install:
+
+    - `$ python setup.py qt_resources`
+    - `$ sudo python setup.py install`
+
+3.  Install runtime dependencies:
+
+    - https://developers.yubico.com/yubico-piv-tool/[Yubico PIV Tool]
+
+
 === Usage guides
 For information and examples on what you can do with a PIV enabled YubiKey,
 see https://developers.yubico.com/PIV/
