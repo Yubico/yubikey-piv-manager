@@ -177,8 +177,9 @@ import_from_file_warning_1 = "Anything currently in slot '%s' will be " \
 importing_file = "Importing from file..."
 unsupported_file = "Unsupported file type"
 delete_cert = "Delete certificate"
-delete_cert_warning_1 = "This will delete the certificate and key stored in " \
-    "slot '%s' of your YubiKey, and cannot be undone."
+delete_cert_warning_1 = "This will delete the certificate stored in " \
+    "slot '%s' of your YubiKey, and cannot be undone. Note that the "\
+    "private key is not deleted."
 deleting_cert = "Deleting certificate..."
 cert_exported = "Certificate exported"
 cert_exported_desc_1 = "Certificate exported to file: %s"

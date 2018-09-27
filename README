@@ -41,3 +41,12 @@ For information and examples on what you can do with a PIV enabled YubiKey,
 see https://developers.yubico.com/PIV/
 
 
+=== Known issues
+
+==== Deleting certificates
+Note that the dialog showed in PIV Manager when deleting a certificate currently states
+that the private key is being deleted as well. That is not the case, only the certificate is deleted.
+To make sure the private key is destroyed, it is recommended to generate a new private key in the same slot or
+to https://support.yubico.com/support/solutions/articles/15000008587-resetting-the-smart-card-piv-applet-on-your-yubikey[reset the PIV application].
+
+Thanks to Max from Max Tech Labs for pointing this out.
