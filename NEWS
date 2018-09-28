@@ -1,3 +1,6 @@
+* Version 1.4.2h (released 2018-09-28)
+ ** Re-release for Mac because of hard coded path in installation package.
+
 * Version 1.4.2g (released 2018-09-26)
  ** Re-release for Mac and Windows with bundled yubico-piv-tool upgraded to version 1.6.2 to support the YubiKey 5 Series.
 
