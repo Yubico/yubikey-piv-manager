@@ -3,7 +3,7 @@ image:https://travis-ci.org/Yubico/yubikey-piv-manager.svg?branch=master["Build 
 
 Graphical application for configuring a PIV-enabled YubiKey.
 
-NOTE: This project is no longer under active development. The current focus for PIV related development is on YubiKey Manager (https://developers.yubico.com/yubikey-manager-qt/[GUI], https://developers.yubico.com/yubikey-manager/[CLI]).
+NOTE: This project is deprecated and is no longer being maintained. Use YubiKey Manager (https://developers.yubico.com/yubikey-manager-qt/[GUI], https://developers.yubico.com/yubikey-manager/[CLI]) to configure a YubiKey device.
 
 image::screenshot.png[]
 
